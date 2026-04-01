@@ -1,0 +1,17 @@
+<resources>
+    <style name="Base.Theme.GlyphManager" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:colorBackground">@color/window_background</item>
+        <item name="colorSurface">#1C1B1F</item>
+        <item name="colorSurfaceContainer">@color/surface_container</item>
+        <item name="colorPrimaryContainer">@color/surface_container</item>
+        <item name="colorOnSurface">#E6E1E5</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorPrimary">#D0BCFF</item>
+        <item name="colorOnPrimary">#381E72</item>
+        <item name="colorControlActivated">#D0BCFF</item>
+        <item name="colorSecondaryContainer">#4A4458</item>
+        <item name="colorOnSecondaryContainer">#E8DEF8</item>
+        <item name="colorControlHighlight">#33FFFFFF</item>
+    </style>
+</resources>

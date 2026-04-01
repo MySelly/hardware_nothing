@@ -9,6 +9,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 
@@ -27,36 +28,38 @@ class IGlyphServiceImpl(private val context: Context) : IGlyphService.Stub() {
         }
 
     init {
-        bindglyphService()
+        bindGlyphService()
     }
 
-    private fun bindglyphService() {
-        if (context != null) {
-            val intent =
-                Intent("com.nothing.thirdparty.IGlyphService").apply {
-                    component =
-                        ComponentName("co.aospa.glyph", "co.aospa.glyph.Services.ThirdPartyService")
-                }
-            context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+    private fun bindGlyphService() {
+        val component = if (Build.DEVICE == "Spacewar") {
+            ComponentName(
+                "org.aspends.nglyphs",
+                "org.aspends.nglyphs.services.ThirdPartyGlyphService"
+            )
         } else {
-            Log.e("IGlyphServiceImpl", "Context is null, cannot bind service")
+            ComponentName(
+                "co.aospa.glyph",
+                "co.aospa.glyph.Services.ThirdPartyService"
+            )
         }
+        val intent = Intent("com.nothing.thirdparty.IGlyphService").apply {
+            this.component = component
+        }
+        context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
     }
 
     override fun setFrameColors(iArray: IntArray?) {
-        Log.i("IGlyphServiceImpl", "updateLedFrame - ${iArray.contentToString()}")
         if (iArray != null) {
             glyphService?.setFrameColors(iArray)
         }
     }
 
     override fun openSession() {
-        Log.i("IGlyphServiceImpl", "openSession")
         glyphService?.setFrameColors(intArrayOf(0, 0, 0, 0, 0))
     }
 
     override fun closeSession() {
-        Log.i("IGlyphServiceImpl", "closeSession")
         glyphService?.setFrameColors(intArrayOf(0, 0, 0, 0, 0))
     }
 

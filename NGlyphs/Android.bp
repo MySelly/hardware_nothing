@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2024 Paranoid Android
+// Copyright (C) 2024 GlyphManager
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,59 +12,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-java_defaults {
-    name: "glyph_app_defaults",
+android_app {
+    name: "GlyphManager",
+
+    srcs: [
+        "src/**/*.java",
+    ],
+    resource_dirs: ["res"],
+    asset_dirs: ["assets"],
 
     certificate: "platform",
     platform_apis: true,
     privileged: true,
     system_ext_specific: true,
 
-    resource_dirs: [],
-}
-
-android_library {
-    name: "ParanoidGlyph-core",
-    platform_apis: true,
-
-    srcs: [
-        "src/**/*.java",
-        "src/**/*.kt"
-    ],
-
     static_libs: [
         "androidx.core_core",
-        "androidx.preference_preference",
+        "androidx.appcompat_appcompat",
         "com.google.android.material_material",
-        "SettingsLib",
+        "androidx-constraintlayout_constraintlayout",
+        "androidx.recyclerview_recyclerview",
+        "androidx.preference_preference",
         "IGlyphService-java",
+        "KetchumSDK",
+    ],
+
+    optimize: {
+        proguard_flags_files: ["proguard-rules.pro"],
+    },
+
+    required: [
+        "privapp_whitelist_org.aspends.nglyphs.xml",
+        "whitelist_org.aspends.nglyphs.xml",
     ],
 }
 
-android_app {
-    name: "ParanoidGlyphPhone2",
-    defaults: ["glyph_app_defaults"],
-    asset_dirs: ["phone2/assets"],
-    resource_dirs: ["phone2/res"],
-    static_libs: [
-        "ParanoidGlyph-core",
-    ],
-    required: [
-        "privapp_whitelist_co.aospa.glyph.xml",
-        "whitelist_co.aospa.glyph.xml",
-    ],
+java_import {
+    name: "KetchumSDK",
+    jars: ["libs/KetchumSDK.jar"],
+    sdk_version: "current",
 }
 
 prebuilt_etc {
-    name: "privapp_whitelist_co.aospa.glyph.xml",
-    src: "permissions/privapp_whitelist_co.aospa.glyph.xml",
+    name: "privapp_whitelist_org.aspends.nglyphs.xml",
+    src: "permissions/privapp_whitelist_org.aspends.nglyphs.xml",
     sub_dir: "permissions",
     system_ext_specific: true,
 }
 
 prebuilt_etc {
-    name: "whitelist_co.aospa.glyph.xml",
-    src: "permissions/whitelist_co.aospa.glyph.xml",
+    name: "whitelist_org.aspends.nglyphs.xml",
+    src: "permissions/whitelist_org.aspends.nglyphs.xml",
     sub_dir: "sysconfig",
     system_ext_specific: true,
 }
