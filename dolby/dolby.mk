@@ -36,14 +36,8 @@ PRODUCT_PACKAGES += \
 
 # Configs
 PRODUCT_COPY_FILES += \
-    $(DOLBY_PATH)/proprietary/vendor/etc/media_codecs_dolby_audio.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_dolby_audio.xml
-
-PRODUCT_COPY_FILES += \
-    $(DOLBY_PATH)/proprietary/vendor/etc/dolby/dax-default-spatializer.xml:$(TARGET_COPY_OUT_VENDOR)/etc/dolby/dax-default-spatializer.xml \
-    $(DOLBY_PATH)/proprietary/vendor/etc/dolby/dax-default.xml:$(TARGET_COPY_OUT_VENDOR)/etc/dolby/dax-default.xml \
-    $(DOLBY_PATH)/proprietary/vendor/etc/dolby/dax-moto_1.xml:$(TARGET_COPY_OUT_VENDOR)/etc/dolby/dax-moto_1.xml \
-    $(DOLBY_PATH)/proprietary/vendor/etc/dolby/dax-moto_2.xml:$(TARGET_COPY_OUT_VENDOR)/etc/dolby/dax-moto_2.xml \
-    $(DOLBY_PATH)/proprietary/vendor/etc/dolby/dax-moto_3.xml:$(TARGET_COPY_OUT_VENDOR)/etc/dolby/dax-moto_3.xml
+    $(DOLBY_PATH)/configs/dax-default.xml:$(TARGET_COPY_OUT_VENDOR)/etc/dolby/dax-default.xml \
+    $(DOLBY_PATH)/configs/media_codecs_dolby_audio.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs_dolby_audio.xml
 
 # Dolby VNDK libs
 PRODUCT_PACKAGES += \
@@ -59,7 +53,7 @@ PRODUCT_PACKAGES += \
 
 # Spatial Audio
 PRODUCT_COPY_FILES += \
-    $(DOLBY_PATH)/configs/android.hardware.sensor.dynamic.head_tracker.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.dynamic.head_tracker.xml
+    $(DOLBY_PATH)/configs/android.hardware.sensor.dynamic.head_tracker.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.dynamic.head_tracker.xml \
 
 # Spatial Audio: optimize spatializer effect
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -70,7 +64,6 @@ PRODUCT_PROPERTY_OVERRIDES += \
        ro.audio.spatializer_enabled=true \
        ro.audio.headtracking_enabled=true \
        ro.audio.spatializer_transaural_enabled_default=false \
-       ro.audio.stereo_spatialization_enabled=true
        persist.vendor.audio.spatializer.speaker_enabled=true
 
 # Spatial Audio Proprietary blobs

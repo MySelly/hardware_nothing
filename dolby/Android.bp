@@ -17,7 +17,7 @@ soong_namespace {
 
 prebuilt_etc_xml {
     name: "vendor.dolby.hardware.dms@2.0-service.xml",
-    owner: "sony",
+    owner: "motorola",
     src: "proprietary/vendor/etc/vintf/manifest/vendor.dolby.hardware.dms@2.0-service.xml",
     filename_from_src: true,
     sub_dir: "vintf/manifest",
@@ -26,7 +26,7 @@ prebuilt_etc_xml {
 
 prebuilt_etc_xml {
     name: "vendor.dolby.media.c2.xml",
-    owner: "sony",
+    owner: "motorola",
     src: "proprietary/vendor/etc/vintf/manifest/vendor.dolby.media.c2.xml",
     filename_from_src: true,
     sub_dir: "vintf/manifest",
@@ -77,7 +77,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libdapparamstorage-dolby",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -118,7 +118,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libdapparamstorage",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -159,7 +159,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libdlbpreg",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -204,7 +204,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libstagefright_foundation-dolby",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -247,7 +247,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libdlbvol",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -297,7 +297,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libswdap",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -351,7 +351,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libswgamedap",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -451,7 +451,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "vendor.dolby.hardware.dms@2.0-dolby",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -494,7 +494,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "vendor.dolby.hardware.dms@2.0",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -537,7 +537,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libcodec2_soft_ac4dec",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -573,7 +573,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libcodec2_soft_ddpdec",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -609,7 +609,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libcodec2_soft_dolby",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -640,7 +640,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libcodec2_store_dolby",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -650,6 +650,7 @@ cc_prebuilt_library_shared {
                 "proprietary/vendor/lib64/libcodec2_store_dolby.so",
             ],
             shared_libs: [
+                "libdmabufheap",
                 "libbase",
                 "liblog",
                 "libcodec2",
@@ -669,7 +670,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libdeccfg",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -699,7 +700,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "libdlbdsservice",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -732,7 +733,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "liboem_specific",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -742,6 +743,7 @@ cc_prebuilt_library_shared {
                 "proprietary/vendor/lib64/liboem_specific.so",
             ],
             shared_libs: [
+                "libutils",
                 "libc++",
                 "libc",
                 "libm",
@@ -756,7 +758,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_library_shared {
     name: "vendor.dolby.hardware.dms@2.0-impl",
-    owner: "sony",
+    owner: "motorola",
     strip: {
         none: true,
     },
@@ -786,7 +788,7 @@ cc_prebuilt_library_shared {
 
 cc_prebuilt_binary {
     name: "vendor.dolby.hardware.dms@2.0-service",
-    owner: "sony",
+    owner: "motorola",
     target: {
         android_arm64: {
             srcs: [
@@ -818,7 +820,7 @@ cc_prebuilt_binary {
 
 cc_prebuilt_binary {
     name: "vendor.dolby.media.c2@1.0-service",
-    owner: "sony",
+    owner: "motorola",
     target: {
         android_arm64: {
             srcs: [
