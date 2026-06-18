@@ -207,22 +207,24 @@ fun DolbyMainCard(
                     barCount = 11
                 )
 
-                AnimatedVisibility(
-                    visible = isBypassing,
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    Surface(
-                        shape = MaterialTheme.shapes.medium,
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.dolby_bypass_active),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
+                Crossfade(
+                    targetState = isBypassing,
+                    animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                    label = "bypass_overlay"
+                ) { bypassing ->
+                    if (bypassing) {
+                        Surface(
+                            shape = MaterialTheme.shapes.medium,
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.dolby_bypass_active),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            )
+                        }
                     }
                 }
             }

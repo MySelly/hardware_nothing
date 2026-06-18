@@ -94,6 +94,19 @@ sealed class DeviceMemoryUiState {
     data class Error(val message: String) : DeviceMemoryUiState()
 }
 
+data class CustomDolbyPresetSummary(
+    val name: String,
+    val savedFromProfile: Int,
+    val bandMode: BandMode,
+    val savedAt: Long
+)
+
+sealed class CustomPresetUiState {
+    object Loading : CustomPresetUiState()
+    data class Success(val presets: List<CustomDolbyPresetSummary>) : CustomPresetUiState()
+    data class Error(val message: String) : CustomPresetUiState()
+}
+
 sealed class DolbyUiState {
     object Loading : DolbyUiState()
     data class Success(

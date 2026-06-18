@@ -260,6 +260,35 @@ private fun ModernDolbySettingsContent(
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
+                ModernSettingsCard(
+                    title = stringResource(R.string.custom_presets_title),
+                    icon = Icons.Default.Bookmark
+                ) {
+                    Text(
+                        text = stringResource(R.string.custom_presets_home_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Button(
+                        onClick = { navController.navigate("custom_presets") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Icon(Icons.Default.BookmarkBorder, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.custom_presets_manage))
+                    }
+                }
+            }
+        }
+
+        item {
+            AnimatedVisibility(
+                visible = state.settings.enabled,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
                 AppProfileSettingsCard(
                     onManageClick = { navController.navigate("app_profiles") },
                     onManageDeviceMemoryClick = { navController.navigate("device_memory") }

@@ -236,6 +236,21 @@
     <!-- QS tile -->
     <string name="qs_tile_tap_to_enable">Tap to enable</string>
     <string name="qs_tile_profile_switched">Profile: %1$s</string>
-    <string name="qs_tile_state_on">Dolby on, %1$s profile</string>
-    <string name="qs_tile_state_off">Dolby off. Tap to enable, long press to switch profile</string>
+    <string name="qs_tile_state_on">Dolby on, %1$s profile. Tap: next profile. Double tap: off</string>
+    <string name="qs_tile_state_off">Dolby off. Tap to enable</string>
+
+    <!-- Custom Dolby presets -->
+    <string name="custom_presets_title">My presets</string>
+    <string name="custom_presets_home_desc">Save your current EQ and advanced settings as a named preset and apply them anytime.</string>
+    <string name="custom_presets_manage">Manage my presets</string>
+    <string name="custom_presets_desc">Full presets include EQ, IEQ, surround, dialogue enhancer, bass/mid/treble, and more.</string>
+    <string name="custom_presets_empty">No saved presets yet</string>
+    <string name="custom_presets_save_current">Save current</string>
+    <string name="custom_presets_save_title">Save preset</string>
+    <string name="custom_presets_save_desc">Saves all settings for the current profile, including EQ and advanced options.</string>
+    <string name="custom_presets_summary">Saved from %1$s · %2$s</string>
+    <string name="custom_presets_apply">Apply preset</string>
+    <string name="custom_presets_delete_title">Delete preset</string>
+    <string name="custom_presets_delete_message">Delete preset \"%1$s\"? This cannot be undone.</string>
+    <string name="save">Save</string>
 </resources>

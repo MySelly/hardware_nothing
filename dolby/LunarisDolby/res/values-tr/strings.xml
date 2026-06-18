@@ -177,7 +177,22 @@
     <!-- QS tile -->
     <string name="qs_tile_tap_to_enable">Açmak için dokun</string>
     <string name="qs_tile_profile_switched">Profil: %1$s</string>
-    <string name="qs_tile_state_on">Dolby açık, %1$s profili</string>
-    <string name="qs_tile_state_off">Dolby kapalı. Açmak için dokun, profil değiştirmek için basılı tut</string>
+    <string name="qs_tile_state_on">Dolby açık, %1$s profili. Dokun: sonraki profil. Çift dokun: kapat</string>
+    <string name="qs_tile_state_off">Dolby kapalı. Açmak için dokun</string>
+
+    <!-- Custom Dolby presets -->
+    <string name="custom_presets_title">Presetlerim</string>
+    <string name="custom_presets_home_desc">Mevcut EQ ve gelişmiş ayarlarını isimli bir preset olarak kaydet ve istediğin zaman uygula.</string>
+    <string name="custom_presets_manage">Presetlerimi yönet</string>
+    <string name="custom_presets_desc">Tam presetler EQ, IEQ, surround, dialogue enhancer, bass/mid/treble ve daha fazlasını içerir.</string>
+    <string name="custom_presets_empty">Henüz kayıtlı preset yok</string>
+    <string name="custom_presets_save_current">Mevcut ayarı kaydet</string>
+    <string name="custom_presets_save_title">Preset kaydet</string>
+    <string name="custom_presets_save_desc">Geçerli profil için EQ ve gelişmiş ayarlar dahil tüm ayarları kaydeder.</string>
+    <string name="custom_presets_summary">%1$s profilinden · %2$s</string>
+    <string name="custom_presets_apply">Preset uygula</string>
+    <string name="custom_presets_delete_title">Preseti sil</string>
+    <string name="custom_presets_delete_message">\"%1$s\" preseti silinsin mi? Bu işlem geri alınamaz.</string>
+    <string name="save">Kaydet</string>
 
 </resources>

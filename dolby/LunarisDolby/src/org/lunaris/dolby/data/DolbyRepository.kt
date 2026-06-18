@@ -28,6 +28,10 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     
     private val defaultPrefs = context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
     private val presetsPrefs = context.getSharedPreferences(DolbyConstants.PREF_FILE_PRESETS, Context.MODE_PRIVATE)
+    private val customPresetsPrefs = context.getSharedPreferences(
+        DolbyConstants.PREF_FILE_CUSTOM_PRESETS,
+        Context.MODE_PRIVATE
+    )
     
     private val deviceStateManager = DeviceStateManager(context)
 
@@ -818,6 +822,64 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
         } catch (e: Exception) {
             DolbyConstants.dlog(TAG, "Error clearing user presets: ${e.message}")
         }
+    }
+
+    fun getCustomDolbyPresets(): List<CustomDolbyPresetSummary> {
+        return customPresetsPrefs.all.mapNotNull { (name, value) ->
+            try {
+                val json = JSONObject(value as String)
+                CustomDolbyPresetSummary(
+                    name = name,
+                    savedFromProfile = json.optInt("savedFromProfile", 0),
+                    bandMode = BandMode.fromValue(json.optString("bandMode", "10")),
+                    savedAt = json.optLong("savedAt", 0L)
+                )
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error parsing custom preset $name: ${e.message}")
+                null
+            }
+        }.sortedByDescending { it.savedAt }
+    }
+
+    fun saveCustomDolbyPreset(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) {
+            throw IllegalArgumentException("Preset name cannot be empty")
+        }
+        if (trimmed.length > 50) {
+            throw IllegalArgumentException("Preset name too long")
+        }
+        if (customPresetsPrefs.contains(trimmed)) {
+            throw IllegalArgumentException("Preset name already exists")
+        }
+
+        val profile = getCurrentProfile()
+        val snapshot = JSONObject().apply {
+            put("savedFromProfile", profile)
+            put("bandMode", getBandMode().value)
+            put("savedAt", System.currentTimeMillis())
+            put("settings", exportProfilePrefsJson(profile))
+        }
+        customPresetsPrefs.edit().putString(trimmed, snapshot.toString()).apply()
+        DolbyConstants.dlog(TAG, "Saved custom Dolby preset: $trimmed")
+    }
+
+    fun applyCustomDolbyPreset(name: String) {
+        val jsonString = customPresetsPrefs.getString(name, null)
+            ?: throw IllegalArgumentException("Preset not found")
+        val json = JSONObject(jsonString)
+        val profile = getCurrentProfile()
+        val settings = json.getJSONObject("settings")
+        restoreProfilePrefs(profile, settings)
+        setBandMode(BandMode.fromValue(json.getString("bandMode")))
+        restoreProfilePreset(profile)
+        applyProfileSettings(profile)
+        DolbyConstants.dlog(TAG, "Applied custom Dolby preset: $name to profile $profile")
+    }
+
+    fun deleteCustomDolbyPreset(name: String) {
+        customPresetsPrefs.edit().remove(name).apply()
+        DolbyConstants.dlog(TAG, "Deleted custom Dolby preset: $name")
     }
 
     fun exportFullBackupJson(): String {

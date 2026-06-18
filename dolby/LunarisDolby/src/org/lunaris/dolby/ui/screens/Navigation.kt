@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import org.lunaris.dolby.ui.viewmodel.AppProfileViewModel
+import org.lunaris.dolby.ui.viewmodel.CustomPresetViewModel
 import org.lunaris.dolby.ui.viewmodel.DeviceMemoryViewModel
 import org.lunaris.dolby.ui.viewmodel.DolbyViewModel
 import org.lunaris.dolby.ui.viewmodel.EqualizerViewModel
@@ -23,6 +24,7 @@ sealed class Screen(val route: String) {
     object Advanced : Screen("advanced")
     object AppProfiles : Screen("app_profiles")
     object DeviceMemory : Screen("device_memory")
+    object CustomPresets : Screen("custom_presets")
     object ImportExport : Screen("import_export")
 }
 
@@ -90,6 +92,22 @@ fun DolbyNavHost(
             )
         }
         
+        composable(Screen.CustomPresets.route) {
+            val context = LocalContext.current
+            val customPresetViewModel: CustomPresetViewModel = viewModel(
+                factory = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(
+                    context.applicationContext as android.app.Application
+                )
+            )
+
+            CustomPresetsScreen(
+                viewModel = customPresetViewModel,
+                dolbyViewModel = dolbyViewModel,
+                equalizerViewModel = equalizerViewModel,
+                navController = navController
+            )
+        }
+
         composable(Screen.ImportExport.route) {
             PresetImportExportScreen(
                 viewModel = equalizerViewModel,
