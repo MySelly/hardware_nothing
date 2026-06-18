@@ -158,4 +158,16 @@
     <string name="device_memory_clear_all_message">Tüm cihaz Dolby anlık görüntüleri silinsin mi? Bu işlem geri alınamaz.</string>
     <string name="back">Geri</string>
 
+    <!-- Full Dolby backup -->
+    <string name="full_backup_title">Tam Dolby yedeği</string>
+    <string name="full_backup_description">Tüm Dolby ayarlarını dışa aktar veya geri yükle: profiller, EQ, gelişmiş ayarlar ve özel presetler.</string>
+    <string name="full_backup_export">Tümünü dışa aktar</string>
+    <string name="full_backup_import">İçe aktar</string>
+    <string name="full_backup_export_success">Tam yedek başarıyla dışa aktarıldı</string>
+    <string name="full_backup_export_failed">Dışa aktarma başarısız: %1$s</string>
+    <string name="full_backup_import_title">Tam yedek geri yüklensin mi?</string>
+    <string name="full_backup_import_message">Mevcut Dolby profilleri, gelişmiş ayarlar ve özel EQ presetleri değiştirilecek. Bu işlem geri alınamaz.</string>
+    <string name="full_backup_import_success">Tam yedek başarıyla geri yüklendi</string>
+    <string name="full_backup_import_failed">İçe aktarma başarısız: %1$s</string>
+
 </resources>

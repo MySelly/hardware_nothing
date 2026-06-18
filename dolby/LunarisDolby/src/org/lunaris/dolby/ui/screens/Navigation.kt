@@ -93,6 +93,7 @@ fun DolbyNavHost(
         composable(Screen.ImportExport.route) {
             PresetImportExportScreen(
                 viewModel = equalizerViewModel,
+                dolbyViewModel = dolbyViewModel,
                 navController = navController
             )
         }

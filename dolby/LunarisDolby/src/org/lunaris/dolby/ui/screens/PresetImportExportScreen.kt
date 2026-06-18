@@ -26,10 +26,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import org.lunaris.dolby.R
+import org.lunaris.dolby.data.DolbyConfigExportManager
 import org.lunaris.dolby.data.PresetExportManager
 import org.lunaris.dolby.domain.models.EqualizerPreset
 import org.lunaris.dolby.domain.models.EqualizerUiState
 import org.lunaris.dolby.ui.components.ModernConfirmDialog
+import org.lunaris.dolby.ui.viewmodel.DolbyViewModel
 import org.lunaris.dolby.ui.viewmodel.EqualizerViewModel
 import org.lunaris.dolby.utils.ToastHelper
 
@@ -37,18 +39,56 @@ import org.lunaris.dolby.utils.ToastHelper
 @Composable
 fun PresetImportExportScreen(
     viewModel: EqualizerViewModel,
+    dolbyViewModel: DolbyViewModel,
     navController: NavController
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val exportManager = remember { PresetExportManager(context) }
+    val configExportManager = remember { DolbyConfigExportManager(context) }
+    DisposableEffect(Unit) {
+        onDispose { configExportManager.close() }
+    }
     val uiState by viewModel.uiState.collectAsState()
     var selectedPreset by remember { mutableStateOf<EqualizerPreset?>(null) }
     var showExportOptions by remember { mutableStateOf(false) }
     var showBatchExport by remember { mutableStateOf(false) }
+    var showFullBackupImportConfirm by remember { mutableStateOf(false) }
+    var pendingFullBackupUri by remember { mutableStateOf<android.net.Uri?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var presetToDelete by remember { mutableStateOf<EqualizerPreset?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+
+    val fullBackupExportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let {
+            scope.launch {
+                isLoading = true
+                configExportManager.exportToFile(it).fold(
+                    onSuccess = {
+                        ToastHelper.showToast(context, context.getString(R.string.full_backup_export_success))
+                    },
+                    onFailure = { e ->
+                        ToastHelper.showToast(
+                            context,
+                            context.getString(R.string.full_backup_export_failed, e.message ?: "")
+                        )
+                    }
+                )
+                isLoading = false
+            }
+        }
+    }
+
+    val fullBackupImportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            pendingFullBackupUri = it
+            showFullBackupImportConfirm = true
+        }
+    }
     
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -196,6 +236,74 @@ fun PresetImportExportScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.extraLarge,
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(20.dp)) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(bottom = 16.dp)
+                                    ) {
+                                        Surface(
+                                            modifier = Modifier.size(40.dp),
+                                            shape = MaterialTheme.shapes.medium,
+                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    Icons.Default.Backup,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            stringResource(R.string.full_backup_title),
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                    Text(
+                                        stringResource(R.string.full_backup_description),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(bottom = 16.dp)
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Button(
+                                            onClick = {
+                                                fullBackupExportLauncher.launch("dolby_full_backup.ldb")
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            shape = MaterialTheme.shapes.medium
+                                        ) {
+                                            Icon(Icons.Default.Upload, contentDescription = null)
+                                            Spacer(Modifier.width(8.dp))
+                                            Text(stringResource(R.string.full_backup_export))
+                                        }
+                                        OutlinedButton(
+                                            onClick = { fullBackupImportLauncher.launch("*/*") },
+                                            modifier = Modifier.weight(1f),
+                                            shape = MaterialTheme.shapes.medium
+                                        ) {
+                                            Icon(Icons.Default.Download, contentDescription = null)
+                                            Spacer(Modifier.width(8.dp))
+                                            Text(stringResource(R.string.full_backup_import))
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
@@ -458,6 +566,44 @@ fun PresetImportExportScreen(
         )
     }
     
+    if (showFullBackupImportConfirm) {
+        ModernConfirmDialog(
+            title = stringResource(R.string.full_backup_import_title),
+            message = stringResource(R.string.full_backup_import_message),
+            icon = Icons.Default.Warning,
+            onConfirm = {
+                pendingFullBackupUri?.let { uri ->
+                    scope.launch {
+                        isLoading = true
+                        configExportManager.importFromFile(uri).fold(
+                            onSuccess = {
+                                viewModel.loadEqualizer()
+                                dolbyViewModel.loadSettings()
+                                ToastHelper.showToast(
+                                    context,
+                                    context.getString(R.string.full_backup_import_success)
+                                )
+                            },
+                            onFailure = { e ->
+                                ToastHelper.showToast(
+                                    context,
+                                    context.getString(R.string.full_backup_import_failed, e.message ?: "")
+                                )
+                            }
+                        )
+                        isLoading = false
+                    }
+                }
+                showFullBackupImportConfirm = false
+                pendingFullBackupUri = null
+            },
+            onDismiss = {
+                showFullBackupImportConfirm = false
+                pendingFullBackupUri = null
+            }
+        )
+    }
+
     if (showDeleteDialog && presetToDelete != null) {
         ModernConfirmDialog(
             title = "Delete Preset",

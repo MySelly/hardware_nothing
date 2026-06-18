@@ -18,6 +18,8 @@ import org.lunaris.dolby.domain.models.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.json.JSONArray
+import org.json.JSONObject
 
 class DolbyRepository(private val context: Context) : AutoCloseable {
 
@@ -764,6 +766,142 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
         }
     }
 
+    fun clearAllUserPresets() {
+        try {
+            presetsPrefs.edit().clear().apply()
+            synchronized(presetCacheLock) {
+                cachedPresets = null
+            }
+        } catch (e: Exception) {
+            DolbyConstants.dlog(TAG, "Error clearing user presets: ${e.message}")
+        }
+    }
+
+    fun exportFullBackupJson(): String {
+        val profileIds = context.resources.getStringArray(R.array.dolby_profile_values)
+            .map { it.toInt() }
+
+        val global = JSONObject().apply {
+            put(DolbyConstants.PREF_ENABLE, getDolbyEnabled())
+            put(DolbyConstants.PREF_PROFILE, getCurrentProfile())
+            put(DolbyConstants.PREF_BAND_MODE, getBandMode().value)
+        }
+
+        val profiles = JSONArray()
+        profileIds.forEach { profileId ->
+            profiles.put(exportProfilePrefsJson(profileId))
+        }
+
+        val userPresets = JSONArray()
+        getUserPresets().forEach { preset ->
+            userPresets.put(JSONObject().apply {
+                put("name", preset.name)
+                put("bandMode", preset.bandMode.value)
+                val gainsArray = JSONArray()
+                preset.bandGains.forEach { bandGain ->
+                    gainsArray.put(JSONObject().apply {
+                        put("frequency", bandGain.frequency)
+                        put("gain", bandGain.gain)
+                    })
+                }
+                put("bandGains", gainsArray)
+            })
+        }
+
+        return JSONObject().apply {
+            put("type", BACKUP_TYPE)
+            put("version", BACKUP_VERSION)
+            put("timestamp", System.currentTimeMillis())
+            put("createdBy", "Lunaris Dolby Manager")
+            put("global", global)
+            put("profiles", profiles)
+            put("user_presets", userPresets)
+        }.toString(2)
+    }
+
+    fun importFullBackup(jsonString: String) {
+        val json = JSONObject(jsonString)
+        if (json.optString("type") != BACKUP_TYPE) {
+            throw IllegalArgumentException("Not a Dolby full backup file")
+        }
+        val version = json.optInt("version", 0)
+        if (version > BACKUP_VERSION) {
+            throw IllegalArgumentException("Backup version not supported")
+        }
+
+        val global = json.getJSONObject("global")
+        val bandMode = BandMode.fromValue(global.getString(DolbyConstants.PREF_BAND_MODE))
+        setBandMode(bandMode)
+
+        val profiles = json.getJSONArray("profiles")
+        for (i in 0 until profiles.length()) {
+            val profileJson = profiles.getJSONObject(i)
+            val profileId = profileJson.getInt("id")
+            restoreProfilePrefs(profileId, profileJson)
+            applyProfileSettings(profileId)
+        }
+
+        if (json.has("user_presets")) {
+            clearAllUserPresets()
+            val presets = json.getJSONArray("user_presets")
+            for (i in 0 until presets.length()) {
+                val presetJson = presets.getJSONObject(i)
+                val name = presetJson.getString("name")
+                val presetBandMode = BandMode.fromValue(presetJson.getString("bandMode"))
+                val gainsArray = presetJson.getJSONArray("bandGains")
+                val bandGains = buildList {
+                    for (j in 0 until gainsArray.length()) {
+                        val gainObj = gainsArray.getJSONObject(j)
+                        add(
+                            BandGain(
+                                frequency = gainObj.getInt("frequency"),
+                                gain = gainObj.getInt("gain")
+                            )
+                        )
+                    }
+                }
+                addUserPreset(name, bandGains, presetBandMode)
+            }
+        }
+
+        val targetProfile = global.getInt(DolbyConstants.PREF_PROFILE)
+        setCurrentProfile(targetProfile)
+        setDolbyEnabled(global.getBoolean(DolbyConstants.PREF_ENABLE))
+    }
+
+    private fun exportProfilePrefsJson(profile: Int): JSONObject {
+        val prefs = getProfilePrefs(profile)
+        return JSONObject().apply {
+            put("id", profile)
+            prefs.all.forEach { (key, value) ->
+                when (value) {
+                    is Boolean -> put(key, value)
+                    is Int -> put(key, value)
+                    is Long -> put(key, value)
+                    is Float -> put(key, value.toDouble())
+                    is String -> put(key, value)
+                }
+            }
+        }
+    }
+
+    private fun restoreProfilePrefs(profile: Int, json: JSONObject) {
+        val editor = getProfilePrefs(profile).edit()
+        val keys = json.keys()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            if (key == "id") continue
+            when (val value = json.get(key)) {
+                is Boolean -> editor.putBoolean(key, value)
+                is Int -> editor.putInt(key, value)
+                is Long -> editor.putLong(key, value)
+                is String -> editor.putString(key, value)
+                is Number -> editor.putInt(key, value.toInt())
+            }
+        }
+        editor.apply()
+    }
+
     fun resetProfile(profile: Int) {
         if (isReleased) return
         
@@ -948,6 +1086,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     companion object {
         private const val TAG = "DolbyRepository"
         private const val EFFECT_PRIORITY = 100
+        private const val BACKUP_TYPE = "dolby_full_backup"
+        private const val BACKUP_VERSION = 1
 
         private val OUTPUT_DEVICE_PRIORITY = listOf(
             AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,

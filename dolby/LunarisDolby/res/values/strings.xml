@@ -216,4 +216,16 @@
     <string name="device_memory_clear_all">Clear all saved devices</string>
     <string name="device_memory_clear_all_message">Delete all per-device Dolby snapshots? This cannot be undone.</string>
     <string name="back">Back</string>
+
+    <!-- Full Dolby backup -->
+    <string name="full_backup_title">Full Dolby backup</string>
+    <string name="full_backup_description">Export or restore all Dolby settings: profiles, EQ, advanced settings, and custom presets.</string>
+    <string name="full_backup_export">Export all</string>
+    <string name="full_backup_import">Import</string>
+    <string name="full_backup_export_success">Full backup exported successfully</string>
+    <string name="full_backup_export_failed">Export failed: %1$s</string>
+    <string name="full_backup_import_title">Restore full backup?</string>
+    <string name="full_backup_import_message">This will replace your current Dolby profiles, advanced settings, and custom EQ presets. This cannot be undone.</string>
+    <string name="full_backup_import_success">Full backup restored successfully</string>
+    <string name="full_backup_import_failed">Import failed: %1$s</string>
 </resources>
