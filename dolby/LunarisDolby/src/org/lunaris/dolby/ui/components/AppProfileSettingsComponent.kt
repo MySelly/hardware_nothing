@@ -31,6 +31,7 @@ import org.lunaris.dolby.DolbyConstants
 @Composable
 fun AppProfileSettingsCard(
     onManageClick: () -> Unit,
+    onManageDeviceMemoryClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -351,6 +352,26 @@ fun AppProfileSettingsCard(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
+
+            AnimatedVisibility(visible = isDeviceStateMemoryEnabled) {
+                OutlinedButton(
+                    onClick = onManageDeviceMemoryClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Icon(
+                        Icons.Default.DevicesOther,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.device_memory_manage))
+                }
+            }
+
+            AnimatedVisibility(visible = isDeviceStateMemoryEnabled) {
+                Spacer(modifier = Modifier.height(12.dp))
+            }
             
             Button(
                 onClick = onManageClick,

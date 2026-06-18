@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import org.lunaris.dolby.ui.viewmodel.AppProfileViewModel
+import org.lunaris.dolby.ui.viewmodel.DeviceMemoryViewModel
 import org.lunaris.dolby.ui.viewmodel.DolbyViewModel
 import org.lunaris.dolby.ui.viewmodel.EqualizerViewModel
 
@@ -21,6 +22,7 @@ sealed class Screen(val route: String) {
     object Equalizer : Screen("equalizer")
     object Advanced : Screen("advanced")
     object AppProfiles : Screen("app_profiles")
+    object DeviceMemory : Screen("device_memory")
     object ImportExport : Screen("import_export")
 }
 
@@ -70,6 +72,20 @@ fun DolbyNavHost(
             
             AppProfileScreen(
                 viewModel = appProfileViewModel,
+                navController = navController
+            )
+        }
+
+        composable(Screen.DeviceMemory.route) {
+            val context = LocalContext.current
+            val deviceMemoryViewModel: DeviceMemoryViewModel = viewModel(
+                factory = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(
+                    context.applicationContext as android.app.Application
+                )
+            )
+
+            DeviceMemoryScreen(
+                viewModel = deviceMemoryViewModel,
                 navController = navController
             )
         }

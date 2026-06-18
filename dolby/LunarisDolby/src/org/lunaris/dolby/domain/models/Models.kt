@@ -77,6 +77,23 @@ data class ActiveAudioDevice(
     }
 }
 
+data class DeviceSnapshotSummary(
+    val deviceKey: String,
+    val displayName: String,
+    val profile: Int,
+    val dolbyEnabled: Boolean,
+    val isCurrentDevice: Boolean
+)
+
+sealed class DeviceMemoryUiState {
+    object Loading : DeviceMemoryUiState()
+    data class Success(
+        val snapshots: List<DeviceSnapshotSummary>,
+        val isMemoryEnabled: Boolean
+    ) : DeviceMemoryUiState()
+    data class Error(val message: String) : DeviceMemoryUiState()
+}
+
 sealed class DolbyUiState {
     object Loading : DolbyUiState()
     data class Success(

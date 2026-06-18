@@ -198,4 +198,22 @@
     <string name="audio_output_bluetooth">Bluetooth</string>
     <string name="audio_output_usb">USB audio</string>
     <string name="audio_output_unknown">Audio device</string>
+
+    <!-- Device memory management -->
+    <string name="device_memory_manage">Manage saved devices</string>
+    <string name="device_memory_manage_title">Saved audio devices</string>
+    <string name="device_memory_manage_desc">Dolby settings saved for each audio device you have used. You can restore or delete them here.</string>
+    <string name="device_memory_empty">No saved devices yet</string>
+    <string name="device_memory_empty_desc">Connect headphones or speakers with per-device memory enabled to save settings automatically.</string>
+    <string name="device_memory_disabled_hint">Per-device memory is disabled. Enable it on the home screen to start saving settings per device.</string>
+    <string name="device_memory_current_device">Currently connected</string>
+    <string name="device_memory_snapshot_summary">Profile: %1$s · Dolby: %2$s</string>
+    <string name="device_memory_restore_now">Restore settings</string>
+    <string name="device_memory_restore_title">Restore device settings?</string>
+    <string name="device_memory_restore_message">Apply saved Dolby settings for %1$s to the current audio output.</string>
+    <string name="device_memory_delete_title">Delete saved device</string>
+    <string name="device_memory_delete_message">Remove saved Dolby settings for %1$s? This cannot be undone.</string>
+    <string name="device_memory_clear_all">Clear all saved devices</string>
+    <string name="device_memory_clear_all_message">Delete all per-device Dolby snapshots? This cannot be undone.</string>
+    <string name="back">Back</string>
 </resources>

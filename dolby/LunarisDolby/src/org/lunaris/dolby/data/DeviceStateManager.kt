@@ -8,10 +8,12 @@ package org.lunaris.dolby.data
 import android.content.Context
 import android.content.SharedPreferences
 import android.media.AudioDeviceInfo
+import android.media.AudioManager
 
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.domain.models.BandGain
 import org.lunaris.dolby.domain.models.BandMode
+import org.lunaris.dolby.domain.models.DeviceSnapshotSummary
 
 class DeviceStateManager(private val context: Context) {
 
@@ -181,6 +183,54 @@ class DeviceStateManager(private val context: Context) {
     fun clearSnapshot(deviceKey: String) {
         getDevicePrefs(deviceKey).edit().clear().apply()
         DolbyConstants.dlog(TAG, "Snapshot cleared for device=$deviceKey")
+    }
+
+    fun clearAllSnapshots() {
+        getAllDeviceKeys().forEach { clearSnapshot(it) }
+        DolbyConstants.dlog(TAG, "All device snapshots cleared")
+    }
+
+    fun getSnapshotSummary(deviceKey: String, currentDeviceKey: String?): DeviceSnapshotSummary {
+        val prefs = getDevicePrefs(deviceKey)
+        return DeviceSnapshotSummary(
+            deviceKey = deviceKey,
+            displayName = deviceKeyToDisplayName(deviceKey),
+            profile = prefs.getInt(KEY_PROFILE, 0),
+            dolbyEnabled = prefs.getBoolean(KEY_DOLBY_ENABLED, true),
+            isCurrentDevice = deviceKey == currentDeviceKey
+        )
+    }
+
+    fun getSnapshotSummaries(currentDeviceKey: String?): List<DeviceSnapshotSummary> {
+        return getAllDeviceKeys()
+            .filter { hasSnapshot(it) }
+            .map { getSnapshotSummary(it, currentDeviceKey) }
+            .sortedWith(
+                compareByDescending<DeviceSnapshotSummary> { it.isCurrentDevice }
+                    .thenBy { it.displayName.lowercase() }
+            )
+    }
+
+    fun deviceKeyToDisplayName(deviceKey: String): String {
+        return when (deviceKey) {
+            "builtin_speaker" -> "Phone Speaker"
+            "wired_headphones" -> "Wired Headphones"
+            else -> when {
+                deviceKey.startsWith("bt_") -> {
+                    val address = deviceKey.removePrefix("bt_").replace("_", ":")
+                    findDeviceNameByAddress(address) ?: "Bluetooth ($address)"
+                }
+                deviceKey.startsWith("device_type_") -> "Audio Device"
+                else -> deviceKey
+            }
+        }
+    }
+
+    private fun findDeviceNameByAddress(address: String): String? {
+        val audioManager = context.getSystemService(AudioManager::class.java) ?: return null
+        return audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+            .firstOrNull { it.address == address }
+            ?.productName?.toString()?.takeIf { it.isNotBlank() }
     }
 
     fun getAllDeviceKeys(): List<String> {

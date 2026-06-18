@@ -260,7 +260,8 @@ private fun ModernDolbySettingsContent(
                 exit = fadeOut() + shrinkVertically()
             ) {
                 AppProfileSettingsCard(
-                    onManageClick = { navController.navigate("app_profiles") }
+                    onManageClick = { navController.navigate("app_profiles") },
+                    onManageDeviceMemoryClick = { navController.navigate("device_memory") }
                 )
             }
         }

@@ -140,4 +140,22 @@
     <string name="audio_output_usb">USB ses</string>
     <string name="audio_output_unknown">Ses cihazı</string>
 
+    <!-- Device memory management -->
+    <string name="device_memory_manage">Kayıtlı cihazları yönet</string>
+    <string name="device_memory_manage_title">Kayıtlı ses cihazları</string>
+    <string name="device_memory_manage_desc">Kullandığın her ses cihazı için kaydedilen Dolby ayarları. Buradan geri yükleyebilir veya silebilirsin.</string>
+    <string name="device_memory_empty">Henüz kayıtlı cihaz yok</string>
+    <string name="device_memory_empty_desc">Cihaz başına hafıza açıkken kulaklık veya hoparlör bağlandığında ayarlar otomatik kaydedilir.</string>
+    <string name="device_memory_disabled_hint">Cihaz başına hafıza kapalı. Kaydetmeye başlamak için ana ekrandan etkinleştir.</string>
+    <string name="device_memory_current_device">Şu an bağlı</string>
+    <string name="device_memory_snapshot_summary">Profil: %1$s · Dolby: %2$s</string>
+    <string name="device_memory_restore_now">Ayarları geri yükle</string>
+    <string name="device_memory_restore_title">Cihaz ayarları geri yüklensin mi?</string>
+    <string name="device_memory_restore_message">%1$s için kaydedilen Dolby ayarları mevcut ses çıkışına uygulansın mı?</string>
+    <string name="device_memory_delete_title">Kayıtlı cihazı sil</string>
+    <string name="device_memory_delete_message">%1$s için kaydedilen Dolby ayarları silinsin mi? Bu işlem geri alınamaz.</string>
+    <string name="device_memory_clear_all">Tüm kayıtlı cihazları temizle</string>
+    <string name="device_memory_clear_all_message">Tüm cihaz Dolby anlık görüntüleri silinsin mi? Bu işlem geri alınamaz.</string>
+    <string name="back">Geri</string>
+
 </resources>
