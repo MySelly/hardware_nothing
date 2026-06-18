@@ -128,6 +128,14 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun setDolbyBypass(bypass: Boolean) {
+        try {
+            repository.setDolbyBypass(bypass)
+        } catch (e: Exception) {
+            DolbyConstants.dlog(TAG, "Error setting Dolby bypass: ${e.message}")
+        }
+    }
+
     fun setProfile(profile: Int) {
         viewModelScope.launch {
             try {

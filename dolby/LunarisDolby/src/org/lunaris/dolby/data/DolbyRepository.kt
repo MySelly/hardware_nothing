@@ -47,6 +47,7 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     
     private var cachedPresets: List<EqualizerPreset>? = null
     private val presetCacheLock = Any()
+    private var isBypassActive = false
 
     private fun createDolbyEffect(): DolbyAudioEffect {
         return try {
@@ -193,8 +194,31 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
             checkEffect()
             dolbyEffect.dsOn = enabled
             defaultPrefs.edit().putBoolean(DolbyConstants.PREF_ENABLE, enabled).apply()
+            isBypassActive = false
         } catch (e: Exception) {
             DolbyConstants.dlog(TAG, "Error setting Dolby enabled: ${e.message}")
+        }
+    }
+
+    fun setDolbyBypass(bypass: Boolean) {
+        if (isReleased) return
+
+        try {
+            checkEffect()
+            if (bypass) {
+                if (!isBypassActive && defaultPrefs.getBoolean(DolbyConstants.PREF_ENABLE, false)) {
+                    dolbyEffect.dsOn = false
+                    isBypassActive = true
+                    DolbyConstants.dlog(TAG, "Dolby bypass active")
+                }
+            } else if (isBypassActive) {
+                val savedEnabled = defaultPrefs.getBoolean(DolbyConstants.PREF_ENABLE, false)
+                dolbyEffect.dsOn = savedEnabled
+                isBypassActive = false
+                DolbyConstants.dlog(TAG, "Dolby bypass released")
+            }
+        } catch (e: Exception) {
+            DolbyConstants.dlog(TAG, "Error setting Dolby bypass: ${e.message}")
         }
     }
 

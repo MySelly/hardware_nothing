@@ -228,4 +228,8 @@
     <string name="full_backup_import_message">This will replace your current Dolby profiles, advanced settings, and custom EQ presets. This cannot be undone.</string>
     <string name="full_backup_import_success">Full backup restored successfully</string>
     <string name="full_backup_import_failed">Import failed: %1$s</string>
+
+    <!-- A/B bypass -->
+    <string name="dolby_bypass_hold">Hold to compare without Dolby</string>
+    <string name="dolby_bypass_active">Comparing without Dolby…</string>
 </resources>

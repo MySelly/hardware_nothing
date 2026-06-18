@@ -170,4 +170,8 @@
     <string name="full_backup_import_success">Tam yedek başarıyla geri yüklendi</string>
     <string name="full_backup_import_failed">İçe aktarma başarısız: %1$s</string>
 
+    <!-- A/B bypass -->
+    <string name="dolby_bypass_hold">Basılı tut: Dolby olmadan dinle</string>
+    <string name="dolby_bypass_active">Dolby olmadan karşılaştırılıyor…</string>
+
 </resources>

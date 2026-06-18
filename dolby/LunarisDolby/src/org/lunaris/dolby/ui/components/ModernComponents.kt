@@ -163,10 +163,12 @@ fun ActiveAudioDeviceCard(
 fun DolbyMainCard(
     enabled: Boolean,
     onEnabledChange: (Boolean) -> Unit,
+    onBypassChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val haptic = rememberHapticFeedback()
     val scope = rememberCoroutineScope()
+    var isBypassing by remember { mutableStateOf(false) }
     
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -183,10 +185,17 @@ fun DolbyMainCard(
                     .height(120.dp)
                     .background(
                         brush = Brush.linearGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
-                                MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)
-                            )
+                            colors = if (isBypassing) {
+                                listOf(
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
+                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                )
+                            } else {
+                                listOf(
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                                    MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)
+                                )
+                            }
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -197,6 +206,25 @@ fun DolbyMainCard(
                     height = 64.dp,
                     barCount = 11
                 )
+
+                AnimatedVisibility(
+                    visible = isBypassing,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Surface(
+                        shape = MaterialTheme.shapes.medium,
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.dolby_bypass_active),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+                }
             }
             
             Column(
@@ -216,8 +244,11 @@ fun DolbyMainCard(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = if (enabled) stringResource(R.string.dolby_on) 
-                                  else stringResource(R.string.dolby_off),
+                            text = when {
+                                isBypassing -> stringResource(R.string.dolby_bypass_active)
+                                enabled -> stringResource(R.string.dolby_on)
+                                else -> stringResource(R.string.dolby_off)
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -252,6 +283,58 @@ fun DolbyMainCard(
                             }
                         }
                     )
+                }
+
+                AnimatedVisibility(visible = enabled) {
+                    Column {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onPress = {
+                                            isBypassing = true
+                                            scope.launch {
+                                                haptic.performHaptic(HapticFeedbackHelper.HapticIntensity.HEAVY_CLICK)
+                                            }
+                                            onBypassChange(true)
+                                            tryAwaitRelease()
+                                            isBypassing = false
+                                            onBypassChange(false)
+                                        }
+                                    )
+                                },
+                            shape = MaterialTheme.shapes.medium,
+                            color = if (isBypassing) {
+                                MaterialTheme.colorScheme.secondaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                            }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.TouchApp,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(R.string.dolby_bypass_hold),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
