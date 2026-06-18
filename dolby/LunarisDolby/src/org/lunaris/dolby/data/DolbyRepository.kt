@@ -251,6 +251,25 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
         }
     }
 
+    fun cycleToNextProfile(): Int {
+        val profileIds = context.resources.getStringArray(R.array.dolby_profile_values)
+            .map { it.toInt() }
+        if (profileIds.isEmpty()) return getCurrentProfile()
+
+        val current = getCurrentProfile()
+        val currentIndex = profileIds.indexOf(current)
+        val nextProfile = profileIds[(currentIndex + 1) % profileIds.size]
+        setCurrentProfile(nextProfile)
+        return nextProfile
+    }
+
+    fun getProfileDisplayName(profile: Int): String {
+        val profiles = context.resources.getStringArray(R.array.dolby_profile_entries)
+        val profileValues = context.resources.getStringArray(R.array.dolby_profile_values)
+        val index = profileValues.indexOf(profile.toString())
+        return if (index != -1) profiles[index] else context.getString(R.string.dolby_unknown)
+    }
+
     private fun restoreProfilePreset(profile: Int) {
         try {
             val prefs = getProfilePrefs(profile)

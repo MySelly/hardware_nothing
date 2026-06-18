@@ -174,4 +174,10 @@
     <string name="dolby_bypass_hold">Basılı tut: Dolby olmadan dinle</string>
     <string name="dolby_bypass_active">Dolby olmadan karşılaştırılıyor…</string>
 
+    <!-- QS tile -->
+    <string name="qs_tile_tap_to_enable">Açmak için dokun</string>
+    <string name="qs_tile_profile_switched">Profil: %1$s</string>
+    <string name="qs_tile_state_on">Dolby açık, %1$s profili</string>
+    <string name="qs_tile_state_off">Dolby kapalı. Açmak için dokun, profil değiştirmek için basılı tut</string>
+
 </resources>

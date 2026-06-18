@@ -5,11 +5,12 @@
 
 package org.lunaris.dolby.tile
 
-import android.content.res.Resources
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import android.widget.Toast
 import org.lunaris.dolby.R
 import org.lunaris.dolby.data.DolbyRepository
+import org.lunaris.dolby.service.DolbyEffectService
 
 class DolbyTileService : TileService() {
 
@@ -21,31 +22,57 @@ class DolbyTileService : TileService() {
     }
 
     override fun onClick() {
-        super.onClick()
-        val enabled = repository.getDolbyEnabled()
-        repository.setDolbyEnabled(!enabled)
-        updateTile()
+        unlockAndRun {
+            val enabled = repository.getDolbyEnabled()
+            val newState = !enabled
+            repository.setDolbyEnabled(newState)
+            if (newState) {
+                DolbyEffectService.start(applicationContext)
+            } else {
+                DolbyEffectService.stop(applicationContext)
+            }
+            updateTile()
+        }
+    }
+
+    override fun onLongClick() {
+        unlockAndRun {
+            val nextProfile = repository.cycleToNextProfile()
+            if (!repository.getDolbyEnabled()) {
+                repository.setDolbyEnabled(true)
+                DolbyEffectService.start(applicationContext)
+            }
+            val profileName = repository.getProfileDisplayName(nextProfile)
+            Toast.makeText(
+                applicationContext,
+                getString(R.string.qs_tile_profile_switched, profileName),
+                Toast.LENGTH_SHORT
+            ).show()
+            updateTile()
+        }
     }
 
     private fun updateTile() {
         qsTile?.apply {
             val enabled = repository.getDolbyEnabled()
+            val profileName = getProfileName()
             state = if (enabled) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
-            subtitle = getProfileName()
+            label = getString(R.string.dolby_title)
+            subtitle = if (enabled) {
+                profileName
+            } else {
+                getString(R.string.qs_tile_tap_to_enable)
+            }
+            stateDescription = if (enabled) {
+                getString(R.string.qs_tile_state_on, profileName)
+            } else {
+                getString(R.string.qs_tile_state_off)
+            }
             updateTile()
         }
     }
 
     private fun getProfileName(): String {
-        val profile = repository.getCurrentProfile()
-        val profiles = resources.getStringArray(R.array.dolby_profile_entries)
-        val profileValues = resources.getStringArray(R.array.dolby_profile_values)
-        
-        return try {
-            val index = profileValues.indexOf(profile.toString())
-            if (index != -1) profiles[index] else getString(R.string.dolby_unknown)
-        } catch (e: Exception) {
-            getString(R.string.dolby_unknown)
-        }
+        return repository.getProfileDisplayName(repository.getCurrentProfile())
     }
 }
