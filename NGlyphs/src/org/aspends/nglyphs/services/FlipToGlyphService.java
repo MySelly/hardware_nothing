@@ -167,7 +167,7 @@ public class FlipToGlyphService extends Service implements SensorEventListener {
     private void startCallBlinking() {
         if (isRinging)
             return;
-        if (SleepGuard.isBlocked(prefs))
+        if (SleepGuard.isBlocked(prefs) && !prefs.getBoolean("sleep_allow_calls", false))
             return;
 
         isRinging = true;

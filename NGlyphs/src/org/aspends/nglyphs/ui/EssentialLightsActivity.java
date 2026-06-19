@@ -107,10 +107,31 @@ public class EssentialLightsActivity extends AppCompatActivity {
         switchBatterySaver.setChecked(prefs.getBoolean("essential_battery_saver", false));
         switchBatterySaver.setOnCheckedChangeListener((bw, ic) -> {
             prefs.edit().putBoolean("essential_battery_saver", ic).apply();
-            // Refresh essential lights state immediately
+            android.view.View layoutIdle = findViewById(R.id.layoutEssentialIdle);
+            if (layoutIdle != null) {
+                layoutIdle.setVisibility(ic ? android.view.View.VISIBLE : android.view.View.GONE);
+            }
             sendBroadcast(new android.content.Intent("org.aspends.nglyphs.ACTION_REFRESH_ESSENTIAL")
                             .setPackage(getPackageName()));
         });
+
+        com.google.android.material.slider.Slider sliderIdle = findViewById(R.id.sliderEssentialIdle);
+        android.widget.TextView textIdle = findViewById(R.id.textEssentialIdle);
+        android.view.View layoutIdle = findViewById(R.id.layoutEssentialIdle);
+        if (sliderIdle != null && textIdle != null && layoutIdle != null) {
+            boolean saverOn = prefs.getBoolean("essential_battery_saver", false);
+            layoutIdle.setVisibility(saverOn ? android.view.View.VISIBLE : android.view.View.GONE);
+            int minutes = prefs.getInt("essential_idle_minutes", 30);
+            sliderIdle.setValue(minutes);
+            textIdle.setText(getString(R.string.essential_idle_minutes, minutes));
+            sliderIdle.addOnChangeListener((s, value, fromUser) -> {
+                if (fromUser) {
+                    int m = (int) value;
+                    prefs.edit().putInt("essential_idle_minutes", m).apply();
+                    textIdle.setText(getString(R.string.essential_idle_minutes, m));
+                }
+            });
+        }
 
         // Setup Missed Call Switch
         MaterialSwitch switchMissedCall = findViewById(R.id.switchMissedCall);

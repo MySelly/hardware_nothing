@@ -89,6 +89,15 @@ public class SleepModeActivity extends AppCompatActivity {
             prefs.edit().putBoolean("shake_allow_in_sleep", chk).apply();
         });
 
+        MaterialSwitch swCalls = findViewById(R.id.switchAllowCalls);
+        if (swCalls != null) {
+            swCalls.setChecked(prefs.getBoolean("sleep_allow_calls", false));
+            swCalls.setOnCheckedChangeListener((v, chk) -> {
+                quickTick(20, 100);
+                prefs.edit().putBoolean("sleep_allow_calls", chk).apply();
+            });
+        }
+
         tvStart.setText(prefs.getString("sleep_start", "23:00"));
         tvEnd.setText(prefs.getString("sleep_end", "07:00"));
 

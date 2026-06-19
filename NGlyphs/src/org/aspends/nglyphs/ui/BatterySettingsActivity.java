@@ -103,6 +103,41 @@ public class BatterySettingsActivity extends AppCompatActivity {
                 stopService(psIntent);
             }
         });
+
+        MaterialSwitch switchLowBattery = findViewById(R.id.switchLowBattery);
+        MaterialSwitch switchChargeComplete = findViewById(R.id.switchChargeComplete);
+        com.google.android.material.slider.Slider sliderLowBattery = findViewById(R.id.sliderLowBattery);
+        android.widget.TextView textLowBatteryThreshold = findViewById(R.id.textLowBatteryThreshold);
+        if (switchLowBattery != null && sliderLowBattery != null) {
+            switchLowBattery.setChecked(prefs.getBoolean("low_battery_glyph_enabled", false));
+            int threshold = prefs.getInt("low_battery_threshold", 15);
+            sliderLowBattery.setValue(threshold);
+            updateLowBatteryLabel(textLowBatteryThreshold, threshold);
+            switchLowBattery.setOnCheckedChangeListener((v, ic) -> {
+                quickTick(15, 100);
+                prefs.edit().putBoolean("low_battery_glyph_enabled", ic).apply();
+            });
+            sliderLowBattery.addOnChangeListener((s, value, fromUser) -> {
+                if (fromUser) {
+                    int t = (int) value;
+                    prefs.edit().putInt("low_battery_threshold", t).apply();
+                    updateLowBatteryLabel(textLowBatteryThreshold, t);
+                }
+            });
+        }
+        if (switchChargeComplete != null) {
+            switchChargeComplete.setChecked(prefs.getBoolean("charge_complete_glyph_enabled", false));
+            switchChargeComplete.setOnCheckedChangeListener((v, ic) -> {
+                quickTick(15, 100);
+                prefs.edit().putBoolean("charge_complete_glyph_enabled", ic).apply();
+            });
+        }
+    }
+
+    private void updateLowBatteryLabel(android.widget.TextView label, int threshold) {
+        if (label != null) {
+            label.setText(getString(R.string.low_battery_threshold, threshold));
+        }
     }
 
     private void quickTick(int d, int a) {
