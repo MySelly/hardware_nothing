@@ -84,11 +84,22 @@ class DeviceStateManager(private val context: Context) {
         if (repository.volumeLevelerSupported) {
             editor.putBoolean(KEY_VOLUME, repository.getVolumeLevelerEnabled(profile))
         }
-        if (repository.stereoWideningSupported) {
-            editor.putInt(KEY_STEREO, repository.getStereoWideningAmount(profile))
-        }
+            if (repository.stereoWideningSupported) {
+                editor.putInt(KEY_STEREO, repository.getStereoWideningAmount(profile))
+            }
 
-        val gains = repository.getEqualizerGains(profile, BandMode.TWENTY_BAND)
+            editor.putBoolean(KEY_OUTPUT_BOOST, repository.isOutputBoostEnabled(profile))
+            editor.putInt(KEY_OUTPUT_BOOST_TENTHS, repository.getOutputBoostTenths(profile))
+            editor.putBoolean(KEY_VOLMAX_BOOST, repository.isVolmaxBoostEnabled(profile))
+            editor.putInt(KEY_VOLMAX_VALUE, repository.getVolmaxBoost(profile))
+            editor.putInt(KEY_IEQ_AMOUNT, repository.getIeqAmount(profile))
+            editor.putBoolean(KEY_SURROUND_BOOST, repository.isSurroundBoostEnabled(profile))
+            editor.putInt(KEY_SURROUND_VALUE, repository.getSurroundBoost(profile))
+            editor.putInt(KEY_LEVELER_AMOUNT, repository.getVolumeLevelerAmount(profile))
+            editor.putBoolean(KEY_VIRTUAL_BASS, repository.isVirtualBassEnabled(profile))
+            editor.putBoolean(KEY_HEARING, repository.isHearingProtectionEnabled(profile))
+
+            val gains = repository.getEqualizerGains(profile, BandMode.TWENTY_BAND)
         editor.putInt(KEY_EQ_BAND_COUNT, gains.size)
         editor.putString(KEY_EQ_GAINS, gains.joinToString(",") { it.gain.toString() })
 
@@ -161,6 +172,40 @@ class DeviceStateManager(private val context: Context) {
             }
             if (repository.stereoWideningSupported) {
                 repository.setStereoWideningAmount(profile, prefs.getInt(KEY_STEREO, 32))
+            }
+
+            if (prefs.contains(KEY_OUTPUT_BOOST)) {
+                repository.setOutputBoost(
+                    profile,
+                    prefs.getBoolean(KEY_OUTPUT_BOOST, false),
+                    prefs.getInt(KEY_OUTPUT_BOOST_TENTHS, 0)
+                )
+            }
+            if (prefs.contains(KEY_VOLMAX_BOOST)) {
+                repository.setVolmaxBoost(
+                    profile,
+                    prefs.getBoolean(KEY_VOLMAX_BOOST, false),
+                    prefs.getInt(KEY_VOLMAX_VALUE, 48)
+                )
+            }
+            if (prefs.contains(KEY_IEQ_AMOUNT)) {
+                repository.setIeqAmount(profile, prefs.getInt(KEY_IEQ_AMOUNT, 6))
+            }
+            if (prefs.contains(KEY_SURROUND_BOOST)) {
+                repository.setSurroundBoost(
+                    profile,
+                    prefs.getBoolean(KEY_SURROUND_BOOST, false),
+                    prefs.getInt(KEY_SURROUND_VALUE, 0)
+                )
+            }
+            if (prefs.contains(KEY_LEVELER_AMOUNT)) {
+                repository.setVolumeLevelerAmount(profile, prefs.getInt(KEY_LEVELER_AMOUNT, 0))
+            }
+            if (prefs.contains(KEY_VIRTUAL_BASS)) {
+                repository.setVirtualBassEnabled(profile, prefs.getBoolean(KEY_VIRTUAL_BASS, false))
+            }
+            if (prefs.contains(KEY_HEARING)) {
+                repository.setHearingProtectionEnabled(profile, prefs.getBoolean(KEY_HEARING, false))
             }
 
             DolbyConstants.dlog(TAG,
@@ -249,7 +294,7 @@ class DeviceStateManager(private val context: Context) {
     companion object {
         private const val TAG = "DeviceStateManager"
 
-        const val SNAPSHOT_VERSION = 1
+        const val SNAPSHOT_VERSION = 2
 
         private const val KEY_VERSION = "snapshot_version"
         private const val KEY_DOLBY_ENABLED = "enabled"
@@ -268,6 +313,16 @@ class DeviceStateManager(private val context: Context) {
         private const val KEY_MID_LEVEL = "mid_level"
         private const val KEY_VOLUME = "volume"
         private const val KEY_STEREO = "stereo"
+        private const val KEY_OUTPUT_BOOST = "output_boost"
+        private const val KEY_OUTPUT_BOOST_TENTHS = "output_boost_tenths"
+        private const val KEY_VOLMAX_BOOST = "volmax_boost"
+        private const val KEY_VOLMAX_VALUE = "volmax_value"
+        private const val KEY_IEQ_AMOUNT = "ieq_amount"
+        private const val KEY_SURROUND_BOOST = "surround_boost"
+        private const val KEY_SURROUND_VALUE = "surround_value"
+        private const val KEY_LEVELER_AMOUNT = "leveler_amount"
+        private const val KEY_VIRTUAL_BASS = "virtual_bass"
+        private const val KEY_HEARING = "hearing_protection"
         private const val KEY_EQ_BAND_COUNT = "eq_band_count"
         private const val KEY_EQ_GAINS = "eq_gains"
     }
