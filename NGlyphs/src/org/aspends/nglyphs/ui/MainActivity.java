@@ -422,10 +422,14 @@ public class MainActivity extends AppCompatActivity {
         // fresh install
         SharedPreferences.Editor editor = prefs.edit();
         if (!prefs.contains("glyph_blink_style")) {
-            editor.putString("glyph_blink_style", "static");
+            String[] notif = loadStyleNames("notification");
+            editor.putString("glyph_blink_style", notif.length > 0 ? notif[0] : "Beak_One");
+            editor.putInt("glyph_blink_style_idx", 0);
         }
         if (!prefs.contains("call_style_value")) {
-            editor.putString("call_style_value", "static");
+            String[] call = loadStyleNames("call");
+            editor.putString("call_style_value", call.length > 0 ? call[0] : "Abra_One");
+            editor.putInt("call_style_idx", 0);
         }
         if (!prefs.contains("flip_style_value")) {
             editor.putString("flip_style_value", NATIVE_FLIP_VALUE);
@@ -691,15 +695,18 @@ public class MainActivity extends AppCompatActivity {
 
         if (cardMusicVisualizer != null) {
             cardMusicVisualizer.setOnClickListener(v -> {
-                String[] modes = {"Beat detection", "5-zone LED Visualizer",
-                        "15-zone LED Visualizer"};
+                String[] modes = {
+                    getString(R.string.music_visualizer_mode_beat),
+                    getString(R.string.music_visualizer_mode_5),
+                    getString(R.string.music_visualizer_mode_15)
+                };
                 int current = prefs.getInt("visualizer_mode",
                         org.aspends.nglyphs.services.AudioVisualizerService.MODE_BEAT);
                 if (current < 0 || current >= modes.length) {
                     current = org.aspends.nglyphs.services.AudioVisualizerService.MODE_BEAT;
                 }
                 new MaterialAlertDialogBuilder(this)
-                        .setTitle("Visualizer Mode")
+                        .setTitle(R.string.music_visualizer_mode_title)
                         .setSingleChoiceItems(modes, current,
                                 (dialog, which) -> {
                                     prefs.edit().putInt("visualizer_mode", which).apply();
@@ -715,7 +722,7 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                     dialog.dismiss();
                                 })
-                        .setNegativeButton("Cancel", null)
+                        .setNegativeButton(R.string.cancel, null)
                         .show();
             });
         }
@@ -842,6 +849,8 @@ public class MainActivity extends AppCompatActivity {
                 shakes = 3;
             prefs.edit().putInt("shake_count", shakes).apply();
         });
+
+        MainActivityExtras.bind(this, prefs);
     }
 
     private void showStyleDialog(
@@ -865,55 +874,71 @@ public class MainActivity extends AppCompatActivity {
                 org.aspends.nglyphs.services.AudioVisualizerService.MODE_BEAT);
         switch (mode) {
             case org.aspends.nglyphs.services.AudioVisualizerService.MODE_BEAT:
-                textCurrentMusic.setText("Beat detection \u00b7 Pulse on beats");
+                textCurrentMusic.setText(R.string.music_visualizer_beat);
                 break;
             case org.aspends.nglyphs.services.AudioVisualizerService.MODE_5ZONE:
-                textCurrentMusic.setText("5-zone \u00b7 Sync to audio");
+                textCurrentMusic.setText(R.string.music_visualizer_5zone);
                 break;
             default:
-                textCurrentMusic.setText("15-zone \u00b7 Full LED array");
+                textCurrentMusic.setText(R.string.music_visualizer_15zone);
                 break;
         }
     }
 
     private void updateStyleLabels() {
-        int nIdx = prefs.getInt("glyph_blink_style_idx", 0);
-        int cIdx = prefs.getInt("call_style_idx", 0);
-        int fIdx = prefs.getInt("flip_style_idx", 0);
-
         List<java.io.File> customs = CustomRingtoneManager.getImportedRingtones(this);
 
-        if (notifStyleValues != null && nIdx < notifStyleValues.length) {
-            textCurrentNotifSound.setText(
-                    CustomRingtoneManager.cleanStyleName(notifStyleValues[nIdx]));
-        } else if (notifStyleValues != null && nIdx - notifStyleValues.length < customs.size()) {
-            textCurrentNotifSound.setText(CustomRingtoneManager.cleanStyleName(
-                    customs.get(nIdx - notifStyleValues.length).getName()));
+        textCurrentNotifSound.setText(resolveStyleLabel(
+                "glyph_blink_style", "glyph_blink_style_idx", notifStyleValues, customs));
+        textCurrentRingtone.setText(resolveStyleLabel(
+                "call_style_value", "call_style_idx", callStyleValues, customs));
+
+        String flipVal = prefs.getString("flip_style_value", NATIVE_FLIP_VALUE);
+        if (NATIVE_FLIP_VALUE.equals(flipVal)) {
+            textCurrentFlipStyle.setText(R.string.flip_style_stock);
+        } else {
+            textCurrentFlipStyle.setText(resolveStyleLabel(
+                    "flip_style_value", "flip_style_idx", flipStyleValues, customs));
         }
 
-        if (callStyleValues != null && cIdx < callStyleValues.length) {
-            textCurrentRingtone.setText(
-                    CustomRingtoneManager.cleanStyleName(callStyleValues[cIdx]));
-        } else if (callStyleValues != null && cIdx - callStyleValues.length < customs.size()) {
-            textCurrentRingtone.setText(CustomRingtoneManager.cleanStyleName(
-                    customs.get(cIdx - callStyleValues.length).getName()));
-        }
+        checkCustomAudioWarning((notifStyleValues != null
+                                        && prefs.getInt("glyph_blink_style_idx", 0)
+                                                >= notifStyleValues.length)
+                || (callStyleValues != null
+                        && prefs.getInt("call_style_idx", 0) >= callStyleValues.length)
+                || (flipStyleValues != null
+                        && prefs.getInt("flip_style_idx", 0) >= flipStyleValues.length));
+    }
 
-        if (flipStyleValues != null && fIdx < flipStyleValues.length) {
-            String val = flipStyleValues[fIdx];
-            if (NATIVE_FLIP_VALUE.equals(val)) {
-                textCurrentFlipStyle.setText("Stock");
-            } else {
-                textCurrentFlipStyle.setText(CustomRingtoneManager.cleanStyleName(val));
+    private String resolveStyleLabel(
+            String valKey, String idxKey, String[] values, List<java.io.File> customs) {
+        String stored = prefs.getString(valKey, null);
+        if (stored != null && !stored.isEmpty()) {
+            if (values != null) {
+                for (String value : values) {
+                    if (value.equalsIgnoreCase(stored)) {
+                        return CustomRingtoneManager.cleanStyleName(value);
+                    }
+                }
             }
-        } else if (flipStyleValues != null && fIdx - flipStyleValues.length < customs.size()) {
-            textCurrentFlipStyle.setText(CustomRingtoneManager.cleanStyleName(
-                    customs.get(fIdx - flipStyleValues.length).getName()));
+            for (java.io.File file : customs) {
+                String base = file.getName().replace(".ogg", "");
+                if (base.equals(stored) || file.getName().equals(stored)) {
+                    return CustomRingtoneManager.cleanStyleName(file.getName());
+                }
+            }
+            return CustomRingtoneManager.cleanStyleName(stored);
         }
 
-        checkCustomAudioWarning((notifStyleValues != null && nIdx >= notifStyleValues.length)
-                || (callStyleValues != null && cIdx >= callStyleValues.length)
-                || (flipStyleValues != null && fIdx >= flipStyleValues.length));
+        int idx = prefs.getInt(idxKey, 0);
+        if (values != null && idx < values.length) {
+            return CustomRingtoneManager.cleanStyleName(values[idx]);
+        }
+        if (values != null && idx - values.length < customs.size()) {
+            return CustomRingtoneManager.cleanStyleName(
+                    customs.get(idx - values.length).getName());
+        }
+        return getString(R.string.style_unknown);
     }
 
     private void checkCustomAudioWarning(boolean hasCustom) {
