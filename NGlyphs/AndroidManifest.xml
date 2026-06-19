@@ -95,6 +95,12 @@
             android:theme="@style/Theme.GlyphManager" />
 
         <activity
+            android:name=".ui.VipAppsActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:theme="@style/Theme.GlyphManager" />
+
+        <activity
             android:name=".ui.TileSliderActivity"
             android:excludeFromRecents="true"
             android:exported="true"
@@ -213,6 +219,16 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receivers.GlyphControlReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="org.aspends.nglyphs.ACTION_SET_MASTER" />
+                <action android:name="org.aspends.nglyphs.ACTION_TOGGLE_MASTER" />
+                <action android:name="org.aspends.nglyphs.ACTION_PREVIEW_BRIGHTNESS" />
             </intent-filter>
         </receiver>
 
