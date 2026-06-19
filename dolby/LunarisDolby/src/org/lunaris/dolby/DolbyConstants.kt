@@ -28,6 +28,18 @@ object DolbyConstants {
     const val PREF_TREBLE = "dolby_treble"
     const val PREF_TREBLE_LEVEL = "dolby_treble_level"
     const val PREF_VOLUME = "dolby_volume"
+    const val PREF_VOLUME_LEVELER_AMOUNT = "dolby_volume_leveler_amount"
+    const val PREF_OUTPUT_BOOST_ENABLED = "dolby_output_boost_enabled"
+    const val PREF_OUTPUT_BOOST_TENTHS = "dolby_output_boost_tenths"
+    const val PREF_VOLMAX_BOOST_ENABLED = "dolby_volmax_boost_enabled"
+    const val PREF_VOLMAX_BOOST = "dolby_volmax_boost"
+    const val PREF_IEQ_AMOUNT = "dolby_ieq_amount"
+    const val PREF_SURROUND_BOOST_ENABLED = "dolby_surround_boost_enabled"
+    const val PREF_SURROUND_BOOST = "dolby_surround_boost"
+    const val PREF_VIRTUAL_BASS = "dolby_virtual_bass"
+    const val PREF_HEARING_PROTECTION = "dolby_hearing_protection"
+    const val PREF_DSP_VOLUME_BOOST_ENABLED = "dsp_volume_boost_enabled"
+    const val PREF_DSP_VOLUME_BOOST_STRENGTH = "dsp_volume_boost_strength"
     const val PREF_PRESETS_MIGRATED = "presets_migrated"
     const val PREF_BAND_MODE = "dolby_band_mode"
     const val PREF_DEVICE_STATE_MEMORY = "device_state_memory_enabled"
@@ -50,10 +62,24 @@ object DolbyConstants {
         DIALOGUE_ENHANCER_AMOUNT(108),
         GEQ_BAND_GAINS(110, 20),
         BASS_ENHANCER_ENABLE(111),
-        STEREO_WIDENING_AMOUNT(113);
+        STEREO_WIDENING_AMOUNT(113),
+        VOLMAX_BOOST(114),
+        IEQ_ENABLE(106),
+        IEQ_AMOUNT(107),
+        VOLUME_LEVELER_AMOUNT(109),
+        SURROUND_BOOST(112),
+        VIRTUAL_BASS_ENABLE(117),
+        HEARING_PROTECTION_ENABLE(118);
 
         override fun toString(): String = "${name}(${id})"
     }
+
+    const val OUTPUT_BOOST_MIN_TENTHS = -60
+    const val OUTPUT_BOOST_MAX_TENTHS = 60
+    const val VOLMAX_BOOST_MAX = 96
+    const val SURROUND_BOOST_MAX = 64
+    const val IEQ_AMOUNT_MAX = 10
+    const val VOLUME_LEVELER_AMOUNT_MAX = 10
 
     fun dlog(tag: String, msg: String) {
         if (Log.isLoggable(TAG, Log.DEBUG) || Log.isLoggable(tag, Log.DEBUG)) {

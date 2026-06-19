@@ -41,7 +41,19 @@ data class ProfileSettings(
     val bassLevel: Int = 0,
     val midLevel: Int = 0,
     val trebleLevel: Int = 0,
-    val bassCurve: Int = 0
+    val bassCurve: Int = 0,
+    val outputBoostEnabled: Boolean = false,
+    val outputBoostTenthsDb: Int = 0,
+    val volmaxBoostEnabled: Boolean = false,
+    val volmaxBoost: Int = 48,
+    val ieqAmount: Int = 6,
+    val surroundBoostEnabled: Boolean = false,
+    val surroundBoost: Int = 0,
+    val volumeLevelerAmount: Int = 0,
+    val virtualBassEnabled: Boolean = false,
+    val hearingProtectionEnabled: Boolean = false,
+    val dspVolumeBoostEnabled: Boolean = false,
+    val dspVolumeBoostStrength: Int = 0
 )
 
 data class EqualizerPreset(

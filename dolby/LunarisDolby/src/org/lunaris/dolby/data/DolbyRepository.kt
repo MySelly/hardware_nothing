@@ -35,6 +35,15 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     
     private val deviceStateManager = DeviceStateManager(context)
 
+    private val audioTuning = AudioTuningController(
+        context = context,
+        dolbyEffectProvider = { dolbyEffect },
+        checkEffect = { checkEffect() },
+        isReleased = { isReleased },
+        profilePrefs = { getProfilePrefs(it) },
+        defaultPrefs = defaultPrefs
+    )
+
     private val _activeAudioDevice = MutableStateFlow(resolveActiveAudioDevice())
     val activeAudioDevice: StateFlow<ActiveAudioDevice> = _activeAudioDevice.asStateFlow()
 
@@ -125,6 +134,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
                 val volumeLeveler = prefs.getBoolean(DolbyConstants.PREF_VOLUME, false)
                 dolbyEffect.setDapParameter(DsParam.VOLUME_LEVELER_ENABLE, volumeLeveler, profile)
             }
+
+            audioTuning.applyAll(profile)
             
             DolbyConstants.dlog(TAG, "Successfully restored all settings for profile $profile")
         } catch (e: Exception) {
@@ -275,20 +286,7 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     }
 
     private fun restoreProfilePreset(profile: Int) {
-        try {
-            val prefs = getProfilePrefs(profile)
-            val savedPresetGains = prefs.getString(DolbyConstants.PREF_PRESET, null)
-            
-            if (savedPresetGains != null) {
-                val gains = savedPresetGains.split(",").mapNotNull { it.toIntOrNull() }.toIntArray()
-                if (gains.size == 20) {
-                    dolbyEffect.setDapParameter(DsParam.GEQ_BAND_GAINS, gains, profile)
-                    DolbyConstants.dlog(TAG, "Restored preset for profile $profile")
-                }
-            }
-        } catch (e: Exception) {
-            DolbyConstants.dlog(TAG, "Failed to restore preset for profile $profile: ${e.message}")
-        }
+        audioTuning.pushGeqToHardware(profile)
     }
 
     fun verifyProfileSaved(profile: Int): Boolean {
@@ -360,14 +358,13 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
 
             if (level <= 0) return
             checkEffect()
-            val currentGains = dolbyEffect.getDapParameter(DsParam.GEQ_BAND_GAINS, profile)
+            val currentGains = audioTuning.getRawGeqArray(profile)?.copyOf()
+                ?: dolbyEffect.getDapParameter(DsParam.GEQ_BAND_GAINS, profile)
             val modifiedGains = currentGains.copyOf()
             applyBassCurve(modifiedGains, level, previousCurve, -1)
             applyBassCurve(modifiedGains, level, curve, 1)
-            dolbyEffect.setDapParameter(DsParam.GEQ_BAND_GAINS, modifiedGains, profile)
-            
-            val gainsString = modifiedGains.joinToString(",")
-            prefs.edit().putString(DolbyConstants.PREF_PRESET, gainsString).apply()
+            audioTuning.saveRawGeqArray(profile, modifiedGains)
+            audioTuning.pushGeqToHardware(profile)
         } catch (e: Exception) {
             DolbyConstants.dlog(TAG, "Error setting bass curve: ${e.message}")
             throw e
@@ -403,7 +400,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
             setBassEnhancerEnabled(profile, level > 0)
             
             checkEffect()
-            val currentGains = dolbyEffect.getDapParameter(DsParam.GEQ_BAND_GAINS, profile)
+            val currentGains = audioTuning.getRawGeqArray(profile)?.copyOf()
+                ?: dolbyEffect.getDapParameter(DsParam.GEQ_BAND_GAINS, profile)
             val modifiedGains = currentGains.copyOf()
             
             val curve = prefs.getInt(DolbyConstants.PREF_BASS_CURVE, 0)
@@ -414,10 +412,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
             if (level > 0) {
                 applyBassCurve(modifiedGains, level, curve, 1)
             }
-            dolbyEffect.setDapParameter(DsParam.GEQ_BAND_GAINS, modifiedGains, profile)
-            
-            val gainsString = modifiedGains.joinToString(",")
-            prefs.edit().putString(DolbyConstants.PREF_PRESET, gainsString).apply()
+            audioTuning.saveRawGeqArray(profile, modifiedGains)
+            audioTuning.pushGeqToHardware(profile)
             
             DolbyConstants.dlog(TAG, "setBassLevel: success")
         } catch (e: IllegalArgumentException) {
@@ -463,7 +459,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
             setTrebleEnhancerEnabled(profile, level > 0)
 
             checkEffect()
-            val currentGains = dolbyEffect.getDapParameter(DsParam.GEQ_BAND_GAINS, profile)
+            val currentGains = audioTuning.getRawGeqArray(profile)?.copyOf()
+                ?: dolbyEffect.getDapParameter(DsParam.GEQ_BAND_GAINS, profile)
             val modifiedGains = currentGains.copyOf()
 
             if (previousLevel > 0) {
@@ -484,10 +481,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
                 }
             }
 
-            dolbyEffect.setDapParameter(DsParam.GEQ_BAND_GAINS, modifiedGains, profile)
-            
-            val gainsString = modifiedGains.joinToString(",")
-            prefs.edit().putString(DolbyConstants.PREF_PRESET, gainsString).apply()
+            audioTuning.saveRawGeqArray(profile, modifiedGains)
+            audioTuning.pushGeqToHardware(profile)
             
             DolbyConstants.dlog(TAG, "setTrebleLevel: success")
         } catch (e: IllegalArgumentException) {
@@ -664,7 +659,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
 
     fun getEqualizerGains(profile: Int, bandMode: BandMode): List<BandGain> {
         return try {
-            val gains = dolbyEffect.getDapParameter(DsParam.GEQ_BAND_GAINS, profile)
+            val gains = audioTuning.getRawGeqArray(profile)
+                ?: dolbyEffect.getDapParameter(DsParam.GEQ_BAND_GAINS, profile)
             deserializeGains(gains, bandMode)
         } catch (e: Exception) {
             DolbyConstants.dlog(TAG, "Error getting equalizer gains: ${e.message}")
@@ -683,9 +679,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
         try {
             checkEffect()
             val gains = serializeGains(bandGains, bandMode)
-            dolbyEffect.setDapParameter(DsParam.GEQ_BAND_GAINS, gains, profile)
-            val gainsString = gains.joinToString(",")
-            getProfilePrefs(profile).edit().putString(DolbyConstants.PREF_PRESET, gainsString).apply()
+            audioTuning.saveRawGeqArray(profile, gains)
+            audioTuning.pushGeqToHardware(profile)
         } catch (e: Exception) {
             DolbyConstants.dlog(TAG, "Error setting equalizer gains: ${e.message}")
         }
@@ -693,7 +688,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
 
     fun getPresetName(profile: Int): String {
         return try {
-            val gains = dolbyEffect.getDapParameter(DsParam.GEQ_BAND_GAINS, profile)
+            val gains = audioTuning.getRawGeqArray(profile)
+                ?: dolbyEffect.getDapParameter(DsParam.GEQ_BAND_GAINS, profile)
             
             val tenBandGains = gains.filterIndexed { index, _ -> index % 2 == 0 }
             val currentGainsString = tenBandGains.joinToString(",")
@@ -1140,7 +1136,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
             setMidEnhancerEnabled(profile, level > 0)
 
             checkEffect()
-            val currentGains = dolbyEffect.getDapParameter(DsParam.GEQ_BAND_GAINS, profile)
+            val currentGains = audioTuning.getRawGeqArray(profile)?.copyOf()
+                ?: dolbyEffect.getDapParameter(DsParam.GEQ_BAND_GAINS, profile)
             val modifiedGains = currentGains.copyOf()
 
             if (previousLevel > 0) {
@@ -1161,10 +1158,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
                 }
             }
 
-            dolbyEffect.setDapParameter(DsParam.GEQ_BAND_GAINS, modifiedGains, profile)
-            
-            val gainsString = modifiedGains.joinToString(",")
-            prefs.edit().putString(DolbyConstants.PREF_PRESET, gainsString).apply()
+            audioTuning.saveRawGeqArray(profile, modifiedGains)
+            audioTuning.pushGeqToHardware(profile)
             
             DolbyConstants.dlog(TAG, "setMidLevel: success")
         } catch (e: IllegalArgumentException) {
@@ -1193,6 +1188,41 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     override fun close() {
         release()
     }
+
+    fun isOutputBoostEnabled(profile: Int) = audioTuning.isOutputBoostEnabled(profile)
+    fun getOutputBoostTenths(profile: Int) = audioTuning.getOutputBoostTenths(profile)
+    fun setOutputBoost(profile: Int, enabled: Boolean, tenthsDb: Int) =
+        audioTuning.setOutputBoost(profile, enabled, tenthsDb)
+
+    fun isVolmaxBoostEnabled(profile: Int) = audioTuning.isVolmaxBoostEnabled(profile)
+    fun getVolmaxBoost(profile: Int) = audioTuning.getVolmaxBoost(profile)
+    fun setVolmaxBoost(profile: Int, enabled: Boolean, value: Int) =
+        audioTuning.setVolmaxBoost(profile, enabled, value)
+
+    fun getIeqAmount(profile: Int) = audioTuning.getIeqAmount(profile)
+    fun setIeqAmount(profile: Int, amount: Int) = audioTuning.setIeqAmount(profile, amount)
+
+    fun isSurroundBoostEnabled(profile: Int) = audioTuning.isSurroundBoostEnabled(profile)
+    fun getSurroundBoost(profile: Int) = audioTuning.getSurroundBoost(profile)
+    fun setSurroundBoost(profile: Int, enabled: Boolean, value: Int) =
+        audioTuning.setSurroundBoost(profile, enabled, value)
+
+    fun getVolumeLevelerAmount(profile: Int) = audioTuning.getVolumeLevelerAmount(profile)
+    fun setVolumeLevelerAmount(profile: Int, amount: Int) =
+        audioTuning.setVolumeLevelerAmount(profile, amount)
+
+    fun isVirtualBassEnabled(profile: Int) = audioTuning.isVirtualBassEnabled(profile)
+    fun setVirtualBassEnabled(profile: Int, enabled: Boolean) =
+        audioTuning.setVirtualBassEnabled(profile, enabled)
+
+    fun isHearingProtectionEnabled(profile: Int) = audioTuning.isHearingProtectionEnabled(profile)
+    fun setHearingProtectionEnabled(profile: Int, enabled: Boolean) =
+        audioTuning.setHearingProtectionEnabled(profile, enabled)
+
+    fun isDspVolumeBoostEnabled() = audioTuning.isDspVolumeBoostEnabled()
+    fun getDspVolumeBoostStrength() = audioTuning.getDspVolumeBoostStrength()
+    fun setDspVolumeBoost(enabled: Boolean, strength: Int) =
+        audioTuning.setDspVolumeBoost(enabled, strength)
 
     companion object {
         private const val TAG = "DolbyRepository"
