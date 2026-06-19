@@ -289,6 +289,30 @@ private fun ModernEqualizerContent(
             currentMode = state.bandMode,
             onModeChange = { viewModel.setBandMode(it) }
         )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceBright)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    stringResource(R.string.eq_visualizer_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    stringResource(R.string.eq_visualizer_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                AudioVisualizerBars(
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                    enabled = true
+                )
+            }
+        }
         
         if (!isBandModeCompatible && !isFlatPreset) {
             Card(
