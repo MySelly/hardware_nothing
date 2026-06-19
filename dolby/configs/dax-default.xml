@@ -367,7 +367,7 @@
         <peak-value value="240"/>
         <surround-decoder-enable value="true"/>
         <surround-boost value="0"/>
-        <volmax-boost value="64"/>
+        <volmax-boost value="70"/>
         <hearing-protection-enable value="false"/>
         <hearing-protection-rms-averaging-time-win-len value="6"/>
         <hearing-protection-rms-attenuation-target value="-256"/>
@@ -397,7 +397,7 @@
         <peak-value value="256"/>
         <surround-decoder-enable value="true"/>
         <surround-boost value="0"/>
-        <volmax-boost value="74"/>
+        <volmax-boost value="82"/>
         <hearing-protection-enable value="false"/>
         <hearing-protection-rms-averaging-time-win-len value="6"/>
         <hearing-protection-rms-attenuation-target value="-256"/>
