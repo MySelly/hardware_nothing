@@ -636,8 +636,14 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     }
 
     fun getDialogueEnhancerAmount(profile: Int): Int {
+        val prefs = getProfilePrefs(profile)
+        if (prefs.contains(DolbyConstants.PREF_DIALOGUE_AMOUNT)) {
+            return prefs.getInt(DolbyConstants.PREF_DIALOGUE_AMOUNT, 6)
+        }
         return try {
-            dolbyEffect.getDapParameterInt(DsParam.DIALOGUE_ENHANCER_AMOUNT, profile)
+            val amount = dolbyEffect.getDapParameterInt(DsParam.DIALOGUE_ENHANCER_AMOUNT, profile)
+            prefs.edit().putInt(DolbyConstants.PREF_DIALOGUE_AMOUNT, amount).apply()
+            amount
         } catch (e: Exception) {
             DolbyConstants.dlog(TAG, "Error getting dialogue enhancer amount: ${e.message}")
             6
