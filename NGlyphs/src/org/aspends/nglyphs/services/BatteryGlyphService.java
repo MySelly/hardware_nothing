@@ -41,6 +41,9 @@ public class BatteryGlyphService extends Service implements SensorEventListener 
     private PowerManager powerManager;
     private boolean isFaceDown, isProximityCovered;
     private boolean isCharging;
+    private int lastBatteryLevel = -1;
+    private boolean lastWasFull = false;
+    private long lastLowBatteryAnim = 0;
     private float lastX, lastY, lastZ;
     private boolean hasLastAccel;
     private long plugJustConnectedTime = 0;
@@ -117,6 +120,11 @@ public class BatteryGlyphService extends Service implements SensorEventListener 
                 int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
                 isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING
                         || status == BatteryManager.BATTERY_STATUS_FULL;
+                int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+                if (level != -1 && scale > 0) {
+                    handleBatteryLevelUpdate((int) ((level / (float) scale) * 100), status);
+                }
             } else if ("android.bluetooth.device.action.BATTERY_LEVEL_CHANGED".equals(action)
                     || "android.bluetooth.device.action.ACL_CONNECTED".equals(action)) {
                 handleBluetoothBattery(intent);
@@ -247,6 +255,28 @@ public class BatteryGlyphService extends Service implements SensorEventListener 
                 AnimationManager.playBatteryAnimation(level, this, holdMs);
             }
         }
+    }
+
+    private void handleBatteryLevelUpdate(int pct, int status) {
+        boolean isFull = status == BatteryManager.BATTERY_STATUS_FULL;
+        if (prefs.getBoolean("charge_complete_glyph_enabled", false) && isFull && !lastWasFull
+                && isCharging) {
+            AnimationManager.playBatteryAnimation(100, this, 4000);
+        }
+        lastWasFull = isFull;
+
+        if (prefs.getBoolean("low_battery_glyph_enabled", false) && !isCharging && isFaceDown
+                && isProximityCovered) {
+            int threshold = prefs.getInt("low_battery_threshold", 15);
+            if (pct <= threshold && pct != lastBatteryLevel) {
+                long now = System.currentTimeMillis();
+                if (now - lastLowBatteryAnim > DEBOUNCE_INTERVAL_MS) {
+                    lastLowBatteryAnim = now;
+                    AnimationManager.playBatteryAnimation(pct, this, 3500);
+                }
+            }
+        }
+        lastBatteryLevel = pct;
     }
 
     @SuppressWarnings("deprecation")
