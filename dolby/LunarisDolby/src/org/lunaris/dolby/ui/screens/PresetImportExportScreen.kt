@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -33,7 +35,11 @@ import org.lunaris.dolby.domain.models.EqualizerUiState
 import org.lunaris.dolby.ui.components.ModernConfirmDialog
 import org.lunaris.dolby.ui.viewmodel.DolbyViewModel
 import org.lunaris.dolby.ui.viewmodel.EqualizerViewModel
+import org.lunaris.dolby.utils.PresetShareCodec
 import org.lunaris.dolby.utils.ToastHelper
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Intent
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -57,6 +63,8 @@ fun PresetImportExportScreen(
     var pendingFullBackupUri by remember { mutableStateOf<android.net.Uri?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var presetToDelete by remember { mutableStateOf<EqualizerPreset?>(null) }
+    var shareCodePreset by remember { mutableStateOf<EqualizerPreset?>(null) }
+    var showShareCodeImport by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
 
     val fullBackupExportLauncher = rememberLauncherForActivityResult(
@@ -309,6 +317,39 @@ fun PresetImportExportScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = MaterialTheme.shapes.extraLarge,
                                 colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.35f)
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(20.dp)) {
+                                    Text(
+                                        stringResource(R.string.preset_share_title),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        stringResource(R.string.preset_share_desc),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(vertical = 12.dp)
+                                    )
+                                    OutlinedButton(
+                                        onClick = { showShareCodeImport = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = MaterialTheme.shapes.medium
+                                    ) {
+                                        Icon(Icons.Default.QrCode2, contentDescription = null)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(stringResource(R.string.preset_share_import))
+                                    }
+                                }
+                            }
+                        }
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.extraLarge,
+                                colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceBright
                                 )
                             ) {
@@ -469,6 +510,7 @@ fun PresetImportExportScreen(
                                         isLoading = false
                                     }
                                 },
+                                onShareCode = { shareCodePreset = preset },
                                 onDelete = {
                                     presetToDelete = preset
                                     showDeleteDialog = true
@@ -624,6 +666,104 @@ fun PresetImportExportScreen(
             }
         )
     }
+
+    shareCodePreset?.let { preset ->
+        val code = remember(preset) { PresetShareCodec.encode(preset) }
+        AlertDialog(
+            onDismissRequest = { shareCodePreset = null },
+            title = { Text(stringResource(R.string.preset_share_code_label, preset.name)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    SelectionContainer {
+                        Text(
+                            code,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val clipboard = context.getSystemService(ClipboardManager::class.java)
+                    clipboard.setPrimaryClip(ClipData.newPlainText("dolby_share", code))
+                    ToastHelper.showToast(context, context.getString(R.string.preset_share_copied))
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, code)
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, preset.name))
+                }) {
+                    Text(stringResource(R.string.preset_share_copy))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { shareCodePreset = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
+    if (showShareCodeImport) {
+        var codeInput by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showShareCodeImport = false },
+            title = { Text(stringResource(R.string.preset_share_import)) },
+            text = {
+                OutlinedTextField(
+                    value = codeInput,
+                    onValueChange = { codeInput = it },
+                    label = { Text(stringResource(R.string.preset_share_import_hint)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    scope.launch {
+                        isLoading = true
+                        try {
+                            val preset = PresetShareCodec.decode(codeInput)
+                            val error = viewModel.saveImportedPreset(preset)
+                            if (error != null) {
+                                ToastHelper.showToast(
+                                    context,
+                                    context.getString(
+                                        R.string.preset_share_import_failed,
+                                        error
+                                    )
+                                )
+                            } else {
+                                ToastHelper.showToast(
+                                    context,
+                                    context.getString(R.string.preset_share_import_success)
+                                )
+                                viewModel.loadEqualizer()
+                                showShareCodeImport = false
+                            }
+                        } catch (e: Exception) {
+                            ToastHelper.showToast(
+                                context,
+                                context.getString(
+                                    R.string.preset_share_import_failed,
+                                    e.message ?: ""
+                                )
+                            )
+                        }
+                        isLoading = false
+                    }
+                }) {
+                    Text(stringResource(R.string.import_presets))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showShareCodeImport = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -632,6 +772,7 @@ private fun PresetExportCard(
     onExportFile: () -> Unit,
     onCopyClipboard: () -> Unit,
     onShare: () -> Unit,
+    onShareCode: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
@@ -673,6 +814,13 @@ private fun PresetExportCard(
                             Icons.Default.ContentCopy, 
                             contentDescription = "Copy to clipboard",
                             tint = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                    IconButton(onClick = onShareCode) {
+                        Icon(
+                            Icons.Default.QrCode2,
+                            contentDescription = "Share code",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                     IconButton(onClick = onShare) {
