@@ -317,4 +317,15 @@
     <string name="dsp_volume_boost_summary">Extra loudness at high media volume steps via DSP sync</string>
     <string name="dsp_volume_boost_strength">Lift strength</string>
     <string name="audio_tuning_disabled">Off</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_title">Credits &amp; Contributors</string>
+    <string name="credits_thanks">Thank you to all contributors who made this project possible!</string>
+    <string name="credits_view_github">View on GitHub</string>
+    <string name="credits_github_repo_name">crdroidandroid/android_hardware_nothing</string>
+    <string name="credits_main_contributors">Main Contributors</string>
+    <string name="credits_all_contributors">And all other contributors</string>
+    <string name="credits_github_list">Check the GitHub repository for the complete list</string>
+    <string name="credits_contributor_myselly">Turkish localization, loudness tuning &amp; feature expansion</string>
+    <string name="close">Close</string>
 </resources>
