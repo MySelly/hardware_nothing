@@ -253,4 +253,45 @@
     <string name="custom_presets_delete_title">Delete preset</string>
     <string name="custom_presets_delete_message">Delete preset \"%1$s\"? This cannot be undone.</string>
     <string name="save">Save</string>
+
+    <!-- Scheduled profiles -->
+    <string name="scheduled_profiles_title">Scheduled profiles</string>
+    <string name="scheduled_profiles_home_desc">Automatically switch Dolby profiles at set times (e.g. Night mode after 10 PM).</string>
+    <string name="scheduled_profiles_manage">Manage schedules</string>
+    <string name="scheduled_profiles_enable">Enable scheduled profiles</string>
+    <string name="scheduled_profiles_enable_desc">Checks every minute and applies matching rules</string>
+    <string name="scheduled_profiles_desc">Rules use 24-hour time. Overnight ranges (e.g. 22:00–07:00) are supported.</string>
+    <string name="scheduled_profiles_empty">No schedules yet. Tap + to add one.</string>
+    <string name="scheduled_profiles_add">Add schedule</string>
+    <string name="scheduled_profiles_rule_name">Schedule name</string>
+    <string name="scheduled_profiles_unnamed">Schedule</string>
+    <string name="scheduled_profiles_profile_label">Dolby profile</string>
+    <string name="scheduled_profiles_start_hour">Start hour: %1$d:00</string>
+    <string name="scheduled_profiles_end_hour">End hour: %1$d:00</string>
+    <string name="scheduled_profiles_rule_summary">%1$s · %2$d:00 – %3$d:00</string>
+    <string name="scheduled_profiles_delete_title">Delete schedule</string>
+    <string name="scheduled_profiles_delete_message">Delete schedule \"%1$s\"?</string>
+
+    <!-- EQ visualizer -->
+    <string name="eq_visualizer_title">Live audio</string>
+    <string name="eq_visualizer_desc">Real-time waveform from system audio output</string>
+
+    <!-- Preset share codes -->
+    <string name="preset_share_title">Community share code</string>
+    <string name="preset_share_desc">Share compact codes with other LunarisDolby users. Paste a code to import a preset instantly.</string>
+    <string name="preset_share_generate">Show share code</string>
+    <string name="preset_share_import">Import share code</string>
+    <string name="preset_share_copy">Copy code</string>
+    <string name="preset_share_copied">Share code copied</string>
+    <string name="preset_share_import_hint">Paste LDOLBY1:… code here</string>
+    <string name="preset_share_import_success">Preset imported from share code</string>
+    <string name="preset_share_import_failed">Invalid share code: %1$s</string>
+    <string name="preset_share_code_label">Share code for \"%1$s\"</string>
+
+    <!-- Hybrid profile priority -->
+    <string name="profile_priority_title">Profile priority</string>
+    <string name="profile_priority_desc">When both per-app and per-device memory are enabled, choose which takes precedence.</string>
+    <string name="profile_priority_device">Device memory first</string>
+    <string name="profile_priority_app">Per-app profiles first</string>
+    <string name="hybrid_both_enabled_info">Both features are active. Priority determines which applies on device or app changes.</string>
 </resources>

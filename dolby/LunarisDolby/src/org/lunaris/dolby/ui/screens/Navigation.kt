@@ -17,6 +17,7 @@ import org.lunaris.dolby.ui.viewmodel.CustomPresetViewModel
 import org.lunaris.dolby.ui.viewmodel.DeviceMemoryViewModel
 import org.lunaris.dolby.ui.viewmodel.DolbyViewModel
 import org.lunaris.dolby.ui.viewmodel.EqualizerViewModel
+import org.lunaris.dolby.ui.viewmodel.ScheduledProfileViewModel
 
 sealed class Screen(val route: String) {
     object Settings : Screen("settings")
@@ -25,6 +26,7 @@ sealed class Screen(val route: String) {
     object AppProfiles : Screen("app_profiles")
     object DeviceMemory : Screen("device_memory")
     object CustomPresets : Screen("custom_presets")
+    object ScheduledProfiles : Screen("scheduled_profiles")
     object ImportExport : Screen("import_export")
 }
 
@@ -104,6 +106,20 @@ fun DolbyNavHost(
                 viewModel = customPresetViewModel,
                 dolbyViewModel = dolbyViewModel,
                 equalizerViewModel = equalizerViewModel,
+                navController = navController
+            )
+        }
+
+        composable(Screen.ScheduledProfiles.route) {
+            val context = LocalContext.current
+            val scheduledProfileViewModel: ScheduledProfileViewModel = viewModel(
+                factory = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(
+                    context.applicationContext as android.app.Application
+                )
+            )
+
+            ScheduledProfilesScreen(
+                viewModel = scheduledProfileViewModel,
                 navController = navController
             )
         }

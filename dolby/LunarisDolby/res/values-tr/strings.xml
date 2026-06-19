@@ -195,4 +195,45 @@
     <string name="custom_presets_delete_message">\"%1$s\" preseti silinsin mi? Bu işlem geri alınamaz.</string>
     <string name="save">Kaydet</string>
 
+    <!-- Scheduled profiles -->
+    <string name="scheduled_profiles_title">Zamanlanmış profiller</string>
+    <string name="scheduled_profiles_home_desc">Belirli saatlerde Dolby profilini otomatik değiştir (ör. 22:00\'den sonra Gece modu).</string>
+    <string name="scheduled_profiles_manage">Zamanlamaları yönet</string>
+    <string name="scheduled_profiles_enable">Zamanlanmış profilleri etkinleştir</string>
+    <string name="scheduled_profiles_enable_desc">Her dakika kontrol eder ve eşleşen kuralları uygular</string>
+    <string name="scheduled_profiles_desc">Kurallar 24 saat formatını kullanır. Gece yarısını geçen aralıklar (ör. 22:00–07:00) desteklenir.</string>
+    <string name="scheduled_profiles_empty">Henüz zamanlama yok. Eklemek için +\'ya dokun.</string>
+    <string name="scheduled_profiles_add">Zamanlama ekle</string>
+    <string name="scheduled_profiles_rule_name">Zamanlama adı</string>
+    <string name="scheduled_profiles_unnamed">Zamanlama</string>
+    <string name="scheduled_profiles_profile_label">Dolby profili</string>
+    <string name="scheduled_profiles_start_hour">Başlangıç saati: %1$d:00</string>
+    <string name="scheduled_profiles_end_hour">Bitiş saati: %1$d:00</string>
+    <string name="scheduled_profiles_rule_summary">%1$s · %2$d:00 – %3$d:00</string>
+    <string name="scheduled_profiles_delete_title">Zamanlamayı sil</string>
+    <string name="scheduled_profiles_delete_message">\"%1$s\" zamanlaması silinsin mi?</string>
+
+    <!-- EQ visualizer -->
+    <string name="eq_visualizer_title">Canlı ses</string>
+    <string name="eq_visualizer_desc">Sistem ses çıkışından gerçek zamanlı dalga formu</string>
+
+    <!-- Preset share codes -->
+    <string name="preset_share_title">Topluluk paylaşım kodu</string>
+    <string name="preset_share_desc">Diğer LunarisDolby kullanıcılarıyla kompakt kodlar paylaş. Kodu yapıştırarak preseti anında içe aktar.</string>
+    <string name="preset_share_generate">Paylaşım kodunu göster</string>
+    <string name="preset_share_import">Paylaşım kodu içe aktar</string>
+    <string name="preset_share_copy">Kodu kopyala</string>
+    <string name="preset_share_copied">Paylaşım kodu kopyalandı</string>
+    <string name="preset_share_import_hint">LDOLBY1:… kodunu buraya yapıştır</string>
+    <string name="preset_share_import_success">Preset paylaşım kodundan içe aktarıldı</string>
+    <string name="preset_share_import_failed">Geçersiz paylaşım kodu: %1$s</string>
+    <string name="preset_share_code_label">\"%1$s\" için paylaşım kodu</string>
+
+    <!-- Hybrid profile priority -->
+    <string name="profile_priority_title">Profil önceliği</string>
+    <string name="profile_priority_desc">Uygulama profili ve cihaz hafızası birlikte açıkken hangisinin öncelikli olacağını seç.</string>
+    <string name="profile_priority_device">Önce cihaz hafızası</string>
+    <string name="profile_priority_app">Önce uygulama profilleri</string>
+    <string name="hybrid_both_enabled_info">Her iki özellik de aktif. Cihaz veya uygulama değişimlerinde öncelik belirler.</string>
+
 </resources>

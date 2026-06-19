@@ -107,6 +107,36 @@ sealed class CustomPresetUiState {
     data class Error(val message: String) : CustomPresetUiState()
 }
 
+data class ScheduledProfileRule(
+    val id: String,
+    val name: String,
+    val profileId: Int,
+    val startHour: Int,
+    val startMinute: Int,
+    val endHour: Int,
+    val endMinute: Int,
+    val enabled: Boolean = true
+) {
+    fun containsMinute(minuteOfDay: Int): Boolean {
+        val start = startHour * 60 + startMinute
+        val end = endHour * 60 + endMinute
+        return if (start <= end) {
+            minuteOfDay in start until end
+        } else {
+            minuteOfDay >= start || minuteOfDay < end
+        }
+    }
+}
+
+sealed class ScheduledProfileUiState {
+    object Loading : ScheduledProfileUiState()
+    data class Success(
+        val rules: List<ScheduledProfileRule>,
+        val enabled: Boolean
+    ) : ScheduledProfileUiState()
+    data class Error(val message: String) : ScheduledProfileUiState()
+}
+
 sealed class DolbyUiState {
     object Loading : DolbyUiState()
     data class Success(

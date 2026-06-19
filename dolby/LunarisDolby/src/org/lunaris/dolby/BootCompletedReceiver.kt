@@ -12,6 +12,7 @@ import android.content.Intent
 import android.provider.Settings
 import android.util.Log
 import org.lunaris.dolby.data.DolbyRepository
+import org.lunaris.dolby.data.ScheduledProfileManager
 import org.lunaris.dolby.service.AppProfileMonitorService
 import org.lunaris.dolby.service.DolbyEffectService
 import org.lunaris.dolby.service.DolbyNotificationListener
@@ -35,6 +36,10 @@ class BootCompletedReceiver : BroadcastReceiver() {
                     
                     if (isNotificationListenerEnabled(context)) {
                         requestNotificationListenerRebind(context)
+                    }
+
+                    ScheduledProfileManager(context).let { manager ->
+                        if (manager.isEnabled()) manager.scheduleNextCheck()
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to initialize Dolby", e)
