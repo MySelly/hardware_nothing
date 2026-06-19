@@ -138,6 +138,16 @@ class AppProfileMonitorService : Service() {
     private fun checkForegroundApp() {
         try {
             val prefs = getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
+            val deviceMemory = prefs.getBoolean(DolbyConstants.PREF_DEVICE_STATE_MEMORY, false)
+            val priority = prefs.getString(
+                DolbyConstants.PREF_PROFILE_PRIORITY,
+                DolbyConstants.PROFILE_PRIORITY_DEVICE
+            ) ?: DolbyConstants.PROFILE_PRIORITY_DEVICE
+            if (deviceMemory && priority == DolbyConstants.PROFILE_PRIORITY_DEVICE) {
+                DolbyConstants.dlog(TAG, "Device memory has priority, skipping app profile switch")
+                return
+            }
+
             val headphoneOnlyMode = prefs.getBoolean("app_profile_headphone_only", false)
             
             if (headphoneOnlyMode && !isHeadphoneConnected()) {

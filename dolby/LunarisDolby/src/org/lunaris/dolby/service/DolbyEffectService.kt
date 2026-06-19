@@ -85,6 +85,19 @@ class DolbyEffectService : Service() {
     }
 
     private fun handleDeviceChange() {
+        val appMonitoring = dolbyPrefs.getBoolean("app_profile_monitoring_enabled", false)
+        val priority = dolbyPrefs.getString(
+            DolbyConstants.PREF_PROFILE_PRIORITY,
+            DolbyConstants.PROFILE_PRIORITY_DEVICE
+        ) ?: DolbyConstants.PROFILE_PRIORITY_DEVICE
+
+        if (appMonitoring && priority == DolbyConstants.PROFILE_PRIORITY_APP) {
+            Log.d(TAG, "App profile priority active, skipping device snapshot restore")
+            repository.applySavedState()
+            previousActiveDevice = getCurrentOutputDevice()
+            return
+        }
+
         val newDevice = getCurrentOutputDevice()
         val oldDevice = previousActiveDevice
 

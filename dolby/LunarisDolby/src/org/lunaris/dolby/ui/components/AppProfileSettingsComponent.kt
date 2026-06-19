@@ -48,7 +48,16 @@ fun AppProfileSettingsCard(
     var headphoneOnlyMode by remember {
         mutableStateOf(prefs.getBoolean("app_profile_headphone_only", false))
     }
+    var profilePriority by remember {
+        mutableStateOf(
+            prefs.getString(
+                DolbyConstants.PREF_PROFILE_PRIORITY,
+                DolbyConstants.PROFILE_PRIORITY_DEVICE
+            ) ?: DolbyConstants.PROFILE_PRIORITY_DEVICE
+        )
+    }
     var showPermissionDialog by remember { mutableStateOf(false) }
+    val bothEnabled = isEnabled && isDeviceStateMemoryEnabled
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -108,14 +117,10 @@ fun AppProfileSettingsCard(
                 
                 Switch(
                     checked = isEnabled,
-                    enabled = !isDeviceStateMemoryEnabled,
                     onCheckedChange = { enabled ->
                         if (enabled && !hasUsageStatsPermission(context)) {
                             showPermissionDialog = true
                         } else {
-                            if (enabled && isDeviceStateMemoryEnabled) {
-                                return@Switch
-                            }
                             isEnabled = enabled
                             prefs.edit().putBoolean("app_profile_monitoring_enabled", enabled).apply()
                             
@@ -150,18 +155,18 @@ fun AppProfileSettingsCard(
                 )
             }
 
-            AnimatedVisibility(visible = isDeviceStateMemoryEnabled) {
+            AnimatedVisibility(visible = bothEnabled) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 6.dp),
                     shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
                 ) {
                     Text(
-                        text = stringResource(R.string.device_state_memory_conflict_summary),
+                        text = stringResource(R.string.hybrid_both_enabled_info),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                     )
                 }
@@ -291,15 +296,9 @@ fun AppProfileSettingsCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = if (isEnabled)
-                            stringResource(R.string.app_profile_conflict_summary)
-                        else
-                            stringResource(R.string.device_state_memory_summary),
+                        text = stringResource(R.string.device_state_memory_summary),
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (isEnabled)
-                            MaterialTheme.colorScheme.error
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
@@ -308,20 +307,7 @@ fun AppProfileSettingsCard(
 
                 Switch(
                     checked = isDeviceStateMemoryEnabled,
-                    enabled = !isEnabled,
                     onCheckedChange = { enabled ->
-                        if (enabled && isEnabled) {
-                            isEnabled = false
-                            prefs.edit()
-                                .putBoolean("app_profile_monitoring_enabled", false)
-                                .apply()
-                            AppProfileMonitorService.stopMonitoring(context)
-                            android.widget.Toast.makeText(
-                                context,
-                                context.getString(R.string.app_profile_conflict_toast),
-                                android.widget.Toast.LENGTH_SHORT
-                            ).show()
-                        }
                         isDeviceStateMemoryEnabled = enabled
                         prefs.edit()
                             .putBoolean(DolbyConstants.PREF_DEVICE_STATE_MEMORY, enabled)
@@ -349,6 +335,47 @@ fun AppProfileSettingsCard(
                         }
                     }
                 )
+            }
+
+            AnimatedVisibility(visible = bothEnabled) {
+                Column(modifier = Modifier.padding(top = 12.dp)) {
+                    Text(
+                        text = stringResource(R.string.profile_priority_title),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.profile_priority_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
+                    )
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                        SegmentedButton(
+                            selected = profilePriority == DolbyConstants.PROFILE_PRIORITY_DEVICE,
+                            onClick = {
+                                profilePriority = DolbyConstants.PROFILE_PRIORITY_DEVICE
+                                prefs.edit()
+                                    .putString(DolbyConstants.PREF_PROFILE_PRIORITY, profilePriority)
+                                    .apply()
+                            },
+                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                            label = { Text(stringResource(R.string.profile_priority_device)) }
+                        )
+                        SegmentedButton(
+                            selected = profilePriority == DolbyConstants.PROFILE_PRIORITY_APP,
+                            onClick = {
+                                profilePriority = DolbyConstants.PROFILE_PRIORITY_APP
+                                prefs.edit()
+                                    .putString(DolbyConstants.PREF_PROFILE_PRIORITY, profilePriority)
+                                    .apply()
+                            },
+                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                            label = { Text(stringResource(R.string.profile_priority_app)) }
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
