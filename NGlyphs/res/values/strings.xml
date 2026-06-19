@@ -120,4 +120,88 @@
     <string name="builtin_sounds">Built-in Sounds</string>
     <string name="imported_ringtones">Imported Ringtones</string>
     <string name="imported_sounds">Imported Sounds</string>
+
+    <!-- Main UI (previously hardcoded) -->
+    <string name="auto_brightness">Auto</string>
+    <string name="style_unknown">Not set</string>
+    <string name="flip_style_stock">Stock</string>
+    <string name="torch_title">Torch</string>
+    <string name="torch_brightness">Torch brightness</string>
+    <string name="assistant_title">Google Assistant</string>
+    <string name="assistant_desc">Visualize speech on bottom strip</string>
+    <string name="music_visualizer_title">Music\nVisualization</string>
+    <string name="music_visualizer_beat">Beat detection · Pulse on beats</string>
+    <string name="music_visualizer_5zone">5-zone · Sync to audio</string>
+    <string name="music_visualizer_15zone">15-zone · Full LED array</string>
+    <string name="music_visualizer_mode_title">Visualizer mode</string>
+    <string name="music_visualizer_mode_beat">Beat detection</string>
+    <string name="music_visualizer_mode_5">5-zone LED visualizer</string>
+    <string name="music_visualizer_mode_15">15-zone LED visualizer</string>
+    <string name="glyph_converter_title">Glyph Converter</string>
+    <string name="glyph_converter_desc">Convert audio to Glyph-synced OGG</string>
+    <string name="progress_brightness">Progress brightness %</string>
+    <string name="credits_footer">Credits &amp; contributors</string>
+
+    <!-- Cooldown extras -->
+    <string name="notification_cooldown_seconds">Cooldown: %1$d s</string>
+    <string name="cooldown_vip_title">Cooldown exceptions</string>
+    <string name="cooldown_vip_desc">Apps that bypass the notification cooldown</string>
+    <string name="cooldown_vip_manage">Manage exempt apps</string>
+
+    <!-- Credits -->
+    <string name="credits_title">Credits &amp; Contributors</string>
+    <string name="credits_thanks">Thank you to all contributors who made Glyph Manager possible!</string>
+    <string name="credits_view_github">View on GitHub</string>
+    <string name="credits_github_repo">crdroidandroid/android_hardware_nothing</string>
+    <string name="credits_main_contributors">Main contributors</string>
+    <string name="credits_contributor_myselly">Turkish localization &amp; feature expansion</string>
+    <string name="credits_contributor_aspends">Original Glyph Manager rewrite</string>
+    <string name="close">Close</string>
+
+    <!-- Backup -->
+    <string name="backup_title">Backup &amp; restore</string>
+    <string name="backup_desc">Export or import all Glyph settings and custom patterns</string>
+    <string name="backup_export">Export settings</string>
+    <string name="backup_import">Import settings</string>
+    <string name="backup_export_success">Settings exported successfully</string>
+    <string name="backup_import_success">Settings restored successfully</string>
+    <string name="backup_import_failed">Import failed: %1$s</string>
+    <string name="backup_import_confirm_title">Restore settings?</string>
+    <string name="backup_import_confirm_message">This replaces your current Glyph preferences. Custom OGG files listed in the backup must already be on the device.</string>
+    <string name="backup_restore">Restore</string>
+
+    <!-- DND -->
+    <string name="dnd_respect_title">Respect Do Not Disturb</string>
+    <string name="dnd_respect_desc">Skip notification glyph animations while DND is active</string>
+
+    <!-- Progress priority -->
+    <string name="progress_priority_title">Progress bar priority</string>
+    <string name="progress_priority_desc">Choose which source wins when music and downloads overlap</string>
+    <string name="progress_priority_download">Downloads first</string>
+    <string name="progress_priority_music">Music first</string>
+
+    <!-- Essential idle -->
+    <string name="essential_idle_title">Essential idle timeout</string>
+    <string name="essential_idle_desc">Turn off essential lights after no movement</string>
+    <string name="essential_idle_minutes">%1$d min</string>
+
+    <!-- Sleep call exception -->
+    <string name="sleep_allow_calls_title">Allow incoming calls</string>
+    <string name="sleep_allow_calls_desc">Call glyph animations stay active during sleep mode</string>
+
+    <!-- Battery alerts -->
+    <string name="low_battery_glyph_title">Low battery alert</string>
+    <string name="low_battery_glyph_desc">Show battery level on Glyph when flipped and below threshold</string>
+    <string name="low_battery_threshold">Alert below: %1$d%%</string>
+    <string name="charge_complete_glyph_title">Charge complete pulse</string>
+    <string name="charge_complete_glyph_desc">Brief full-bar animation when battery reaches 100%</string>
+
+    <!-- Diagnostics -->
+    <string name="crash_log_share">Share crash log</string>
+    <string name="crash_log_none">No crash log found</string>
+    <string name="crash_log_share_subject">Glyph Manager crash log</string>
+
+    <!-- VIP apps screen -->
+    <string name="vip_apps_title">Cooldown exceptions</string>
+    <string name="vip_apps_desc">Selected apps ignore the notification cooldown timer</string>
 </resources>
