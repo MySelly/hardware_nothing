@@ -49,17 +49,25 @@ public class AppInfoAdapter
     private Set<String> enabledPackages;
     private boolean showSystemApps = false;
     private CharSequence currentQuery = "";
+    private final String packagesPrefKey;
+    private final boolean compactMode;
 
     // Bounds the lazy-loader threads to avoid OutOfMemory or Thread exhaustion
     // resulting in ANRs
     private final ExecutorService iconLoaderExecutor = Executors.newFixedThreadPool(4);
 
     public AppInfoAdapter(Context context) {
+        this(context, "essential_apps", false);
+    }
+
+    public AppInfoAdapter(Context context, String packagesPrefKey, boolean compactMode) {
         this.context = context;
         this.pm = context.getPackageManager();
         this.prefs = context.getSharedPreferences(
                 context.getString(R.string.pref_file), Context.MODE_PRIVATE);
-        this.enabledPackages = new HashSet<>(prefs.getStringSet("essential_apps", new HashSet<>()));
+        this.packagesPrefKey = packagesPrefKey;
+        this.compactMode = compactMode;
+        this.enabledPackages = new HashSet<>(prefs.getStringSet(packagesPrefKey, new HashSet<>()));
 
         loadApps();
     }
@@ -184,16 +192,22 @@ public class AppInfoAdapter
 
         holder.switchEnabled.setOnCheckedChangeListener(null);
         holder.switchEnabled.setChecked(app.isEnabled);
-        holder.iconSettings.setVisibility(app.isEnabled ? View.VISIBLE : View.GONE);
+        holder.iconSettings.setVisibility(
+                (!compactMode && app.isEnabled) ? View.VISIBLE : View.GONE);
 
-        holder.layoutAppBody.setOnClickListener(v -> {
-            app.isExpanded = !app.isExpanded;
-            notifyItemChanged(position);
-        });
+        if (compactMode) {
+            holder.layoutAppBody.setOnClickListener(null);
+        } else {
+            holder.layoutAppBody.setOnClickListener(v -> {
+                app.isExpanded = !app.isExpanded;
+                notifyItemChanged(position);
+            });
+        }
 
         holder.switchEnabled.setOnCheckedChangeListener((btn, isChecked) -> {
             app.isEnabled = isChecked;
-            holder.iconSettings.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            holder.iconSettings.setVisibility(
+                    (!compactMode && isChecked) ? View.VISIBLE : View.GONE);
 
             if (isChecked) {
                 enabledPackages.add(app.packageName);
@@ -201,7 +215,7 @@ public class AppInfoAdapter
                 enabledPackages.remove(app.packageName);
                 app.isExpanded = false;
             }
-            prefs.edit().putStringSet("essential_apps", enabledPackages).apply();
+            prefs.edit().putStringSet(packagesPrefKey, enabledPackages).apply();
 
             // Sync status with original rawApps list so persistence is kept when
             // re-filtering
@@ -214,7 +228,8 @@ public class AppInfoAdapter
             notifyItemChanged(position);
         });
 
-        holder.iconSettings.setOnClickListener(v -> {
+        if (!compactMode) {
+            holder.iconSettings.setOnClickListener(v -> {
             String[] options = {"Default", "Camera", "Diagonal", "Main", "Line", "Dot", "Red"};
             String[] values = {
                     "DEFAULT", "CAMERA", "DIAGONAL", "MAIN", "LINE", "DOT", "SINGLE_LED"};
@@ -270,9 +285,12 @@ public class AppInfoAdapter
                             })
                     .setNegativeButton("Cancel", null)
                     .show();
-        });
+            });
+        } else {
+            holder.iconSettings.setOnClickListener(null);
+        }
 
-        if (app.isExpanded) {
+        if (!compactMode && app.isExpanded) {
             holder.layoutChannels.setVisibility(View.VISIBLE);
             holder.layoutChannels.removeAllViews();
 
@@ -372,7 +390,7 @@ public class AppInfoAdapter
                                     app.isEnabled = true;
                                     enabledPackages.add(app.packageName);
                                     prefs.edit()
-                                            .putStringSet("essential_apps", enabledPackages)
+                                            .putStringSet(packagesPrefKey, enabledPackages)
                                             .apply();
                                     notifyItemChanged(position);
                                 }

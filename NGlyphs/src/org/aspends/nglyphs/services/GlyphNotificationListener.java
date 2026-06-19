@@ -70,7 +70,15 @@ public class GlyphNotificationListener
     private Sensor accelerometer;
     private long lastMovementTime = SystemClock.elapsedRealtime();
     private boolean isBatterySaverActive = false;
-    private static final long IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+    private static final long DEFAULT_IDLE_TIMEOUT_MS = 30 * 60 * 1000L;
+
+    private long getIdleTimeoutMs() {
+        if (prefs == null) {
+            return DEFAULT_IDLE_TIMEOUT_MS;
+        }
+        int idleMinutes = prefs.getInt("essential_idle_minutes", 30);
+        return Math.max(5, idleMinutes) * 60 * 1000L;
+    }
     private float[] lastGravity = new float[3];
     private static final float MOVEMENT_THRESHOLD = 0.5f;
 
@@ -418,10 +426,21 @@ public class GlyphNotificationListener
             lastBlinkTimes.put(sbn.getKey(), now);
 
             if (prefs.getBoolean("notif_cooldown_enabled", false)) {
-                Long lastPkgTrigger = lastPackageTriggerTimes.get(pkgName);
-                if (lastPkgTrigger != null && (now - lastPkgTrigger < 60000))
-                    return;
-                lastPackageTriggerTimes.put(pkgName, now);
+                java.util.Set<String> exempt =
+                        prefs.getStringSet("cooldown_exempt_packages", new java.util.HashSet<>());
+                if (!exempt.contains(pkgName)) {
+                    int cooldownSec = prefs.getInt("notif_cooldown_seconds", 60);
+                    long cooldownMs = Math.max(15, cooldownSec) * 1000L;
+                    Long lastPkgTrigger = lastPackageTriggerTimes.get(pkgName);
+                    if (lastPkgTrigger != null && (now - lastPkgTrigger < cooldownMs))
+                        return;
+                    lastPackageTriggerTimes.put(pkgName, now);
+                }
+            }
+
+            if (prefs.getBoolean("respect_dnd", false)
+                    && org.aspends.nglyphs.util.DndHelper.isDndActive(this)) {
+                return;
             }
 
             if (prefs.getBoolean("screen_off_only", false)) {
@@ -540,7 +559,9 @@ public class GlyphNotificationListener
             return;
         }
 
-        // Priority 1: Notifications (Downloads, Installs)
+        // Priority depends on user setting
+        boolean musicFirst = prefs.getInt("progress_source_priority", 0) == 1;
+
         int highestNotif = -1;
         for (Map.Entry<String, Integer> entry : activeProgressMap.entrySet()) {
             if (entry.getKey().startsWith("MEDIA_") || entry.getKey().startsWith("BT_"))
@@ -549,33 +570,48 @@ public class GlyphNotificationListener
                 highestNotif = entry.getValue();
         }
 
-        if (highestNotif != -1) {
-            AnimationManager.showProgressLevel(highestNotif, this);
-            return;
-        }
-
-        // Priority 2: Bluetooth Battery
         int highestBT = -1;
         for (Map.Entry<String, Integer> entry : activeProgressMap.entrySet()) {
             if (entry.getKey().startsWith("BT_") && entry.getValue() > highestBT) {
                 highestBT = entry.getValue();
             }
         }
-        if (highestBT != -1) {
-            AnimationManager.showProgressLevel(highestBT, this);
-            return;
-        }
 
-        // Priority 3: Media
         findActiveMediaController();
+        Integer mediaPercent = null;
         if (activeController != null) {
             PlaybackState state = activeController.getPlaybackState();
             boolean isPlaying = state != null && state.getState() == PlaybackState.STATE_PLAYING;
-
             String key = "MEDIA_" + activeController.getPackageName();
-            Integer mediaPercent = activeProgressMap.get(key);
+            mediaPercent = activeProgressMap.get(key);
+            if (!isPlaying) {
+                mediaPercent = null;
+            }
+        }
 
-            if (isPlaying && mediaPercent != null) {
+        if (musicFirst) {
+            if (mediaPercent != null) {
+                AnimationManager.showProgressLevel(mediaPercent, this);
+                return;
+            }
+            if (highestNotif != -1) {
+                AnimationManager.showProgressLevel(highestNotif, this);
+                return;
+            }
+            if (highestBT != -1) {
+                AnimationManager.showProgressLevel(highestBT, this);
+                return;
+            }
+        } else {
+            if (highestNotif != -1) {
+                AnimationManager.showProgressLevel(highestNotif, this);
+                return;
+            }
+            if (highestBT != -1) {
+                AnimationManager.showProgressLevel(highestBT, this);
+                return;
+            }
+            if (mediaPercent != null) {
                 AnimationManager.showProgressLevel(mediaPercent, this);
                 return;
             }
@@ -777,7 +813,7 @@ public class GlyphNotificationListener
             prefs = getSharedPreferences(getString(R.string.pref_file), MODE_PRIVATE);
 
         if (prefs.getBoolean("essential_battery_saver", false)) {
-            if (SystemClock.elapsedRealtime() - lastMovementTime > IDLE_TIMEOUT_MS) {
+            if (SystemClock.elapsedRealtime() - lastMovementTime > getIdleTimeoutMs()) {
                 if (!isBatterySaverActive) {
                     isBatterySaverActive = true;
                     android.util.Log.d(
