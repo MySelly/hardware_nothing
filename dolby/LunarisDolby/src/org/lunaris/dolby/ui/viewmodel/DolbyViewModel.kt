@@ -91,7 +91,19 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     bassLevel = repository.getBassLevel(profile),
                     midLevel = repository.getMidLevel(profile),
                     trebleLevel = repository.getTrebleLevel(profile),
-                    bassCurve = repository.getBassCurve(profile)
+                    bassCurve = repository.getBassCurve(profile),
+                    outputBoostEnabled = repository.isOutputBoostEnabled(profile),
+                    outputBoostTenthsDb = repository.getOutputBoostTenths(profile),
+                    volmaxBoostEnabled = repository.isVolmaxBoostEnabled(profile),
+                    volmaxBoost = repository.getVolmaxBoost(profile),
+                    ieqAmount = repository.getIeqAmount(profile),
+                    surroundBoostEnabled = repository.isSurroundBoostEnabled(profile),
+                    surroundBoost = repository.getSurroundBoost(profile),
+                    volumeLevelerAmount = repository.getVolumeLevelerAmount(profile),
+                    virtualBassEnabled = repository.isVirtualBassEnabled(profile),
+                    hearingProtectionEnabled = repository.isHearingProtectionEnabled(profile),
+                    dspVolumeBoostEnabled = repository.isDspVolumeBoostEnabled(),
+                    dspVolumeBoostStrength = repository.getDspVolumeBoostStrength()
                 )
                 
                 if (!isCleared) {
@@ -309,6 +321,101 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 loadSettings()
             } catch (e: Exception) {
                 DolbyConstants.dlog(TAG, "Error resetting profiles: ${e.message}")
+            }
+        }
+    }
+
+    fun setOutputBoost(enabled: Boolean, tenthsDb: Int) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setOutputBoost(profile, enabled, tenthsDb)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting output boost: ${e.message}")
+            }
+        }
+    }
+
+    fun setVolmaxBoost(enabled: Boolean, value: Int) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setVolmaxBoost(profile, enabled, value)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting volmax boost: ${e.message}")
+            }
+        }
+    }
+
+    fun setIeqAmount(amount: Int) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setIeqAmount(profile, amount)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting IEQ amount: ${e.message}")
+            }
+        }
+    }
+
+    fun setSurroundBoost(enabled: Boolean, value: Int) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setSurroundBoost(profile, enabled, value)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting surround boost: ${e.message}")
+            }
+        }
+    }
+
+    fun setVolumeLevelerAmount(amount: Int) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setVolumeLevelerAmount(profile, amount)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting volume leveler amount: ${e.message}")
+            }
+        }
+    }
+
+    fun setVirtualBass(enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setVirtualBassEnabled(profile, enabled)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting virtual bass: ${e.message}")
+            }
+        }
+    }
+
+    fun setHearingProtection(enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setHearingProtectionEnabled(profile, enabled)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting hearing protection: ${e.message}")
+            }
+        }
+    }
+
+    fun setDspVolumeBoost(enabled: Boolean, strength: Int) {
+        viewModelScope.launch {
+            try {
+                repository.setDspVolumeBoost(enabled, strength)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting DSP volume boost: ${e.message}")
             }
         }
     }

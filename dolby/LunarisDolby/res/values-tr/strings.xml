@@ -236,4 +236,27 @@
     <string name="profile_priority_app">Önce uygulama profilleri</string>
     <string name="hybrid_both_enabled_info">Her iki özellik de aktif. Cihaz veya uygulama değişimlerinde öncelik belirler.</string>
 
+    <!-- Audio tuning / loudness -->
+    <string name="audio_tuning_title">Ses yüksekliği &amp; çıkış ayarı</string>
+    <string name="output_boost_title">Çıkış boost</string>
+    <string name="output_boost_summary">EQ üzerine uygulanan global kazanç. Kapatmak için 0 yap veya kapat. 0 dB altına indirilebilir.</string>
+    <string name="output_boost_value">%1$.1f dB</string>
+    <string name="volmax_boost_title">Volmax boost</string>
+    <string name="volmax_boost_summary">Donanım max ses genişletmesi (DAX volmax). Stok ses için kapat.</string>
+    <string name="volmax_boost_value">%1$d</string>
+    <string name="ieq_amount_title">IEQ yoğunluğu</string>
+    <string name="ieq_amount_summary">Akıllı ekolayzır presetinin ne kadar güçlü uygulanacağı</string>
+    <string name="surround_boost_title">Surround boost</string>
+    <string name="surround_boost_summary">Stereo genişletmeden ayrı surround decoder yükseltmesi</string>
+    <string name="volume_leveler_amount_title">Leveler gücü</string>
+    <string name="volume_leveler_amount_summary">Leveler açıkken dinamik ses normalizasyon miktarı</string>
+    <string name="virtual_bass_title">Sanal bas</string>
+    <string name="virtual_bass_summary">Küçük hoparlörlerde daha derin bas için DAX sanal bas işleme</string>
+    <string name="hearing_protection_title">İşitme koruması</string>
+    <string name="hearing_protection_summary">Yüksek çıkış boost kullanırken tepe seviyeleri sınırla</string>
+    <string name="dsp_volume_boost_title">DSP ses yükseltme</string>
+    <string name="dsp_volume_boost_summary">Yüksek medya ses adımlarında DSP senkron ile ekstra ses</string>
+    <string name="dsp_volume_boost_strength">Yükseltme gücü</string>
+    <string name="audio_tuning_disabled">Kapalı</string>
+
 </resources>

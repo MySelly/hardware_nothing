@@ -294,4 +294,27 @@
     <string name="profile_priority_device">Device memory first</string>
     <string name="profile_priority_app">Per-app profiles first</string>
     <string name="hybrid_both_enabled_info">Both features are active. Priority determines which applies on device or app changes.</string>
+
+    <!-- Audio tuning / loudness -->
+    <string name="audio_tuning_title">Loudness &amp; output tuning</string>
+    <string name="output_boost_title">Output boost</string>
+    <string name="output_boost_summary">Global gain applied on top of EQ. Set to 0 or turn off to disable. Can reduce below 0 dB.</string>
+    <string name="output_boost_value">%1$.1f dB</string>
+    <string name="volmax_boost_title">Volmax boost</string>
+    <string name="volmax_boost_summary">Hardware max-volume extension (DAX volmax). Turn off for stock loudness.</string>
+    <string name="volmax_boost_value">%1$d</string>
+    <string name="ieq_amount_title">IEQ intensity</string>
+    <string name="ieq_amount_summary">How strongly the intelligent equalizer preset is applied</string>
+    <string name="surround_boost_title">Surround boost</string>
+    <string name="surround_boost_summary">Extra surround decoder lift separate from stereo widening</string>
+    <string name="volume_leveler_amount_title">Leveler strength</string>
+    <string name="volume_leveler_amount_summary">Dynamic loudness normalization amount when leveler is on</string>
+    <string name="virtual_bass_title">Virtual bass</string>
+    <string name="virtual_bass_summary">DAX virtual bass processing for deeper low-end on small drivers</string>
+    <string name="hearing_protection_title">Hearing protection</string>
+    <string name="hearing_protection_summary">Limit peak levels when using high output boost</string>
+    <string name="dsp_volume_boost_title">DSP volume lift</string>
+    <string name="dsp_volume_boost_summary">Extra loudness at high media volume steps via DSP sync</string>
+    <string name="dsp_volume_boost_strength">Lift strength</string>
+    <string name="audio_tuning_disabled">Off</string>
 </resources>

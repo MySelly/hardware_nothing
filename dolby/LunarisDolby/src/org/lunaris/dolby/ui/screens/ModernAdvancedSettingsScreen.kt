@@ -267,6 +267,15 @@ private fun ModernAdvancedSettingsContent(
                     }
                 }
             }
+
+            item {
+                AudioTuningSettingsCard(
+                    profileSettings = state.profileSettings,
+                    volumeLevelerEnabled = state.settings.volumeLevelerEnabled,
+                    showIeqAmount = state.settings.currentProfile != 0,
+                    viewModel = viewModel
+                )
+            }
             
             item {
                 ModernSettingsCard(
@@ -280,6 +289,19 @@ private fun ModernAdvancedSettingsContent(
                         onCheckedChange = { viewModel.setVolumeLeveler(it) },
                         icon = Icons.Default.BarChart
                     )
+                    AnimatedVisibility(visible = state.settings.volumeLevelerEnabled) {
+                        Column {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            ModernSettingSlider(
+                                title = stringResource(R.string.volume_leveler_amount_title),
+                                value = state.profileSettings.volumeLevelerAmount.toFloat(),
+                                onValueChange = { viewModel.setVolumeLevelerAmount(it.toInt()) },
+                                valueRange = 0f..10f,
+                                steps = 9,
+                                valueLabel = { "$it" }
+                            )
+                        }
+                    }
                 }
             }
             
@@ -406,6 +428,164 @@ private fun ModernAdvancedSettingsContent(
         
         item {
             Spacer(modifier = Modifier.height(70.dp))
+        }
+    }
+}
+
+@Composable
+private fun AudioTuningSettingsCard(
+    profileSettings: org.lunaris.dolby.domain.models.ProfileSettings,
+    volumeLevelerEnabled: Boolean,
+    showIeqAmount: Boolean,
+    viewModel: DolbyViewModel
+) {
+    ModernSettingsCard(
+        title = stringResource(R.string.audio_tuning_title),
+        icon = Icons.Default.VolumeUp
+    ) {
+        ModernSettingSwitch(
+            title = stringResource(R.string.output_boost_title),
+            subtitle = stringResource(R.string.output_boost_summary),
+            checked = profileSettings.outputBoostEnabled,
+            onCheckedChange = { enabled ->
+                if (enabled) {
+                    val tenths = if (profileSettings.outputBoostTenthsDb == 0) 30 else profileSettings.outputBoostTenthsDb
+                    viewModel.setOutputBoost(true, tenths)
+                } else {
+                    viewModel.setOutputBoost(false, profileSettings.outputBoostTenthsDb)
+                }
+            },
+            icon = Icons.Default.TrendingUp
+        )
+        AnimatedVisibility(visible = profileSettings.outputBoostEnabled) {
+            Column {
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.output_boost_title),
+                    value = profileSettings.outputBoostTenthsDb / 10f,
+                    onValueChange = { viewModel.setOutputBoost(true, (it * 10).toInt()) },
+                    valueRange = -6f..6f,
+                    steps = 119,
+                    valueLabel = { stringResource(R.string.output_boost_value, it) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        ModernSettingSwitch(
+            title = stringResource(R.string.volmax_boost_title),
+            subtitle = stringResource(R.string.volmax_boost_summary),
+            checked = profileSettings.volmaxBoostEnabled,
+            onCheckedChange = { enabled ->
+                if (enabled) {
+                    val value = if (profileSettings.volmaxBoost == 0) 64 else profileSettings.volmaxBoost
+                    viewModel.setVolmaxBoost(true, value)
+                } else {
+                    viewModel.setVolmaxBoost(false, profileSettings.volmaxBoost)
+                }
+            },
+            icon = Icons.Default.Speaker
+        )
+        AnimatedVisibility(visible = profileSettings.volmaxBoostEnabled) {
+            Column {
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.volmax_boost_title),
+                    value = profileSettings.volmaxBoost.toFloat(),
+                    onValueChange = { viewModel.setVolmaxBoost(true, it.toInt()) },
+                    valueRange = 0f..96f,
+                    steps = 95,
+                    valueLabel = { stringResource(R.string.volmax_boost_value, it.toInt()) }
+                )
+            }
+        }
+
+        if (showIeqAmount) {
+            Spacer(modifier = Modifier.height(12.dp))
+            ModernSettingSlider(
+                title = stringResource(R.string.ieq_amount_title),
+                value = profileSettings.ieqAmount.toFloat(),
+                onValueChange = { viewModel.setIeqAmount(it.toInt()) },
+                valueRange = 0f..10f,
+                steps = 9,
+                valueLabel = { "$it" }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        ModernSettingSwitch(
+            title = stringResource(R.string.surround_boost_title),
+            subtitle = stringResource(R.string.surround_boost_summary),
+            checked = profileSettings.surroundBoostEnabled,
+            onCheckedChange = { enabled ->
+                if (enabled) {
+                    val value = if (profileSettings.surroundBoost == 0) 16 else profileSettings.surroundBoost
+                    viewModel.setSurroundBoost(true, value)
+                } else {
+                    viewModel.setSurroundBoost(false, profileSettings.surroundBoost)
+                }
+            },
+            icon = Icons.Default.SurroundSound
+        )
+        AnimatedVisibility(visible = profileSettings.surroundBoostEnabled) {
+            Column {
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.surround_boost_title),
+                    value = profileSettings.surroundBoost.toFloat(),
+                    onValueChange = { viewModel.setSurroundBoost(true, it.toInt()) },
+                    valueRange = 0f..64f,
+                    steps = 63,
+                    valueLabel = { "$it" }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        ModernSettingSwitch(
+            title = stringResource(R.string.virtual_bass_title),
+            subtitle = stringResource(R.string.virtual_bass_summary),
+            checked = profileSettings.virtualBassEnabled,
+            onCheckedChange = { viewModel.setVirtualBass(it) },
+            icon = Icons.Default.GraphicEq
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+        ModernSettingSwitch(
+            title = stringResource(R.string.hearing_protection_title),
+            subtitle = stringResource(R.string.hearing_protection_summary),
+            checked = profileSettings.hearingProtectionEnabled,
+            onCheckedChange = { viewModel.setHearingProtection(it) },
+            icon = Icons.Default.HealthAndSafety
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+        ModernSettingSwitch(
+            title = stringResource(R.string.dsp_volume_boost_title),
+            subtitle = stringResource(R.string.dsp_volume_boost_summary),
+            checked = profileSettings.dspVolumeBoostEnabled,
+            onCheckedChange = { enabled ->
+                if (enabled) {
+                    val strength = if (profileSettings.dspVolumeBoostStrength == 0) 50 else profileSettings.dspVolumeBoostStrength
+                    viewModel.setDspVolumeBoost(true, strength)
+                } else {
+                    viewModel.setDspVolumeBoost(false, profileSettings.dspVolumeBoostStrength)
+                }
+            },
+            icon = Icons.Default.VolumeUp
+        )
+        AnimatedVisibility(visible = profileSettings.dspVolumeBoostEnabled) {
+            Column {
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.dsp_volume_boost_strength),
+                    value = profileSettings.dspVolumeBoostStrength.toFloat(),
+                    onValueChange = { viewModel.setDspVolumeBoost(true, it.toInt()) },
+                    valueRange = 0f..100f,
+                    steps = 19,
+                    valueLabel = { "$it%" }
+                )
+            }
         }
     }
 }
