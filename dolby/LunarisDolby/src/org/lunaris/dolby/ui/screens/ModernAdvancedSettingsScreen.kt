@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -294,7 +295,7 @@ private fun ModernAdvancedSettingsContent(
                             Spacer(modifier = Modifier.height(12.dp))
                             ModernSettingSlider(
                                 title = stringResource(R.string.volume_leveler_amount_title),
-                                value = state.profileSettings.volumeLevelerAmount.toFloat(),
+                                value = state.profileSettings.volumeLevelerAmount,
                                 onValueChange = { viewModel.setVolumeLevelerAmount(it.toInt()) },
                                 valueRange = 0f..10f,
                                 steps = 9,
@@ -439,6 +440,7 @@ private fun AudioTuningSettingsCard(
     showIeqAmount: Boolean,
     viewModel: DolbyViewModel
 ) {
+    val context = LocalContext.current
     ModernSettingsCard(
         title = stringResource(R.string.audio_tuning_title),
         icon = Icons.Default.VolumeUp
@@ -462,11 +464,13 @@ private fun AudioTuningSettingsCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 ModernSettingSlider(
                     title = stringResource(R.string.output_boost_title),
-                    value = profileSettings.outputBoostTenthsDb / 10f,
-                    onValueChange = { viewModel.setOutputBoost(true, (it * 10).toInt()) },
-                    valueRange = -6f..6f,
+                    value = profileSettings.outputBoostTenthsDb,
+                    onValueChange = { viewModel.setOutputBoost(true, it.toInt()) },
+                    valueRange = -60f..60f,
                     steps = 119,
-                    valueLabel = { stringResource(R.string.output_boost_value, it) }
+                    valueLabel = { tenths ->
+                        context.getString(R.string.output_boost_value, tenths / 10f)
+                    }
                 )
             }
         }
@@ -491,11 +495,13 @@ private fun AudioTuningSettingsCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 ModernSettingSlider(
                     title = stringResource(R.string.volmax_boost_title),
-                    value = profileSettings.volmaxBoost.toFloat(),
+                    value = profileSettings.volmaxBoost,
                     onValueChange = { viewModel.setVolmaxBoost(true, it.toInt()) },
                     valueRange = 0f..96f,
                     steps = 95,
-                    valueLabel = { stringResource(R.string.volmax_boost_value, it.toInt()) }
+                    valueLabel = { value ->
+                        context.getString(R.string.volmax_boost_value, value)
+                    }
                 )
             }
         }
@@ -504,7 +510,7 @@ private fun AudioTuningSettingsCard(
             Spacer(modifier = Modifier.height(12.dp))
             ModernSettingSlider(
                 title = stringResource(R.string.ieq_amount_title),
-                value = profileSettings.ieqAmount.toFloat(),
+                value = profileSettings.ieqAmount,
                 onValueChange = { viewModel.setIeqAmount(it.toInt()) },
                 valueRange = 0f..10f,
                 steps = 9,
@@ -532,7 +538,7 @@ private fun AudioTuningSettingsCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 ModernSettingSlider(
                     title = stringResource(R.string.surround_boost_title),
-                    value = profileSettings.surroundBoost.toFloat(),
+                    value = profileSettings.surroundBoost,
                     onValueChange = { viewModel.setSurroundBoost(true, it.toInt()) },
                     valueRange = 0f..64f,
                     steps = 63,
@@ -579,7 +585,7 @@ private fun AudioTuningSettingsCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 ModernSettingSlider(
                     title = stringResource(R.string.dsp_volume_boost_strength),
-                    value = profileSettings.dspVolumeBoostStrength.toFloat(),
+                    value = profileSettings.dspVolumeBoostStrength,
                     onValueChange = { viewModel.setDspVolumeBoost(true, it.toInt()) },
                     valueRange = 0f..100f,
                     steps = 19,
