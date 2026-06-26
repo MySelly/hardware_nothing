@@ -8,6 +8,7 @@ package org.lunaris.dolby.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.PowerManager
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.data.DolbyAutomationCoordinator
 import org.lunaris.dolby.data.DolbyRepository
@@ -72,7 +73,7 @@ class DolbyAutomationReceiver : BroadcastReceiver() {
                     repository.close()
                 }
             }
-            Intent.ACTION_POWER_SAVE_MODE_CHANGED -> {
+            PowerManager.ACTION_POWER_SAVE_MODE_CHANGED -> {
                 DolbyAutomationCoordinator.applyBatterySaverIfNeeded(context)
             }
             "android.app.action.INTERRUPTION_FILTER_CHANGED" -> {

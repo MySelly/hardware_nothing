@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import org.lunaris.dolby.data.AudioEnginePreferences
 import org.lunaris.dolby.ui.components.*
 import org.lunaris.dolby.ui.viewmodel.EqualizerViewModel
+import org.lunaris.dolby.R
 import org.lunaris.dolby.domain.models.*
 import org.lunaris.dolby.utils.*
 
