@@ -162,6 +162,23 @@ private fun ModernAdvancedSettingsContent(
     ) {
         if (state.settings.enabled) {
             item {
+                val headroom = viewModel.getHeadroomInfo()
+                val engine = org.lunaris.dolby.data.AudioEnginePreferences(
+                    androidx.compose.ui.platform.LocalContext.current
+                )
+                if (engine.isHeadroomWarningEnabled() && headroom != null) {
+                    org.lunaris.dolby.ui.components.HeadroomWarningCard(headroom)
+                }
+                OutlinedButton(
+                    onClick = { navController.navigate(Screen.PowerUserAudio.route) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.power_user_audio_title))
+                }
+            }
+            item {
                 ModernSettingsCard(
                     title = stringResource(R.string.dolby_category_settings),
                     icon = Icons.Default.Tune
@@ -466,8 +483,9 @@ private fun AudioTuningSettingsCard(
                     title = stringResource(R.string.output_boost_title),
                     value = profileSettings.outputBoostTenthsDb,
                     onValueChange = { viewModel.setOutputBoost(true, it.toInt()) },
-                    valueRange = -60f..60f,
-                    steps = 119,
+                    valueRange = viewModel.getOutputBoostMinTenths().toFloat()..
+                        viewModel.getOutputBoostMaxTenths().toFloat(),
+                    steps = (viewModel.getOutputBoostMaxTenths() - viewModel.getOutputBoostMinTenths() - 1).coerceAtLeast(0),
                     valueLabel = { tenths ->
                         context.getString(R.string.output_boost_value, tenths / 10f)
                     }

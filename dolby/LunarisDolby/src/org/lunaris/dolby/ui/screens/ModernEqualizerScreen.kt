@@ -39,7 +39,8 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
-import org.lunaris.dolby.R
+import androidx.compose.ui.platform.LocalContext
+import org.lunaris.dolby.data.AudioEnginePreferences
 import org.lunaris.dolby.ui.components.*
 import org.lunaris.dolby.ui.viewmodel.EqualizerViewModel
 import org.lunaris.dolby.domain.models.*
@@ -442,6 +443,9 @@ private fun CurveViewContent(
     canEdit: Boolean,
     isActive: Boolean
 ) {
+    val context = LocalContext.current
+    val engine = remember { AudioEnginePreferences(context) }
+    val maxGainRaw = engine.getEqGainMax()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -503,6 +507,8 @@ private fun CurveViewContent(
                 },
                 isActive = isActive,
                 isEditable = canEdit,
+                maxGainRaw = maxGainRaw,
+                showSpectrumOverlay = engine.isEqSpectrumOverlayEnabled(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
@@ -517,6 +523,9 @@ private fun SlidersViewContent(
     viewModel: EqualizerViewModel,
     canEdit: Boolean
 ) {
+    val context = LocalContext.current
+    val engine = remember { AudioEnginePreferences(context) }
+    val maxGainDb = engine.maxGainDb()
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Card(
             modifier = Modifier
@@ -555,6 +564,7 @@ private fun SlidersViewContent(
                 Spacer(modifier = Modifier.height(12.dp))
                 FrequencyResponseCurve(
                     bandGains = state.bandGains,
+                    maxGainRaw = engine.getEqGainMax(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
@@ -632,7 +642,9 @@ private fun SlidersViewContent(
                                     viewModel.setBandGain(index, newGain)
                                 }
                             },
-                            enabled = canEdit
+                            enabled = canEdit,
+                            maxGainDb = maxGainDb,
+                            coloredLabels = engine.isEqColoredDbLabelsEnabled()
                         )
                     }
                 }
@@ -998,7 +1010,9 @@ fun ModernEqualizerBand(
     gain: Int,
     onGainChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    maxGainDb: Float = 15f,
+    coloredLabels: Boolean = true
 ) {
     var sliderValue by remember(gain) { mutableFloatStateOf(gain / 10f) }
     val haptic = rememberHapticFeedback()
@@ -1021,8 +1035,13 @@ fun ModernEqualizerBand(
                 text = "%.1f".format(sliderValue),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = if (enabled) MaterialTheme.colorScheme.onPrimaryContainer
-                       else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = when {
+                    !enabled -> MaterialTheme.colorScheme.onSurfaceVariant
+                    !coloredLabels -> MaterialTheme.colorScheme.onPrimaryContainer
+                    sliderValue >= maxGainDb * 0.85f -> MaterialTheme.colorScheme.error
+                    sliderValue >= maxGainDb * 0.6f -> MaterialTheme.colorScheme.tertiary
+                    else -> MaterialTheme.colorScheme.onPrimaryContainer
+                },
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             )
         }
@@ -1046,7 +1065,7 @@ fun ModernEqualizerBand(
                 }
             },
             enabled = enabled,
-            valueRange = -15f..15f,
+            valueRange = -maxGainDb..maxGainDb,
             modifier = Modifier
                 .graphicsLayer {
                     rotationZ = 270f
@@ -1090,8 +1109,10 @@ fun ModernEqualizerBand(
 @Composable
 private fun FrequencyResponseCurve(
     bandGains: List<BandGain>,
+    maxGainRaw: Int = 150,
     modifier: Modifier = Modifier
 ) {
+    val maxGainDb = maxGainRaw / 10f
     val primaryColor = MaterialTheme.colorScheme.primary
     val surfaceColor = MaterialTheme.colorScheme.surfaceVariant
     
@@ -1123,7 +1144,7 @@ private fun FrequencyResponseCurve(
             
             bandGains.forEachIndexed { index, bandGain ->
                 val x = index * stepX
-                val normalizedGain = (bandGain.gain / 150f).coerceIn(-1f, 1f)
+                val normalizedGain = (bandGain.gain / (maxGainDb * 10f)).coerceIn(-1f, 1f)
                 val y = centerY - (normalizedGain * centerY * 0.8f)
                 
                 if (index == 0) {
@@ -1131,7 +1152,7 @@ private fun FrequencyResponseCurve(
                 } else {
                     val prevX = (index - 1) * stepX
                     val prevGain = bandGains[index - 1].gain
-                    val prevNormalizedGain = (prevGain / 150f).coerceIn(-1f, 1f)
+                    val prevNormalizedGain = (prevGain / maxGainRaw.toFloat()).coerceIn(-1f, 1f)
                     val prevY = centerY - (prevNormalizedGain * centerY * 0.8f)
                     
                     val cpX1 = prevX + stepX * 0.4f

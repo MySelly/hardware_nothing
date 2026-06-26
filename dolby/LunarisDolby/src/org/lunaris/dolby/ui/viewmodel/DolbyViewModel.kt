@@ -11,6 +11,8 @@ import androidx.lifecycle.viewModelScope
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.data.DolbyRepository
 import org.lunaris.dolby.data.ProfileChangeHistoryManager
+import org.lunaris.dolby.data.HeadroomInfo
+import org.lunaris.dolby.data.LoudnessPreset
 import org.lunaris.dolby.domain.models.*
 import org.lunaris.dolby.service.DolbyEffectService
 import kotlinx.coroutines.Job
@@ -423,6 +425,46 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 loadSettings()
             } catch (e: Exception) {
                 DolbyConstants.dlog(TAG, "Error setting DSP volume boost: ${e.message}")
+            }
+        }
+    }
+
+    fun getOutputBoostMinTenths(): Int {
+        return try {
+            DolbyRepository(getApplication()).getOutputBoostMinTenths()
+        } catch (_: Exception) {
+            DolbyConstants.OUTPUT_BOOST_MIN_TENTHS
+        }
+    }
+
+    fun getOutputBoostMaxTenths(): Int {
+        return try {
+            DolbyRepository(getApplication()).getOutputBoostMaxTenths()
+        } catch (_: Exception) {
+            DolbyConstants.OUTPUT_BOOST_STANDARD_MAX
+        }
+    }
+
+    fun getHeadroomInfo(): HeadroomInfo? {
+        return try {
+            val repo = DolbyRepository(getApplication())
+            val info = repo.getHeadroomInfo(repo.getCurrentProfile())
+            repo.close()
+            info
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    fun applyLoudnessPreset(preset: LoudnessPreset) {
+        viewModelScope.launch {
+            try {
+                val repo = DolbyRepository(getApplication())
+                repo.applyLoudnessPreset(preset)
+                repo.close()
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error applying loudness preset: ${e.message}")
             }
         }
     }

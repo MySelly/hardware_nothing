@@ -21,6 +21,8 @@ internal class AudioTuningController(
     private val defaultPrefs: SharedPreferences
 ) {
 
+    private val audioEngine = AudioEngineProcessor(context)
+
     fun applyAll(profile: Int) {
         if (isReleased()) return
         pushGeqToHardware(profile)
@@ -30,6 +32,7 @@ internal class AudioTuningController(
         applyVolumeLevelerAmount(profile)
         applyVirtualBass(profile)
         applyHearingProtection(profile)
+        audioEngine.applySpatialProcessing()
     }
 
     fun pushGeqToHardware(profile: Int) {
@@ -38,7 +41,7 @@ internal class AudioTuningController(
             checkEffect()
             val raw = getRawGeqArray(profile) ?: return
             val offset = getOutputBoostOffset(profile)
-            val applied = raw.map { (it + offset).coerceIn(-150, 150) }.toIntArray()
+            val applied = audioEngine.processGeqForHardware(raw, profile, offset)
             dolbyEffectProvider().setDapParameter(DsParam.GEQ_BAND_GAINS, applied, profile)
         } catch (e: Exception) {
             DolbyConstants.dlog(TAG, "pushGeqToHardware failed: ${e.message}")
@@ -66,30 +69,36 @@ internal class AudioTuningController(
             .apply()
     }
 
-    // --- Output boost (-6..+6 dB) ---
+    // --- Output boost (user-configurable range) ---
 
     fun isOutputBoostEnabled(profile: Int): Boolean =
         profilePrefs(profile).getBoolean(DolbyConstants.PREF_OUTPUT_BOOST_ENABLED, false)
 
-    fun getOutputBoostTenths(profile: Int): Int =
-        profilePrefs(profile).getInt(DolbyConstants.PREF_OUTPUT_BOOST_TENTHS, 0)
-            .coerceIn(DolbyConstants.OUTPUT_BOOST_MIN_TENTHS, DolbyConstants.OUTPUT_BOOST_MAX_TENTHS)
+    fun getOutputBoostTenths(profile: Int): Int {
+        val engine = audioEngine.preferences()
+        return profilePrefs(profile).getInt(DolbyConstants.PREF_OUTPUT_BOOST_TENTHS, 0)
+            .let { engine.clampOutputBoostTenths(it) }
+    }
+
+    fun getOutputBoostMaxTenths(): Int = audioEngine.preferences().getOutputBoostMaxTenths()
+
+    fun getOutputBoostMinTenths(): Int = audioEngine.preferences().getOutputBoostMinTenths()
 
     fun getOutputBoostOffset(profile: Int): Int =
         if (isOutputBoostEnabled(profile)) getOutputBoostTenths(profile) else 0
 
     fun setOutputBoost(profile: Int, enabled: Boolean, tenthsDb: Int) {
         if (isReleased()) return
-        val clamped = tenthsDb.coerceIn(
-            DolbyConstants.OUTPUT_BOOST_MIN_TENTHS,
-            DolbyConstants.OUTPUT_BOOST_MAX_TENTHS
-        )
+        val engine = audioEngine.preferences()
+        val clamped = engine.clampOutputBoostTenths(tenthsDb)
         profilePrefs(profile).edit()
             .putBoolean(DolbyConstants.PREF_OUTPUT_BOOST_ENABLED, enabled)
             .putInt(DolbyConstants.PREF_OUTPUT_BOOST_TENTHS, clamped)
             .apply()
         pushGeqToHardware(profile)
     }
+
+    fun getAudioEnginePreferences(): AudioEnginePreferences = audioEngine.preferences()
 
     // --- Volmax boost ---
 

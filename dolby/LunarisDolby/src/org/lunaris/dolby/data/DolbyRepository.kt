@@ -34,6 +34,9 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     )
     
     private val deviceStateManager = DeviceStateManager(context)
+    private val audioEnginePrefs = AudioEnginePreferences(context)
+
+    private fun clampGeqGain(gain: Int): Int = audioEnginePrefs.clampEqGain(gain)
 
     private val audioTuning = AudioTuningController(
         context = context,
@@ -377,7 +380,7 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
         for (i in weights.indices) {
             if (i >= gains.size) break
             val weightedGain = (baseGain * weights[i] * direction).toInt()
-            gains[i] = (gains[i] + weightedGain).coerceIn(-150, 150)
+            gains[i] = clampGeqGain(gains[i] + weightedGain)
         }
     }
 
@@ -467,7 +470,7 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
                 val previousGain = (previousLevel * TREBLE_GAIN_MULTIPLIER).toInt()
                 for (i in 14..19) {
                     if (i < modifiedGains.size) {
-                        modifiedGains[i] = (modifiedGains[i] - previousGain).coerceIn(-150, 150)
+                        modifiedGains[i] = clampGeqGain(modifiedGains[i] - previousGain)
                     }
                 }
             }
@@ -476,7 +479,7 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
                 val trebleGain = (level * TREBLE_GAIN_MULTIPLIER).toInt()
                 for (i in 14..19) {
                     if (i < modifiedGains.size) {
-                        modifiedGains[i] = (modifiedGains[i] + trebleGain).coerceIn(-150, 150)
+                        modifiedGains[i] = clampGeqGain(modifiedGains[i] + trebleGain)
                     }
                 }
             }
@@ -1144,7 +1147,7 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
                 val previousGain = (previousLevel * MID_GAIN_MULTIPLIER).toInt()
                 for (i in 5..13) {
                     if (i < modifiedGains.size) {
-                        modifiedGains[i] = (modifiedGains[i] - previousGain).coerceIn(-150, 150)
+                        modifiedGains[i] = clampGeqGain(modifiedGains[i] - previousGain)
                     }
                 }
             }
@@ -1153,7 +1156,7 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
                 val midGain = (level * MID_GAIN_MULTIPLIER).toInt()
                 for (i in 5..13) {
                     if (i < modifiedGains.size) {
-                        modifiedGains[i] = (modifiedGains[i] + midGain).coerceIn(-150, 150)
+                        modifiedGains[i] = clampGeqGain(modifiedGains[i] + midGain)
                     }
                 }
             }
@@ -1189,6 +1192,36 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
         release()
     }
 
+    fun getAudioEnginePreferences(): AudioEnginePreferences = audioEnginePrefs
+
+    fun getOutputBoostMaxTenths(): Int = audioTuning.getOutputBoostMaxTenths()
+    fun getOutputBoostMinTenths(): Int = audioTuning.getOutputBoostMinTenths()
+
+    fun getHeadroomInfo(profile: Int): HeadroomInfo {
+        val raw = audioTuning.getRawGeqArray(profile) ?: IntArray(20)
+        val outputDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS).firstOrNull()
+        val deviceOffset = if (outputDevice != null) {
+            audioEnginePrefs.getDeviceGainOffsetTenths(deviceStateManager.deviceKey(outputDevice))
+        } else 0
+        return HeadroomCalculator.calculate(
+            raw,
+            getOutputBoostTenths(profile),
+            isOutputBoostEnabled(profile),
+            isVolmaxBoostEnabled(profile),
+            getVolmaxBoost(profile),
+            deviceOffset,
+            audioEnginePrefs
+        )
+    }
+
+    fun applyLoudnessPreset(preset: LoudnessPreset) {
+        LoudnessPresetManager.applyToProfile(this, getCurrentProfile(), preset, audioEnginePrefs)
+    }
+
+    fun refreshSpatialAndGeq(profile: Int = getCurrentProfile()) {
+        audioTuning.pushGeqToHardware(profile)
+        audioTuning.applyAll(profile)
+    }
     fun isOutputBoostEnabled(profile: Int) = audioTuning.isOutputBoostEnabled(profile)
     fun getOutputBoostTenths(profile: Int) = audioTuning.getOutputBoostTenths(profile)
     fun setOutputBoost(profile: Int, enabled: Boolean, tenthsDb: Int) =

@@ -396,4 +396,48 @@
     <string name="widget_desc">Hızlı Dolby aç/kapa ve profil durumu</string>
     <string name="shortcut_toggle">Dolby\'yi aç/kapat</string>
 
+    <!-- Audio engine / power user -->
+    <string name="power_user_audio_title">Ses motoru</string>
+    <string name="power_user_audio_desc">EQ limitleri, ses yüksekliği, spatial ve görsel seçenekler. Her özellik kapatılabilir.</string>
+    <string name="eq_limits_section">EQ aralığı</string>
+    <string name="extended_eq_enabled">Genişletilmiş EQ aralığı</string>
+    <string name="eq_range_label">Maksimum EQ kazancı</string>
+    <string name="eq_range_standard">Standart (±15 dB)</string>
+    <string name="eq_range_extended">Genişletilmiş (±24 dB)</string>
+    <string name="eq_range_extreme">Ekstrem (±30 dB)</string>
+    <string name="output_boost_section">Çıkış güçlendirme</string>
+    <string name="extended_output_boost_enabled">Genişletilmiş çıkış boost (+%15 dB\'ye kadar)</string>
+    <string name="output_boost_max_label">Maks. çıkış boost: %1$.1f dB</string>
+    <string name="processing_section">İşleme</string>
+    <string name="headroom_warning_enabled">Headroom uyarıları</string>
+    <string name="soft_clip_enabled">Yumuşak kırpma (sert limit yerine tepe düşürme)</string>
+    <string name="high_pass_enabled">Yüksek geçiren filtre</string>
+    <string name="high_pass_hz_label">%1$d Hz altını kes</string>
+    <string name="loudness_presets_section">Ses yüksekliği presetleri</string>
+    <string name="loudness_presets_enabled">Ses presetlerini göster</string>
+    <string name="loudness_flat">Düz</string>
+    <string name="loudness_punch">Punch</string>
+    <string name="loudness_warm">Warm</string>
+    <string name="loudness_max">Maks</string>
+    <string name="auto_loudness_enabled">Düşük seste otomatik yükseltme</string>
+    <string name="spatial_section">Spatial</string>
+    <string name="stereo_balance_enabled">Stereo denge</string>
+    <string name="mono_mix_enabled">Mono karışım</string>
+    <string name="crossfeed_enabled">Kulaklık crossfeed</string>
+    <string name="per_device_gain_section">Cihaz bazlı gain</string>
+    <string name="per_device_gain_enabled">Cihaz bazlı gain offset</string>
+    <string name="per_device_gain_slider">Cihaz gain: %1$.1f dB</string>
+    <string name="eq_ui_section">EQ görünümü</string>
+    <string name="eq_spectrum_overlay">EQ eğrisinde spektrum overlay</string>
+    <string name="eq_colored_db_labels">Renkli dB etiketleri</string>
+    <string name="loudness_stack_visual">Ses yığını görselleştirmesi</string>
+    <string name="headroom_title">Ses headroom</string>
+    <string name="headroom_peak_eq">EQ tepe</string>
+    <string name="headroom_output_boost">Çıkış boost</string>
+    <string name="headroom_device_offset">Cihaz offset</string>
+    <string name="headroom_volmax">Volmax tah.</string>
+    <string name="headroom_remaining">Kalan</string>
+    <string name="headroom_over_limit">Toplam gain güvenli headroom\'u aşıyor — distorsiyon olabilir</string>
+    <string name="loudness_stack_title">Ses yığını</string>
+
 </resources>

@@ -45,6 +45,28 @@ object DolbyHalBridge {
         DolbyConstants.dlog(TAG, "virtual_bass=$flag")
     }
 
+    fun applySpatialAudio(
+        context: Context,
+        balanceEnabled: Boolean,
+        balance: Int,
+        monoEnabled: Boolean,
+        crossfeedEnabled: Boolean,
+        crossfeedStrength: Int
+    ) {
+        val balanceVal = if (balanceEnabled) balance.coerceIn(-100, 100) else 0
+        val mono = if (monoEnabled) 1 else 0
+        val crossfeed = if (crossfeedEnabled) crossfeedStrength.coerceIn(0, 100) else 0
+        setParameters(context, listOf(
+            "stereo_balance=$balanceVal",
+            "dolby_stereo_balance=$balanceVal",
+            "mono_mix=$mono",
+            "dolby_mono_mix=$mono",
+            "crossfeed=$crossfeed",
+            "dolby_crossfeed=$crossfeed"
+        ))
+        DolbyConstants.dlog(TAG, "spatial balance=$balanceVal mono=$mono crossfeed=$crossfeed")
+    }
+
     fun syncDspVolume(context: Context, volumeStep: Int, boostEnabled: Boolean, boostStrength: Int) {
         val am = audioManager(context) ?: return
         val strength = boostStrength.coerceIn(0, 100)

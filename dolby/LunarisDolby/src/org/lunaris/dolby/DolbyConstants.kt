@@ -72,6 +72,28 @@ object DolbyConstants {
     const val PREF_VISUALIZER_FFT_MODE = "visualizer_fft_mode"
     const val PREF_APP_PROFILES_EXPORT = "app_profiles_export"
 
+    // Audio engine (all opt-in, user can disable each)
+    const val PREF_EXTENDED_EQ_ENABLED = "extended_eq_enabled"
+    const val PREF_EQ_RANGE_PRESET = "eq_range_preset"
+    const val PREF_EXTENDED_OUTPUT_BOOST_ENABLED = "extended_output_boost_enabled"
+    const val PREF_OUTPUT_BOOST_MAX_TENTHS_USER = "output_boost_max_tenths_user"
+    const val PREF_HEADROOM_WARNING_ENABLED = "headroom_warning_enabled"
+    const val PREF_SOFT_CLIP_ENABLED = "soft_clip_enabled"
+    const val PREF_LOUDNESS_PRESETS_ENABLED = "loudness_presets_enabled"
+    const val PREF_AUTO_LOUDNESS_ENABLED = "auto_loudness_enabled"
+    const val PREF_PER_DEVICE_GAIN_ENABLED = "per_device_gain_enabled"
+    const val PREF_DEVICE_GAIN_OFFSETS = "device_gain_offsets"
+    const val PREF_STEREO_BALANCE_ENABLED = "stereo_balance_enabled"
+    const val PREF_STEREO_BALANCE_VALUE = "stereo_balance_value"
+    const val PREF_MONO_MIX_ENABLED = "mono_mix_enabled"
+    const val PREF_CROSSFEED_ENABLED = "crossfeed_enabled"
+    const val PREF_CROSSFEED_STRENGTH = "crossfeed_strength"
+    const val PREF_HIGH_PASS_ENABLED = "high_pass_enabled"
+    const val PREF_HIGH_PASS_HZ = "high_pass_hz"
+    const val PREF_EQ_SPECTRUM_OVERLAY = "eq_spectrum_overlay"
+    const val PREF_EQ_COLORED_DB_LABELS = "eq_colored_db_labels"
+    const val PREF_LOUDNESS_STACK_VISUAL = "loudness_stack_visual"
+
     const val ACTION_SET_PROFILE = "org.lunaris.dolby.action.SET_PROFILE"
     const val ACTION_TOGGLE = "org.lunaris.dolby.action.TOGGLE"
     const val ACTION_APPLY_PRESET = "org.lunaris.dolby.action.APPLY_PRESET"
@@ -116,6 +138,11 @@ object DolbyConstants {
 
     const val OUTPUT_BOOST_MIN_TENTHS = -60
     const val OUTPUT_BOOST_MAX_TENTHS = 60
+    const val OUTPUT_BOOST_STANDARD_MAX = 60
+    const val OUTPUT_BOOST_EXTENDED_MAX = 150
+    const val EQ_GAIN_STANDARD = 150
+    const val EQ_GAIN_EXTENDED = 240
+    const val EQ_GAIN_EXTREME = 300
     const val VOLMAX_BOOST_MAX = 96
     const val SURROUND_BOOST_MAX = 64
     const val IEQ_AMOUNT_MAX = 10

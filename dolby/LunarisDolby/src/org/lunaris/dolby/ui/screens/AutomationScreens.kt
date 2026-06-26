@@ -52,6 +52,14 @@ fun AutomationHubScreen(navController: NavController) {
             ) {
                 item {
                     AutomationNavButton(
+                        title = stringResource(R.string.power_user_audio_title),
+                        subtitle = stringResource(R.string.power_user_audio_desc),
+                        icon = Icons.Default.Tune,
+                        onClick = { navController.navigate(Screen.PowerUserAudio.route) }
+                    )
+                }
+                item {
+                    AutomationNavButton(
                         title = stringResource(R.string.scheduled_profiles_title),
                         subtitle = stringResource(R.string.scheduled_profiles_home_desc),
                         icon = Icons.Default.Schedule,

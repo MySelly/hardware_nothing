@@ -36,7 +36,9 @@ fun InteractiveFrequencyResponseCurve(
     onBandGainChange: (index: Int, newGain: Int) -> Unit,
     modifier: Modifier = Modifier,
     isActive: Boolean = false,
-    isEditable: Boolean = true
+    isEditable: Boolean = true,
+    maxGainRaw: Int = 150,
+    showSpectrumOverlay: Boolean = false
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val surfaceColor = MaterialTheme.colorScheme.surfaceVariant
@@ -60,7 +62,7 @@ fun InteractiveFrequencyResponseCurve(
         Color.Transparent
     }
     
-    val borderWidth = if (isActive) 2.dp else if (!isEditable) 1.dp else 0.dp
+    val maxGainDb = maxGainRaw / 10f
     
     var draggedIndex by remember { mutableStateOf<Int?>(null) }
     var controlPoints by remember { mutableStateOf(bandGains.map { it.gain }) }
@@ -71,7 +73,17 @@ fun InteractiveFrequencyResponseCurve(
         }
     }
     
+    val borderWidth = if (isActive) 2.dp else if (!isEditable) 1.dp else 0.dp
+    
     Box(modifier = modifier) {
+        if (showSpectrumOverlay) {
+            AudioVisualizerBars(
+                modifier = Modifier.fillMaxSize().matchParentSize(),
+                enabled = true,
+                useFft = true,
+                barCount = bandGains.size.coerceAtLeast(10)
+            )
+        }
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
@@ -95,7 +107,7 @@ fun InteractiveFrequencyResponseCurve(
                                 
                                 bandGains.forEachIndexed { index, _ ->
                                     val x = index * stepX
-                                    val normalizedGain = (controlPoints[index] / 150f).coerceIn(-1f, 1f)
+                                    val normalizedGain = (controlPoints[index] / maxGainRaw.toFloat()).coerceIn(-1f, 1f)
                                     val y = height / 2 - (normalizedGain * height / 2 * 0.85f)
                                     
                                     val distance = kotlin.math.sqrt(
@@ -119,7 +131,7 @@ fun InteractiveFrequencyResponseCurve(
                                     val centerY = height / 2
                                     val y = change.position.y
                                     val normalizedGain = ((centerY - y) / (height / 2 * 0.85f)).coerceIn(-1f, 1f)
-                                    val newGain = (normalizedGain * 150).toInt().coerceIn(-150, 150)
+                                    val newGain = (normalizedGain * maxGainRaw).toInt().coerceIn(-maxGainRaw, maxGainRaw)
                                     
                                     if (controlPoints[index] != newGain) {
                                         controlPoints = controlPoints.toMutableList().apply {
@@ -195,7 +207,7 @@ fun InteractiveFrequencyResponseCurve(
                 
                 controlPoints.forEachIndexed { index, gain ->
                     val x = index * stepX
-                    val normalizedGain = (gain / 150f).coerceIn(-1f, 1f)
+                    val normalizedGain = (gain / maxGainRaw.toFloat()).coerceIn(-1f, 1f)
                     val y = centerY - (normalizedGain * centerY * 0.85f)
                     
                     if (index == 0) {
@@ -203,7 +215,7 @@ fun InteractiveFrequencyResponseCurve(
                     } else {
                         val prevX = (index - 1) * stepX
                         val prevGain = controlPoints[index - 1]
-                        val prevNormalizedGain = (prevGain / 150f).coerceIn(-1f, 1f)
+                        val prevNormalizedGain = (prevGain / maxGainRaw.toFloat()).coerceIn(-1f, 1f)
                         val prevY = centerY - (prevNormalizedGain * centerY * 0.85f)
                         
                         val cpX1 = prevX + stepX * 0.4f
@@ -247,7 +259,7 @@ fun InteractiveFrequencyResponseCurve(
                 
                 controlPoints.forEachIndexed { index, gain ->
                     val x = index * stepX
-                    val normalizedGain = (gain / 150f).coerceIn(-1f, 1f)
+                    val normalizedGain = (gain / maxGainRaw.toFloat()).coerceIn(-1f, 1f)
                     val y = centerY - (normalizedGain * centerY * 0.85f)
                     
                     val isBeingDragged = draggedIndex == index
@@ -309,7 +321,7 @@ fun InteractiveFrequencyResponseCurve(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "+15",
+                text = "+${maxGainDb.toInt()}",
                 style = MaterialTheme.typography.labelSmall,
                 color = if (isActive) {
                     secondaryColor
@@ -333,7 +345,7 @@ fun InteractiveFrequencyResponseCurve(
                 modifier = Modifier.padding(vertical = 12.dp)
             )
             Text(
-                text = "-15",
+                text = "-${maxGainDb.toInt()}",
                 style = MaterialTheme.typography.labelSmall,
                 color = if (isActive) {
                     secondaryColor

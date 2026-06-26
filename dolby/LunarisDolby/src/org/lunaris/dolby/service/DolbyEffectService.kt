@@ -22,6 +22,7 @@ import org.lunaris.dolby.data.DolbyRepository
 import org.lunaris.dolby.data.BluetoothProfileManager
 import org.lunaris.dolby.data.DolbyAutomationCoordinator
 import org.lunaris.dolby.data.ProfileChangeHistoryManager
+import org.lunaris.dolby.data.AudioEngineProcessor
 import org.lunaris.dolby.domain.models.ProfileChangeSource
 
 class DolbyEffectService : Service() {
@@ -69,8 +70,15 @@ class DolbyEffectService : Service() {
             val isActive = configs?.any { it.isActive } == true
             if (isActive) {
                 repository.applySavedState()
+                applyAutoLoudnessIfNeeded()
             }
         }
+    }
+
+    private fun applyAutoLoudnessIfNeeded() {
+        val maxSteps = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+        val step = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        AudioEngineProcessor(this).applyAutoLoudness(step, maxSteps, repository.getCurrentProfile(), repository)
     }
 
     override fun onCreate() {
@@ -98,6 +106,7 @@ class DolbyEffectService : Service() {
         audioManager.registerAudioDeviceCallback(audioDeviceCallback, handler)
         audioManager.registerAudioPlaybackCallback(playbackCallback, handler)
         handler.post(callCheckRunnable)
+        applyAutoLoudnessIfNeeded()
         Log.d(TAG, "Dolby effect service created")
     }
 

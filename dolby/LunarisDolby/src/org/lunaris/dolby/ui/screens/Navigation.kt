@@ -34,6 +34,7 @@ sealed class Screen(val route: String) {
     object ProfileHistory : Screen("profile_history")
     object Diagnostics : Screen("diagnostics")
     object Calibration : Screen("calibration")
+    object PowerUserAudio : Screen("power_user_audio")
 }
 
 @Composable
@@ -160,6 +161,13 @@ fun DolbyNavHost(
 
         composable(Screen.Calibration.route) {
             CalibrationScreen(navController = navController)
+        }
+
+        composable(Screen.PowerUserAudio.route) {
+            PowerUserAudioScreen(
+                navController = navController,
+                dolbyViewModel = dolbyViewModel
+            )
         }
     }
 }
