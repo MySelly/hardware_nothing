@@ -20,6 +20,9 @@ import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.R
 import org.lunaris.dolby.data.AppProfileManager
 import org.lunaris.dolby.data.DolbyRepository
+import org.lunaris.dolby.data.DolbyAutomationCoordinator
+import org.lunaris.dolby.data.ProfileChangeHistoryManager
+import org.lunaris.dolby.domain.models.ProfileChangeSource
 import org.lunaris.dolby.utils.ToastHelper
 import java.util.concurrent.atomic.AtomicReference
 
@@ -29,6 +32,7 @@ class AppProfileMonitorService : Service() {
     private val switchHandler = Handler(Looper.getMainLooper())
     private lateinit var appProfileManager: AppProfileManager
     private lateinit var dolbyRepository: DolbyRepository
+    private lateinit var historyManager: ProfileChangeHistoryManager
     private lateinit var audioManager: AudioManager
     private val lastPackageName = AtomicReference<String?>(null)
     private var originalProfile: Int = -1
@@ -50,6 +54,7 @@ class AppProfileMonitorService : Service() {
         super.onCreate()
         appProfileManager = AppProfileManager(this)
         dolbyRepository = DolbyRepository(this)
+        historyManager = ProfileChangeHistoryManager(this)
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         
         val prefs = getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
@@ -157,6 +162,18 @@ class AppProfileMonitorService : Service() {
             
             val packageName = getForegroundPackage() ?: return
             
+            val appName = getAppName(packageName)
+            prefs.edit()
+                .putString("last_foreground_app_package", packageName)
+                .putString("last_foreground_app_name", appName)
+                .apply()
+
+            if (prefs.getBoolean(DolbyConstants.PREF_MEDIA_CONTENT_DETECTION, false)) {
+                detectMediaContent(packageName)?.let { contentType ->
+                    DolbyAutomationCoordinator.applyMediaContentProfile(this, contentType)
+                }
+            }
+            
             val previousPackage = lastPackageName.getAndSet(packageName)
             if (packageName == previousPackage) {
                 return
@@ -181,7 +198,13 @@ class AppProfileMonitorService : Service() {
                             if (assignedProfile >= 0) {
                                 DolbyConstants.dlog(TAG, "Switching to profile $assignedProfile for $packageName")
                                 lastProfileChangeTime = System.currentTimeMillis()
+                                historyManager.saveUndoProfile(dolbyRepository.getCurrentProfile())
                                 dolbyRepository.setCurrentProfile(assignedProfile)
+                                historyManager.recordChange(
+                                    assignedProfile,
+                                    ProfileChangeSource.APP,
+                                    appName
+                                )
                                 DolbyConstants.dlog(TAG, "App profile active - original profile remains: $originalProfile")
                                 
                                 if (showToasts) {
@@ -200,6 +223,11 @@ class AppProfileMonitorService : Service() {
                                         DolbyConstants.dlog(TAG, "Restoring original profile $originalProfile for $packageName (current: $currentProfile)")
                                         lastProfileChangeTime = System.currentTimeMillis()
                                         dolbyRepository.setCurrentProfile(originalProfile)
+                                        historyManager.recordChange(
+                                            originalProfile,
+                                            ProfileChangeSource.APP,
+                                            "Restore: $appName"
+                                        )
                                     } else {
                                         DolbyConstants.dlog(TAG, "Already on original profile $originalProfile, no change needed")
                                     }
@@ -260,6 +288,19 @@ class AppProfileMonitorService : Service() {
             packageManager.getApplicationLabel(appInfo).toString()
         } catch (e: Exception) {
             packageName
+        }
+    }
+
+    private fun detectMediaContent(packageName: String): String? {
+        return when (packageName) {
+            "com.spotify.music", "com.google.android.apps.youtube.music",
+            "com.apple.android.music", "com.amazon.mp3" -> "music"
+            "com.google.android.youtube", "com.netflix.mediaclient",
+            "com.disney.disneyplus", "tv.twitch.android.app" -> "video"
+            "com.mojang.minecraftpe", "com.epicgames.fortnite",
+            "com.activision.callofduty.shooter" -> "game"
+            "com.google.android.apps.podcasts", "com.audible.application" -> "speech"
+            else -> null
         }
     }
 

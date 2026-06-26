@@ -25,12 +25,13 @@ import kotlin.math.max
 fun AudioVisualizerBars(
     modifier: Modifier = Modifier,
     barCount: Int = 24,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    useFft: Boolean = false
 ) {
     var levels by remember { mutableStateOf(FloatArray(barCount) { 0.1f }) }
     val mainHandler = remember { Handler(Looper.getMainLooper()) }
 
-    DisposableEffect(enabled) {
+    DisposableEffect(enabled, useFft) {
         if (!enabled) {
             return@DisposableEffect onDispose { }
         }
@@ -45,30 +46,30 @@ fun AudioVisualizerBars(
                             waveform: ByteArray?,
                             samplingRate: Int
                         ) {
-                            if (waveform == null) return
-                            val chunk = max(1, waveform.size / barCount)
-                            val next = FloatArray(barCount)
-                            for (i in 0 until barCount) {
-                                var peak = 0
-                                val start = i * chunk
-                                val end = minOf(start + chunk, waveform.size)
-                                for (j in start until end) {
-                                    peak = max(peak, kotlin.math.abs(waveform[j].toInt()))
-                                }
-                                next[i] = (peak / 128f).coerceIn(0.05f, 1f)
-                            }
-                            mainHandler.post { levels = next }
+                            if (useFft || waveform == null) return
+                            updateLevels(waveform, barCount, mainHandler) { levels = it }
                         }
 
                         override fun onFftDataCapture(
                             visualizer: Visualizer?,
                             fft: ByteArray?,
                             samplingRate: Int
-                        ) = Unit
+                        ) {
+                            if (!useFft || fft == null) return
+                            val next = FloatArray(barCount) { 0.05f }
+                            val usable = minOf(fft.size / 2, barCount)
+                            for (i in 0 until usable) {
+                                val real = fft[2 * i].toInt()
+                                val imag = fft[2 * i + 1].toInt()
+                                val magnitude = kotlin.math.sqrt((real * real + imag * imag).toFloat())
+                                next[i] = (magnitude / 128f).coerceIn(0.05f, 1f)
+                            }
+                            mainHandler.post { levels = next }
+                        }
                     },
                     Visualizer.getMaxCaptureRate() / 2,
-                    true,
-                    false
+                    !useFft,
+                    useFft
                 )
                 this.enabled = true
             }
@@ -112,4 +113,24 @@ fun AudioVisualizerBars(
             )
         }
     }
+}
+
+private fun updateLevels(
+    waveform: ByteArray,
+    barCount: Int,
+    handler: Handler,
+    onUpdate: (FloatArray) -> Unit
+) {
+    val chunk = max(1, waveform.size / barCount)
+    val next = FloatArray(barCount)
+    for (i in 0 until barCount) {
+        var peak = 0
+        val start = i * chunk
+        val end = minOf(start + chunk, waveform.size)
+        for (j in start until end) {
+            peak = max(peak, kotlin.math.abs(waveform[j].toInt()))
+        }
+        next[i] = (peak / 128f).coerceIn(0.05f, 1f)
+    }
+    handler.post { onUpdate(next) }
 }

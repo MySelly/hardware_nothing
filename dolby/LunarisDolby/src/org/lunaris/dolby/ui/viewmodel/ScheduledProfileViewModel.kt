@@ -47,7 +47,14 @@ class ScheduledProfileViewModel(application: Application) : AndroidViewModel(app
         load()
     }
 
-    fun addRule(name: String, profileId: Int, startHour: Int, endHour: Int) {
+    fun addRule(
+        name: String,
+        profileId: Int,
+        startHour: Int,
+        endHour: Int,
+        daysOfWeek: Set<Int> = emptySet(),
+        priority: Int = 0
+    ) {
         val rule = ScheduledProfileRule(
             id = ScheduledProfileManager.newRuleId(),
             name = name.trim(),
@@ -55,7 +62,9 @@ class ScheduledProfileViewModel(application: Application) : AndroidViewModel(app
             startHour = startHour.coerceIn(0, 23),
             startMinute = 0,
             endHour = endHour.coerceIn(0, 23),
-            endMinute = 0
+            endMinute = 0,
+            daysOfWeek = daysOfWeek,
+            priority = priority
         )
         manager.addRule(rule)
         load()

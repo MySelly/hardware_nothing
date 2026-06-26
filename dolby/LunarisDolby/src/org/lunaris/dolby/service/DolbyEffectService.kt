@@ -19,6 +19,10 @@ import android.util.Log
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.data.DeviceStateManager
 import org.lunaris.dolby.data.DolbyRepository
+import org.lunaris.dolby.data.BluetoothProfileManager
+import org.lunaris.dolby.data.DolbyAutomationCoordinator
+import org.lunaris.dolby.data.ProfileChangeHistoryManager
+import org.lunaris.dolby.domain.models.ProfileChangeSource
 
 class DolbyEffectService : Service() {
 
@@ -31,7 +35,15 @@ class DolbyEffectService : Service() {
     private val handler = Handler()
     private lateinit var repository: DolbyRepository
     private lateinit var deviceStateManager: DeviceStateManager
+    private lateinit var historyManager: ProfileChangeHistoryManager
     private var previousActiveDevice: AudioDeviceInfo? = null
+    private var wasInCall = false
+    private val callCheckRunnable = object : Runnable {
+        override fun run() {
+            checkCallState()
+            handler.postDelayed(this, 2000L)
+        }
+    }
 
     private val audioDeviceCallback = object : AudioDeviceCallback() {
         override fun onAudioDevicesAdded(addedDevices: Array<AudioDeviceInfo>) {
@@ -65,6 +77,10 @@ class DolbyEffectService : Service() {
         super.onCreate()
         repository = DolbyRepository(this)
         deviceStateManager = DeviceStateManager(this)
+        historyManager = ProfileChangeHistoryManager(this)
+        DolbyAutomationCoordinator.applyBatterySaverIfNeeded(this)
+        DolbyAutomationCoordinator.applyGameLatencyMode(this)
+        DolbyAutomationCoordinator.enforceSafeListeningLimit(this)
         val currentDevice = getCurrentOutputDevice()
         if (currentDevice != null) {
             previousActiveDevice = currentDevice
@@ -81,6 +97,7 @@ class DolbyEffectService : Service() {
 
         audioManager.registerAudioDeviceCallback(audioDeviceCallback, handler)
         audioManager.registerAudioPlaybackCallback(playbackCallback, handler)
+        handler.post(callCheckRunnable)
         Log.d(TAG, "Dolby effect service created")
     }
 
@@ -122,6 +139,10 @@ class DolbyEffectService : Service() {
                 Log.d(TAG, "Device state memory disabled, applying saved state")
                 repository.applySavedState()
             }
+            BluetoothProfileManager(this).findRuleForDevice(newDevice)?.let { rule ->
+                historyManager.recordChange(rule.profileId, ProfileChangeSource.BLUETOOTH, rule.displayName)
+                repository.setCurrentProfile(rule.profileId)
+            }
             previousActiveDevice = newDevice
         } else {
             repository.updateSpeakerState()
@@ -158,8 +179,19 @@ class DolbyEffectService : Service() {
         return START_STICKY
     }
 
+    private fun checkCallState() {
+        val inCall = audioManager.mode == AudioManager.MODE_IN_CALL ||
+            audioManager.mode == AudioManager.MODE_IN_COMMUNICATION
+        if (inCall != wasInCall) {
+            wasInCall = inCall
+            DolbyAutomationCoordinator.handleCallState(this, inCall)
+        }
+        DolbyAutomationCoordinator.enforceSafeListeningLimit(this)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        handler.removeCallbacks(callCheckRunnable)
         if (isDeviceStateMemoryEnabled) {
             previousActiveDevice?.let { device ->
                 val key = deviceStateManager.deviceKey(device)

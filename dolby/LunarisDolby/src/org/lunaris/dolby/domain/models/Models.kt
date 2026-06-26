@@ -127,7 +127,10 @@ data class ScheduledProfileRule(
     val startMinute: Int,
     val endHour: Int,
     val endMinute: Int,
-    val enabled: Boolean = true
+    val enabled: Boolean = true,
+    /** Calendar.DAY_OF_WEEK values (1=Sun..7=Sat). Empty = every day. */
+    val daysOfWeek: Set<Int> = emptySet(),
+    val priority: Int = 0
 ) {
     fun containsMinute(minuteOfDay: Int): Boolean {
         val start = startHour * 60 + startMinute
@@ -138,7 +141,75 @@ data class ScheduledProfileRule(
             minuteOfDay >= start || minuteOfDay < end
         }
     }
+
+    fun matchesDay(calendarDayOfWeek: Int): Boolean {
+        return daysOfWeek.isEmpty() || calendarDayOfWeek in daysOfWeek
+    }
 }
+
+enum class ProfileChangeSource(val key: String) {
+    MANUAL("manual"),
+    SCHEDULE("schedule"),
+    APP("app"),
+    DEVICE("device"),
+    BLUETOOTH("bluetooth"),
+    MEDIA("media"),
+    AUTOMATION("automation"),
+    CALL("call"),
+    SLEEP_TIMER("sleep_timer"),
+    FOCUS("focus"),
+    WIDGET("widget"),
+    QS_TILE("qs_tile")
+}
+
+data class ProfileHistoryEntry(
+    val timestamp: Long,
+    val profileId: Int,
+    val source: ProfileChangeSource,
+    val detail: String
+)
+
+data class BluetoothProfileRule(
+    val deviceKey: String,
+    val displayName: String,
+    val profileId: Int,
+    val enabled: Boolean = true
+)
+
+enum class SleepTimerAction {
+    DISABLE,
+    RESTORE_PROFILE,
+    SWITCH_PROFILE
+}
+
+data class SleepTimerConfig(
+    val endTimeMs: Long,
+    val action: SleepTimerAction,
+    val targetProfileId: Int = 0,
+    val previousProfileId: Int = 0
+)
+
+data class AutomationStatus(
+    val activeSource: ProfileChangeSource?,
+    val activeDetail: String,
+    val scheduledRuleName: String?,
+    val appPackage: String?,
+    val deviceName: String?,
+    val bluetoothRuleName: String?,
+    val mediaContentType: String?,
+    val atmosContentActive: Boolean,
+    val dolbyEffectHealthy: Boolean,
+    val spatialAudioEnabled: Boolean
+)
+
+data class DolbyDiagnostics(
+    val dolbyEnabled: Boolean,
+    val currentProfile: Int,
+    val effectHasControl: Boolean,
+    val activeDevice: ActiveAudioDevice,
+    val automationStatus: AutomationStatus,
+    val recentHistory: List<ProfileHistoryEntry>
+)
 
 sealed class ScheduledProfileUiState {
     object Loading : ScheduledProfileUiState()

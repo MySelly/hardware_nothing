@@ -23,11 +23,17 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
     object Equalizer : Screen("equalizer")
     object Advanced : Screen("advanced")
+    object Automation : Screen("automation")
     object AppProfiles : Screen("app_profiles")
     object DeviceMemory : Screen("device_memory")
     object CustomPresets : Screen("custom_presets")
     object ScheduledProfiles : Screen("scheduled_profiles")
     object ImportExport : Screen("import_export")
+    object AutomationSettings : Screen("automation_settings")
+    object BluetoothRules : Screen("bluetooth_rules")
+    object ProfileHistory : Screen("profile_history")
+    object Diagnostics : Screen("diagnostics")
+    object Calibration : Screen("calibration")
 }
 
 @Composable
@@ -130,6 +136,30 @@ fun DolbyNavHost(
                 dolbyViewModel = dolbyViewModel,
                 navController = navController
             )
+        }
+
+        composable(Screen.Automation.route) {
+            AutomationHubScreen(navController = navController)
+        }
+
+        composable(Screen.AutomationSettings.route) {
+            AutomationSettingsScreen(navController = navController)
+        }
+
+        composable(Screen.BluetoothRules.route) {
+            BluetoothRulesScreen(navController = navController)
+        }
+
+        composable(Screen.ProfileHistory.route) {
+            ProfileHistoryScreen(navController = navController)
+        }
+
+        composable(Screen.Diagnostics.route) {
+            DiagnosticsScreen(navController = navController)
+        }
+
+        composable(Screen.Calibration.route) {
+            CalibrationScreen(navController = navController)
         }
     }
 }

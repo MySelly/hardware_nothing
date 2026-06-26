@@ -129,9 +129,18 @@ fun DolbyTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("dolby_prefs", android.content.Context.MODE_PRIVATE)
+    val amoled = prefs.getBoolean(org.lunaris.dolby.DolbyConstants.PREF_AMOLED_THEME, false)
+    val useDynamic = dynamicColor && prefs.getBoolean(org.lunaris.dolby.DolbyConstants.PREF_DYNAMIC_COLOR, true)
+
     val colorScheme = when {
-        dynamicColor -> {
-            val context = LocalContext.current
+        amoled && darkTheme -> darkColorScheme(
+            surface = androidx.compose.ui.graphics.Color.Black,
+            background = androidx.compose.ui.graphics.Color.Black,
+            surfaceContainer = androidx.compose.ui.graphics.Color(0xFF0A0A0A)
+        )
+        useDynamic -> {
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
         darkTheme -> darkColorScheme()

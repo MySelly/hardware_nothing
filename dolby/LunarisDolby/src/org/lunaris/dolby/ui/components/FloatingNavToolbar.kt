@@ -22,6 +22,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.R
 import org.lunaris.dolby.utils.*
 
@@ -34,10 +37,16 @@ fun FloatingNavToolbar(
 ) {
     val haptic = rememberHapticFeedback()
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val simpleMode = remember {
+        context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
+            .getBoolean(DolbyConstants.PREF_SIMPLE_UI_MODE, false)
+    }
     
     val isHomeSelected = currentRoute == "settings"
     val isEqualizerSelected = currentRoute == "equalizer"
     val isAdvancedSelected = currentRoute == "advanced"
+    val isAutomationSelected = currentRoute == "automation"
     
     val containerColor = MaterialTheme.colorScheme.primaryContainer
     val onContainerColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -98,11 +107,29 @@ fun FloatingNavToolbar(
                     onNavigate("equalizer")
                 }
             )
-            
+
+            if (!simpleMode) {
+                NavToolbarItem(
+                    icon = Icons.Default.Settings,
+                    label = stringResource(R.string.advanced),
+                    selected = isAdvancedSelected,
+                    primaryColor = primaryColor,
+                    onPrimaryColor = onPrimaryColor,
+                    containerColor = containerColor,
+                    onContainerColor = onContainerColor,
+                    onClick = {
+                        scope.launch {
+                            haptic.performHaptic(HapticFeedbackHelper.HapticIntensity.DOUBLE_CLICK)
+                        }
+                        onNavigate("advanced")
+                    }
+                )
+            }
+
             NavToolbarItem(
-                icon = Icons.Default.Settings,
-                label = stringResource(R.string.advanced),
-                selected = isAdvancedSelected,
+                icon = Icons.Default.AutoAwesome,
+                label = stringResource(R.string.automation_hub_title),
+                selected = isAutomationSelected,
                 primaryColor = primaryColor,
                 onPrimaryColor = onPrimaryColor,
                 containerColor = containerColor,
@@ -111,7 +138,7 @@ fun FloatingNavToolbar(
                     scope.launch {
                         haptic.performHaptic(HapticFeedbackHelper.HapticIntensity.DOUBLE_CLICK)
                     }
-                    onNavigate("advanced")
+                    onNavigate("automation")
                 }
             )
         }

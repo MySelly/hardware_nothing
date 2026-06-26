@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="toggle_dolby"
+        android:enabled="true"
+        android:icon="@drawable/ic_dolby_qs"
+        android:shortcutShortLabel="@string/shortcut_toggle"
+        android:shortcutLongLabel="@string/shortcut_toggle">
+        <intent
+            android:action="org.lunaris.dolby.action.TOGGLE"
+            android:targetPackage="org.lunaris.dolby"
+            android:targetClass="org.lunaris.dolby.receiver.DolbyAutomationReceiver" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="profile_music"
+        android:enabled="true"
+        android:icon="@drawable/ic_dolby_qs"
+        android:shortcutShortLabel="@string/dolby_profile_music">
+        <intent
+            android:action="org.lunaris.dolby.action.SET_PROFILE"
+            android:targetPackage="org.lunaris.dolby"
+            android:targetClass="org.lunaris.dolby.receiver.DolbyAutomationReceiver">
+            <extra android:name="profile" android:value="2" />
+        </intent>
+    </shortcut>
+</shortcuts>

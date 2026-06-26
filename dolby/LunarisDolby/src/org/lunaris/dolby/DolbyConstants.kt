@@ -47,8 +47,48 @@ object DolbyConstants {
     const val PREF_SCHEDULED_PROFILES = "scheduled_profiles"
     const val PREF_SCHEDULED_PROFILES_ENABLED = "scheduled_profiles_enabled"
 
+    const val PREF_SIMPLE_UI_MODE = "simple_ui_mode"
+    const val PREF_AMOLED_THEME = "amoled_theme"
+    const val PREF_DYNAMIC_COLOR = "dynamic_color"
+    const val PREF_ONBOARDING_COMPLETE = "onboarding_complete"
+    const val PREF_BATTERY_SAVER_MODE = "battery_saver_mode"
+    const val PREF_AUTO_DISABLE_ON_CALL = "auto_disable_on_call"
+    const val PREF_MEDIA_CONTENT_DETECTION = "media_content_detection"
+    const val PREF_GAME_LATENCY_MODE = "game_latency_mode"
+    const val PREF_FOCUS_MODE_INTEGRATION = "focus_mode_integration"
+    const val PREF_FOCUS_PROFILE_ID = "focus_profile_id"
+    const val PREF_SLEEP_TIMER_END_MS = "sleep_timer_end_ms"
+    const val PREF_SLEEP_TIMER_ACTION = "sleep_timer_action"
+    const val PREF_SLEEP_TIMER_PROFILE = "sleep_timer_profile"
+    const val PREF_BT_PROFILE_RULES = "bt_profile_rules"
+    const val PREF_LAST_AUTOMATION_SOURCE = "last_automation_source"
+    const val PREF_LAST_AUTOMATION_DETAIL = "last_automation_detail"
+    const val PREF_ATMOS_CONTENT_ACTIVE = "atmos_content_active"
+    const val PREF_PROFILE_HISTORY = "profile_change_history"
+    const val PREF_SAFE_LISTENING_LIMIT = "safe_listening_limit"
+    const val PREF_UNDO_PROFILE = "undo_profile"
+    const val PREF_UNDO_TIMESTAMP = "undo_timestamp"
+    const val PREF_SPATIAL_AUDIO_ENABLED = "spatial_audio_enabled"
+    const val PREF_VISUALIZER_FFT_MODE = "visualizer_fft_mode"
+    const val PREF_APP_PROFILES_EXPORT = "app_profiles_export"
+
+    const val ACTION_SET_PROFILE = "org.lunaris.dolby.action.SET_PROFILE"
+    const val ACTION_TOGGLE = "org.lunaris.dolby.action.TOGGLE"
+    const val ACTION_APPLY_PRESET = "org.lunaris.dolby.action.APPLY_PRESET"
+    const val ACTION_SET_ENABLED = "org.lunaris.dolby.action.SET_ENABLED"
+    const val ACTION_SLEEP_TIMER = "org.lunaris.dolby.action.SLEEP_TIMER"
+    const val EXTRA_PROFILE = "profile"
+    const val EXTRA_PRESET = "preset"
+    const val EXTRA_ENABLED = "enabled"
+
+    const val SLEEP_ACTION_DISABLE = "disable"
+    const val SLEEP_ACTION_PROFILE = "profile"
+
     const val PROFILE_PRIORITY_DEVICE = "device"
     const val PROFILE_PRIORITY_APP = "app"
+
+    const val UNDO_WINDOW_MS = 30_000L
+    const val MAX_HISTORY_ENTRIES = 20
     
     const val PREF_FILE_PRESETS = "presets"
     const val PREF_FILE_CUSTOM_PRESETS = "custom_dolby_presets"

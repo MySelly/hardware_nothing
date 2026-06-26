@@ -12,6 +12,7 @@ import android.service.quicksettings.TileService
 import android.widget.Toast
 import org.lunaris.dolby.R
 import org.lunaris.dolby.data.DolbyRepository
+import org.lunaris.dolby.data.ProfileChangeHistoryManager
 import org.lunaris.dolby.service.DolbyEffectService
 
 class DolbyTileService : TileService() {
@@ -51,6 +52,11 @@ class DolbyTileService : TileService() {
                 waitingForDisableConfirm = false
                 profileCycleRunnable = null
                 val nextProfile = repository.cycleToNextProfile()
+                ProfileChangeHistoryManager(applicationContext).recordChange(
+                    nextProfile,
+                    org.lunaris.dolby.domain.models.ProfileChangeSource.QS_TILE,
+                    repository.getProfileDisplayName(nextProfile)
+                )
                 Toast.makeText(
                     applicationContext,
                     getString(R.string.qs_tile_profile_switched, repository.getProfileDisplayName(nextProfile)),

@@ -43,10 +43,48 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".receiver.SleepTimerReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.lunaris.dolby.action.SLEEP_TIMER_FIRE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receiver.DolbyAutomationReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="org.lunaris.dolby.action.SET_PROFILE" />
+                <action android:name="org.lunaris.dolby.action.TOGGLE" />
+                <action android:name="org.lunaris.dolby.action.APPLY_PRESET" />
+                <action android:name="org.lunaris.dolby.action.SET_ENABLED" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.POWER_SAVE_MODE_CHANGED" />
+                <action android:name="android.app.action.INTERRUPTION_FILTER_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".widget.DolbyWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="org.lunaris.dolby.widget.TOGGLE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/dolby_widget_info" />
+        </receiver>
+
         <activity
             android:name=".ui.DolbyActivity"
             android:label="@string/dolby_title"
             android:exported="true">
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
             <intent-filter>
                 <action android:name="com.android.settings.action.IA_SETTINGS" />
                 <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES"/>

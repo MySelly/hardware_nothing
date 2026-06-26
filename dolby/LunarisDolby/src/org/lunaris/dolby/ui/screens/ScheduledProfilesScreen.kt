@@ -135,8 +135,8 @@ fun ScheduledProfilesScreen(
     if (showAddDialog) {
         AddScheduledRuleDialog(
             onDismiss = { showAddDialog = false },
-            onAdd = { name, profile, start, end ->
-                viewModel.addRule(name, profile, start, end)
+            onAdd = { name, profile, start, end, days, priority ->
+                viewModel.addRule(name, profile, start, end, days, priority)
                 showAddDialog = false
             }
         )
@@ -186,6 +186,20 @@ private fun ScheduledRuleCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (rule.daysOfWeek.isNotEmpty()) {
+                    Text(
+                        stringResource(R.string.scheduled_profiles_days, rule.daysOfWeek.sorted().joinToString(",")),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (rule.priority > 0) {
+                    Text(
+                        stringResource(R.string.scheduled_profiles_priority, rule.priority),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
             Switch(checked = rule.enabled, onCheckedChange = onToggle)
             IconButton(onClick = onDelete) {
@@ -199,12 +213,16 @@ private fun ScheduledRuleCard(
 @Composable
 private fun AddScheduledRuleDialog(
     onDismiss: () -> Unit,
-    onAdd: (name: String, profileId: Int, startHour: Int, endHour: Int) -> Unit
+    onAdd: (name: String, profileId: Int, startHour: Int, endHour: Int, days: Set<Int>, priority: Int) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var profileIndex by remember { mutableIntStateOf(0) }
     var startHour by remember { mutableIntStateOf(22) }
     var endHour by remember { mutableIntStateOf(7) }
+    var priority by remember { mutableIntStateOf(0) }
+    val selectedDays = remember { mutableStateListOf<Int>() }
+    val dayLabels = listOf("S", "M", "T", "W", "T", "F", "S")
+    val dayValues = listOf(1, 2, 3, 4, 5, 6, 7)
     val profiles = stringArrayResource(R.array.dolby_profile_entries)
     val values = stringArrayResource(R.array.dolby_profile_values)
 
@@ -220,6 +238,19 @@ private fun AddScheduledRuleDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+                Text(stringResource(R.string.scheduled_profiles_days_label))
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    dayLabels.forEachIndexed { index, label ->
+                        val day = dayValues[index]
+                        FilterChip(
+                            selected = day in selectedDays,
+                            onClick = {
+                                if (day in selectedDays) selectedDays.remove(day) else selectedDays.add(day)
+                            },
+                            label = { Text(label) }
+                        )
+                    }
+                }
                 Text(stringResource(R.string.scheduled_profiles_profile_label))
                 profiles.forEachIndexed { index, label ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -244,6 +275,13 @@ private fun AddScheduledRuleDialog(
                     valueRange = 0f..23f,
                     steps = 22
                 )
+                Text(stringResource(R.string.scheduled_profiles_priority, priority))
+                Slider(
+                    value = priority.toFloat(),
+                    onValueChange = { priority = it.toInt() },
+                    valueRange = 0f..10f,
+                    steps = 10
+                )
             }
         },
         confirmButton = {
@@ -254,7 +292,9 @@ private fun AddScheduledRuleDialog(
                         name.ifBlank { defaultName },
                         values[profileIndex].toInt(),
                         startHour,
-                        endHour
+                        endHour,
+                        selectedDays.toSet(),
+                        priority
                     )
                 },
                 enabled = true

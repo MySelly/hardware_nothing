@@ -10,6 +10,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.data.DolbyRepository
+import org.lunaris.dolby.data.ProfileChangeHistoryManager
 import org.lunaris.dolby.domain.models.*
 import org.lunaris.dolby.service.DolbyEffectService
 import kotlinx.coroutines.Job
@@ -151,7 +152,13 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
     fun setProfile(profile: Int) {
         viewModelScope.launch {
             try {
+                ProfileChangeHistoryManager(getApplication()).saveUndoProfile(repository.getCurrentProfile())
                 repository.setCurrentProfile(profile)
+                ProfileChangeHistoryManager(getApplication()).recordChange(
+                    profile,
+                    ProfileChangeSource.MANUAL,
+                    "Manual selection"
+                )
             } catch (e: Exception) {
                 DolbyConstants.dlog(TAG, "Error setting profile: ${e.message}")
             }

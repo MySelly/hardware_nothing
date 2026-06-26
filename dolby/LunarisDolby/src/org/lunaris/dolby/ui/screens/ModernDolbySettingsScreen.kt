@@ -23,6 +23,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import org.lunaris.dolby.R
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringArrayResource
+import org.lunaris.dolby.data.AutomationStatusResolver
+import org.lunaris.dolby.data.ProfileChangeHistoryManager
 import org.lunaris.dolby.domain.models.DolbyUiState
 import org.lunaris.dolby.ui.components.*
 import org.lunaris.dolby.ui.viewmodel.DolbyViewModel
@@ -202,6 +207,19 @@ private fun ModernDolbySettingsContent(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val statusResolver = remember { AutomationStatusResolver(context) }
+    val historyManager = remember { ProfileChangeHistoryManager(context) }
+    val automationStatus = remember(state) { statusResolver.resolve() }
+    val profiles = stringArrayResource(R.array.dolby_profile_entries)
+    val profileValues = stringArrayResource(R.array.dolby_profile_values)
+    val profileIdx = profileValues.indexOf(state.settings.currentProfile.toString())
+    val profileName = profiles.getOrElse(profileIdx.coerceAtLeast(0)) { "?" }
+
+    DisposableEffect(Unit) {
+        onDispose { statusResolver.close() }
+    }
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -217,6 +235,18 @@ private fun ModernDolbySettingsContent(
 
         item {
             ActiveAudioDeviceCard(device = state.activeAudioDevice)
+        }
+
+        item {
+            ActiveRuleStatusCard(
+                status = automationStatus,
+                currentProfileName = profileName,
+                onUndoClick = {
+                    historyManager.consumeUndoProfile()?.let { profile ->
+                        viewModel.setProfile(profile)
+                    }
+                }
+            )
         }
 
         item {
@@ -250,6 +280,31 @@ private fun ModernDolbySettingsContent(
                         currentPreset = state.profileSettings.ieqPreset,
                         onPresetChange = { viewModel.setIeqPreset(it) }
                     )
+                }
+            }
+        }
+
+        item {
+            AnimatedVisibility(
+                visible = state.settings.enabled,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AudioVisualizerBars(
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = true,
+                        useFft = context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
+                            .getBoolean(org.lunaris.dolby.DolbyConstants.PREF_VISUALIZER_FFT_MODE, false)
+                    )
+                    TextButton(
+                        onClick = { navController.navigate(Screen.Automation.route) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.automation_hub_title))
+                    }
                 }
             }
         }

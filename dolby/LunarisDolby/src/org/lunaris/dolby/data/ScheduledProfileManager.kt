@@ -60,13 +60,21 @@ class ScheduledProfileManager(private val context: Context) {
 
     fun findActiveRule(now: Calendar = Calendar.getInstance()): ScheduledProfileRule? {
         val minuteOfDay = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
-        return getRules().firstOrNull { it.enabled && it.containsMinute(minuteOfDay) }
+        val dayOfWeek = now.get(Calendar.DAY_OF_WEEK)
+        return getRules()
+            .filter { it.enabled && it.matchesDay(dayOfWeek) && it.containsMinute(minuteOfDay) }
+            .maxByOrNull { it.priority }
     }
 
     fun applyActiveRuleIfNeeded(repository: DolbyRepository) {
         if (!isEnabled()) return
         val rule = findActiveRule() ?: return
         if (repository.getCurrentProfile() != rule.profileId) {
+            ProfileChangeHistoryManager(context).recordChange(
+                rule.profileId,
+                ProfileChangeSource.SCHEDULE,
+                rule.name
+            )
             repository.setCurrentProfile(rule.profileId)
             DolbyConstants.dlog(TAG, "Applied scheduled profile ${rule.profileId} (${rule.name})")
         }
@@ -110,10 +118,20 @@ class ScheduledProfileManager(private val context: Context) {
             put("endHour", rule.endHour)
             put("endMinute", rule.endMinute)
             put("enabled", rule.enabled)
+            put("priority", rule.priority)
+            val daysArray = JSONArray()
+            rule.daysOfWeek.sorted().forEach { daysArray.put(it) }
+            put("daysOfWeek", daysArray)
         }
     }
 
     private fun parseRule(json: JSONObject): ScheduledProfileRule {
+        val days = mutableSetOf<Int>()
+        json.optJSONArray("daysOfWeek")?.let { array ->
+            for (i in 0 until array.length()) {
+                days.add(array.getInt(i))
+            }
+        }
         return ScheduledProfileRule(
             id = json.getString("id"),
             name = json.getString("name"),
@@ -122,7 +140,9 @@ class ScheduledProfileManager(private val context: Context) {
             startMinute = json.getInt("startMinute"),
             endHour = json.getInt("endHour"),
             endMinute = json.getInt("endMinute"),
-            enabled = json.optBoolean("enabled", true)
+            enabled = json.optBoolean("enabled", true),
+            daysOfWeek = days,
+            priority = json.optInt("priority", 0)
         )
     }
 
