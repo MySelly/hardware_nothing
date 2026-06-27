@@ -834,6 +834,17 @@ public class GlyphNotificationListener
             }
         }
 
+        // Respect DND when configured: suppress essential lights entirely while DND is active
+        if (prefs.getBoolean("respect_dnd", false)
+                && org.aspends.nglyphs.util.DndHelper.isDndActive(this)) {
+            for (GlyphManagerV2.Glyph glyph : GlyphManagerV2.Glyph.values()) {
+                AnimationManager.setBackgroundGlyph(glyph, 0);
+            }
+            android.util.Log.d("GlyphNotification",
+                    "performEssentialLightUpdate: suppressed due to DND");
+            return;
+        }
+
         // Immediate Suppression: If device is active and unlocked, no essential light
         // can fire
         android.app.KeyguardManager kmCheck =
