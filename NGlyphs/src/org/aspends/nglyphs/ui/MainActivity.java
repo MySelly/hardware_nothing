@@ -1,6 +1,7 @@
 package org.aspends.nglyphs.ui;
 
 import android.Manifest;
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +17,7 @@ import android.provider.Settings;
 import android.service.quicksettings.TileService;
 import android.util.Log; // Added for Log.i
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
@@ -72,12 +74,13 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView textCurrentRingtone, textCurrentNotifSound, textCurrentFlipStyle,
             textSleepTime, textImportWarning, textCurrentMusic;
+    private Button buttonOpenMusicVisualizer;
     private MaterialSwitch switchMaster, switchFlip, switchFlipVibrate, switchFlipDnd,
             switchLockscreenOnly, switchSleepMode, switchShake, switchVolumeBar,
             switchVolumeFlipOnly, switchRingNotifHaptics, switchShakeWhileOn,
             switchAutoBrightness, switchAssistantMic, switchGlyphProgress,
             switchGlyphProgressFlippedOnly, switchNotifCooldown, switchStopDuringCall,
-            switchTorch, switchMusicVisualizer, switchAssistant;
+            switchTorch, switchAssistant;
     private LinearLayout layoutRingNotifHapticStrength, layoutVolumeFlipOnly,
             layoutGlyphProgressFlippedOnly, layoutGlyphProgressBrightness;
     private Slider slider, sliderShakeSensitivity, sliderHapticStrength,
@@ -94,6 +97,9 @@ public class MainActivity extends AppCompatActivity {
     private android.content.BroadcastReceiver brightnessReceiver;
 
     public static final String PREF_BLINK_STYLE = "glyph_blink_style";
+    private static final String MUSIC_VISUALIZER_PACKAGE = "com.better.nothing.music.vizualizer";
+    private static final String MUSIC_VISUALIZER_ACTIVITY =
+            "com.better.nothing.music.vizualizer.ui.MainActivity";
 
     // if u gonna add extra styles, begin from here
     private String[] notifStyleValues;
@@ -353,6 +359,7 @@ public class MainActivity extends AppCompatActivity {
         cardTorchBrightness = findViewById(R.id.cardTorchBrightness);
         cardAssistant = findViewById(R.id.cardAssistant);
         cardMusicVisualizer = findViewById(R.id.cardMusicVisualizer);
+        buttonOpenMusicVisualizer = findViewById(R.id.buttonOpenMusicVisualizer);
         cardNotifCooldown = findViewById(R.id.cardNotifCooldown);
         sliderTorch = findViewById(R.id.sliderTorch);
 
@@ -378,7 +385,6 @@ public class MainActivity extends AppCompatActivity {
         switchVolumeFlipOnly = findViewById(R.id.switchVolumeFlipOnly);
         switchRingNotifHaptics = findViewById(R.id.switchRingNotifHaptics);
         switchTorch = findViewById(R.id.switchTorch);
-        switchMusicVisualizer = findViewById(R.id.switchMusicVisualizer);
         switchAssistant = findViewById(R.id.switchAssistant);
 
         sliderShakeSensitivity = findViewById(R.id.seekBar_sensitivity);
@@ -424,8 +430,6 @@ public class MainActivity extends AppCompatActivity {
         switchGlyphProgressFlippedOnly.setChecked(
                 prefs.getBoolean("glyph_progress_flipped_only", false));
         switchNotifCooldown.setChecked(prefs.getBoolean("notif_cooldown_enabled", false));
-        if (switchMusicVisualizer != null)
-            switchMusicVisualizer.setChecked(prefs.getBoolean("music_visualizer_enabled", false));
         sliderRingNotifHapticStrength.setValue(prefs.getInt("ring_notif_haptic_strength", 100));
         sliderProgressBrightness.setValue(prefs.getInt("glyph_progress_brightness_factor", 70));
         sliderShakeSensitivity.setValue(prefs.getInt("shake_sensitivity", 50));
@@ -483,25 +487,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (isMasterAllowed) {
-            boolean vizEnabled = prefs.getBoolean("music_visualizer_enabled", false);
-            if (vizEnabled) {
-                startService(new Intent(this, AudioVisualizerService.class));
-            } else {
-                Intent flipIntent = new Intent(this, FlipToGlyphService.class);
-                Intent batteryIntent = new Intent(this, BatteryGlyphService.class);
-                Intent volumeIntent = new Intent(this, VolumeObserverService.class);
+            Intent flipIntent = new Intent(this, FlipToGlyphService.class);
+            Intent batteryIntent = new Intent(this, BatteryGlyphService.class);
+            Intent volumeIntent = new Intent(this, VolumeObserverService.class);
 
-                startService(flipIntent);
-
-                if (prefs.getBoolean("battery_glyph_enabled", false)) {
-                    startService(batteryIntent);
-                }
-                if (prefs.getBoolean("powershare_glyph_enabled", false)) {
-                    startService(new Intent(this, PowershareService.class));
-                }
-                if (prefs.getBoolean("volume_bar_enabled", true)) {
-                    startService(volumeIntent);
-                }
+            startService(flipIntent);
+            if (prefs.getBoolean("battery_glyph_enabled", false)) {
+                startService(batteryIntent);
+            }
+            if (prefs.getBoolean("powershare_glyph_enabled", false)) {
+                startService(new Intent(this, PowershareService.class));
+            }
+            if (prefs.getBoolean("volume_bar_enabled", true)) {
+                startService(volumeIntent);
             }
             if (prefs.getBoolean("auto_brightness_enabled", false)) {
                 startService(new Intent(this, AutoBrightnessService.class));
@@ -564,8 +562,6 @@ public class MainActivity extends AppCompatActivity {
                     startService(volumeIntent);
                 if (prefs.getBoolean("auto_brightness_enabled", false))
                     startService(autoBrightIntent);
-                if (prefs.getBoolean("music_visualizer_enabled", false))
-                    startService(new Intent(this, AudioVisualizerService.class));
                 if (prefs.getBoolean("assistant_animations_enabled", false))
                     startService(new Intent(this, AssistantInteractionService.class));
                 startService(new Intent(this, CameraRecordingService.class));
@@ -575,7 +571,6 @@ public class MainActivity extends AppCompatActivity {
                 stopService(new Intent(this, PowershareService.class));
                 stopService(volumeIntent);
                 stopService(autoBrightIntent);
-                stopService(new Intent(this, AudioVisualizerService.class));
                 stopService(new Intent(this, AssistantInteractionService.class));
                 stopService(new Intent(this, CameraRecordingService.class));
                 // ShakeToGlyphService remains running for independent Torch toggles,
@@ -686,76 +681,11 @@ public class MainActivity extends AppCompatActivity {
             refreshUIState();
         });
 
-        if (switchMusicVisualizer != null) {
-            switchMusicVisualizer.setOnCheckedChangeListener((v, ic) -> {
-                if (isUpdatingUI)
-                    return;
-                quickTick(15, 100);
-                prefs.edit().putBoolean("music_visualizer_enabled", ic).apply();
-                Intent vizIntent =
-                        new Intent(this, org.aspends.nglyphs.services.AudioVisualizerService.class);
-                Intent flipIntent = new Intent(this, FlipToGlyphService.class);
-                Intent volumeIntent = new Intent(this, VolumeObserverService.class);
-                Intent batteryIntent = new Intent(this, BatteryGlyphService.class);
-                Intent powershareIntent = new Intent(this, PowershareService.class);
-                if (ic && isMasterAllowed) {
-                    stopService(flipIntent);
-                    stopService(volumeIntent);
-                    stopService(batteryIntent);
-                    stopService(powershareIntent);
-                    AnimationManager.cancelAnimation();
-                    startService(vizIntent);
-                } else {
-                    stopService(vizIntent);
-                    AnimationManager.cancelAnimation();
-                    if (isMasterAllowed) {
-                        startService(flipIntent);
-                        if (prefs.getBoolean("volume_bar_enabled", true))
-                            startService(volumeIntent);
-                        if (prefs.getBoolean("battery_glyph_enabled", false))
-                            startService(batteryIntent);
-                        if (prefs.getBoolean("powershare_glyph_enabled", false))
-                            startService(powershareIntent);
-                    }
-                }
-                refreshUIState();
-            });
-        }
-
-        updateMusicZoneLabel();
-
         if (cardMusicVisualizer != null) {
-            cardMusicVisualizer.setOnClickListener(v -> {
-                String[] modes = {
-                    getString(R.string.music_visualizer_mode_beat),
-                    getString(R.string.music_visualizer_mode_5),
-                    getString(R.string.music_visualizer_mode_15)
-                };
-                int current = prefs.getInt("visualizer_mode",
-                        org.aspends.nglyphs.services.AudioVisualizerService.MODE_BEAT);
-                if (current < 0 || current >= modes.length) {
-                    current = org.aspends.nglyphs.services.AudioVisualizerService.MODE_BEAT;
-                }
-                new MaterialAlertDialogBuilder(this)
-                        .setTitle(R.string.music_visualizer_mode_title)
-                        .setSingleChoiceItems(modes, current,
-                                (dialog, which) -> {
-                                    prefs.edit().putInt("visualizer_mode", which).apply();
-                                    updateMusicZoneLabel();
-                                    if (switchMusicVisualizer != null
-                                            && switchMusicVisualizer.isChecked()
-                                            && isMasterAllowed) {
-                                        Intent vizIntent = new Intent(this,
-                                                org.aspends.nglyphs.services.AudioVisualizerService
-                                                        .class);
-                                        stopService(vizIntent);
-                                        startService(vizIntent);
-                                    }
-                                    dialog.dismiss();
-                                })
-                        .setNegativeButton(R.string.cancel, null)
-                        .show();
-            });
+            cardMusicVisualizer.setOnClickListener(v -> openExternalMusicVisualizer());
+        }
+        if (buttonOpenMusicVisualizer != null) {
+            buttonOpenMusicVisualizer.setOnClickListener(v -> openExternalMusicVisualizer());
         }
 
         if (switchAssistant != null) {
@@ -884,6 +814,25 @@ public class MainActivity extends AppCompatActivity {
         MainActivityExtras.bind(this, prefs);
     }
 
+    private void openExternalMusicVisualizer() {
+        Intent launchIntent = getPackageManager().getLaunchIntentForPackage(
+                MUSIC_VISUALIZER_PACKAGE);
+        if (launchIntent == null) {
+            launchIntent = new Intent(Intent.ACTION_MAIN);
+            launchIntent.setComponent(new ComponentName(
+                    MUSIC_VISUALIZER_PACKAGE,
+                    MUSIC_VISUALIZER_ACTIVITY));
+            launchIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        }
+        if (launchIntent.resolveActivity(getPackageManager()) == null) {
+            Toast.makeText(this, R.string.music_visualizer_app_missing,
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(launchIntent);
+    }
+
     private void showStyleDialog(
             int titleRes, String idxKey, String valKey, String folderName, String[] values) {
         if (values == null || values.length == 0)
@@ -896,24 +845,6 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("folderName", folderName);
         intent.putExtra("values", values);
         startActivity(intent);
-    }
-
-    private void updateMusicZoneLabel() {
-        if (textCurrentMusic == null)
-            return;
-        int mode = prefs.getInt("visualizer_mode",
-                org.aspends.nglyphs.services.AudioVisualizerService.MODE_BEAT);
-        switch (mode) {
-            case org.aspends.nglyphs.services.AudioVisualizerService.MODE_BEAT:
-                textCurrentMusic.setText(R.string.music_visualizer_beat);
-                break;
-            case org.aspends.nglyphs.services.AudioVisualizerService.MODE_5ZONE:
-                textCurrentMusic.setText(R.string.music_visualizer_5zone);
-                break;
-            default:
-                textCurrentMusic.setText(R.string.music_visualizer_15zone);
-                break;
-        }
     }
 
     private void updateStyleLabels() {
@@ -1070,12 +1001,7 @@ public class MainActivity extends AppCompatActivity {
                 continue;
             boolean cardEnabled = generalEnabled;
             // Mutually exclusive logic: if Music Visualizer is ON, disable conflicting card modules
-            if (switchMusicVisualizer != null && switchMusicVisualizer.isChecked()) {
-                if (c == cardShakeToGlyph || c == cardGlyphProgress || c == cardAssistant) {
-                    cardEnabled = false;
-                }
-            }
-
+    
             // Exceptions for Sleep/TurnOff/Brightness (allow interaction if master is on)
             if (c == cardSleepTime || c == cardBrightness || c == cardTorchBrightness)
                 cardEnabled = isMasterAllowed;
@@ -1105,17 +1031,11 @@ public class MainActivity extends AppCompatActivity {
                 switchShake, switchVolumeBar, switchVolumeFlipOnly, switchRingNotifHaptics,
                 switchShakeWhileOn, switchAutoBrightness, switchAssistantMic, switchGlyphProgress,
                 switchGlyphProgressFlippedOnly, switchNotifCooldown, switchStopDuringCall,
-                switchAssistant, switchMusicVisualizer, switchTorch};
+                switchAssistant, switchTorch};
 
         for (MaterialSwitch s : switches) {
             if (s != null) {
                 boolean parentEnabled = generalEnabled;
-                // Conflict Logic: Music Visualizer takes total precedence
-                if (switchMusicVisualizer != null && switchMusicVisualizer.isChecked()) {
-                    if (s == switchShake || s == switchGlyphProgress || s == switchAssistant) {
-                        parentEnabled = false;
-                    }
-                }
 
                 // Sub-feature logic: only enable if parent feature is ALSO checked
                 if (s == switchVolumeFlipOnly)

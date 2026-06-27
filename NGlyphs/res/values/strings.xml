@@ -134,6 +134,9 @@
     <string name="assistant_title">Google Assistant</string>
     <string name="assistant_desc">Visualize speech on bottom strip</string>
     <string name="music_visualizer_title">Music\nVisualization</string>
+    <string name="music_visualizer_open_desc">Tap to open the external visualizer app</string>
+    <string name="music_visualizer_open_button">Open Visualizer</string>
+    <string name="music_visualizer_app_missing">Music visualizer app not installed</string>
     <string name="music_visualizer_beat">Beat detection · Pulse on beats</string>
     <string name="music_visualizer_5zone">5-zone · Sync to audio</string>
     <string name="music_visualizer_15zone">15-zone · Full LED array</string>

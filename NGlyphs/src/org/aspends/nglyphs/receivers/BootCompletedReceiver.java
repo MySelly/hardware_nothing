@@ -54,10 +54,6 @@ public class BootCompletedReceiver extends BroadcastReceiver {
 
             startServiceIfEnabled(context, prefs, "assistant_animations_enabled",
                     AssistantInteractionService.class);
-
-            if (prefs.getBoolean("music_visualizer_enabled", false)) {
-                context.startService(new Intent(context, AudioVisualizerService.class));
-            }
         }
     }
 

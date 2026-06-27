@@ -603,11 +603,12 @@
                             app:layout_constraintTop_toTopOf="parent"
                             app:tint="?attr/colorOnSurface" />
 
-                        <com.google.android.material.materialswitch.MaterialSwitch
-                            android:id="@+id/switchMusicVisualizer"
+                        <Button
+                            android:id="@+id/buttonOpenMusicVisualizer"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="20dp"
+                            android:text="@string/music_visualizer_open_button"
                             app:layout_constraintBottom_toBottomOf="@id/iconMusic"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="@id/iconMusic" />

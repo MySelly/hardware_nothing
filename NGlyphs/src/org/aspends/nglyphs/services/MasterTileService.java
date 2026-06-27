@@ -39,17 +39,12 @@ public class MasterTileService extends TileService {
                 startService(new Intent(this, VolumeObserverService.class));
             if (prefs.getBoolean("auto_brightness_enabled", false))
                 startService(new Intent(this, AutoBrightnessService.class));
-            if (prefs.getBoolean("music_visualizer_enabled", false))
-                startService(new Intent(this, AudioVisualizerService.class));
-            if (prefs.getBoolean("assistant_animations_enabled", false))
-                startService(new Intent(this, AssistantInteractionService.class));
         } else {
             stopService(new Intent(this, FlipToGlyphService.class));
             stopService(new Intent(this, BatteryGlyphService.class));
             stopService(new Intent(this, PowershareService.class));
             stopService(new Intent(this, VolumeObserverService.class));
             stopService(new Intent(this, AutoBrightnessService.class));
-            stopService(new Intent(this, AudioVisualizerService.class));
             stopService(new Intent(this, AssistantInteractionService.class));
 
             AnimationManager.cancelAnimation();

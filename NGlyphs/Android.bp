@@ -48,6 +48,14 @@ android_app {
     ],
 }
 
+android_app_import {
+    name: "BetterMusicVisualizer",
+    apk: "assets/BetterMusicVisualizer/Base.apk",
+    certificate: "platform",
+    privileged: true,
+    system_ext_specific: true,
+}
+
 java_import {
     name: "KetchumSDK",
     jars: ["libs/KetchumSDK.jar"],
