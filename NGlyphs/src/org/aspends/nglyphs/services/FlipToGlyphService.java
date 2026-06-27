@@ -40,6 +40,7 @@ public class FlipToGlyphService extends Service implements SensorEventListener {
 
     private SensorManager sensorManager;
     private AudioManager audioManager;
+    private NotificationManager notificationManager;
     private Vibrator vibrator;
     private SharedPreferences prefs;
     private PowerManager.WakeLock wakeLock;
@@ -49,6 +50,9 @@ public class FlipToGlyphService extends Service implements SensorEventListener {
     public static volatile boolean ringingActive = false;
     public static volatile long ringingStartTime = 0;
     private int originalRingerMode;
+    private boolean ringerModeChangedByFlip;
+    private int originalDndFilter = NotificationManager.INTERRUPTION_FILTER_ALL;
+    private boolean dndActivatedByFlip;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable activationRunnable;
@@ -71,6 +75,7 @@ public class FlipToGlyphService extends Service implements SensorEventListener {
 
         wakeLock = ((PowerManager) getSystemService(POWER_SERVICE))
                            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "GlyphManager:Lock");
+        notificationManager = getSystemService(NotificationManager.class);
 
         startSensorWork();
     }
@@ -452,10 +457,35 @@ public class FlipToGlyphService extends Service implements SensorEventListener {
     private void activateFlipMode() {
         isActive = true;
         activationRunnable = null;
-        originalRingerMode = audioManager.getRingerMode();
-        audioManager.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
+        boolean flipVibrate = prefs.getBoolean("flip_mode_vibrate", true);
+        boolean flipDnd = prefs.getBoolean("flip_mode_dnd", true);
 
-        if (vibrator != null && vibrator.hasVibrator()) {
+        ringerModeChangedByFlip = false;
+        if (flipVibrate && audioManager != null) {
+            originalRingerMode = audioManager.getRingerMode();
+            if (originalRingerMode != AudioManager.RINGER_MODE_VIBRATE) {
+                audioManager.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
+                ringerModeChangedByFlip = true;
+            }
+        }
+
+        if (flipDnd
+                && notificationManager != null
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && notificationManager.isNotificationPolicyAccessGranted()) {
+            try {
+                originalDndFilter = notificationManager.getCurrentInterruptionFilter();
+                notificationManager.setInterruptionFilter(
+                        NotificationManager.INTERRUPTION_FILTER_NONE);
+                dndActivatedByFlip = true;
+            } catch (Exception ignored) {
+                dndActivatedByFlip = false;
+            }
+        } else {
+            dndActivatedByFlip = false;
+        }
+
+        if (flipVibrate && vibrator != null && vibrator.hasVibrator()) {
             vibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE));
         }
 
@@ -470,7 +500,22 @@ public class FlipToGlyphService extends Service implements SensorEventListener {
     private void deactivateFlipMode() {
         isActive = false;
         prefs.edit().putBoolean("device_is_flipped", false).apply();
-        audioManager.setRingerMode(originalRingerMode);
+        if (ringerModeChangedByFlip && audioManager != null) {
+            try {
+                audioManager.setRingerMode(originalRingerMode);
+            } catch (Exception ignored) {
+            }
+            ringerModeChangedByFlip = false;
+        }
+        if (dndActivatedByFlip
+                && notificationManager != null
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                notificationManager.setInterruptionFilter(originalDndFilter);
+            } catch (Exception ignored) {
+            }
+            dndActivatedByFlip = false;
+        }
 
         restoreTorchState();
 
@@ -501,8 +546,9 @@ public class FlipToGlyphService extends Service implements SensorEventListener {
     public void onDestroy() {
         isRinging = false;
         ringingActive = false;
-        if (isActive)
-            audioManager.setRingerMode(originalRingerMode);
+        if (isActive) {
+            deactivateFlipMode();
+        }
 
         if (sensorManager != null)
             sensorManager.unregisterListener(this);

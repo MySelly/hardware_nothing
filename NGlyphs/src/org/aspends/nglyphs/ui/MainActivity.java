@@ -57,6 +57,13 @@ public class MainActivity extends AppCompatActivity {
     private boolean isUpdatingUI = false;
     private int currentBrightness;
 
+    private boolean hasDndPermission() {
+        NotificationManager nm = getSystemService(NotificationManager.class);
+        return nm != null
+                && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M
+                && nm.isNotificationPolicyAccessGranted();
+    }
+
     private MaterialCardView cardNotifications, cardRingtones, cardFlipStyle, cardSleepTime,
             cardBrightness, cardEssentialLights, cardRingNotifHaptics, cardVolumeBar,
             cardShakeToGlyph, cardImport, cardBattery, cardTurnOff, cardGlyphProgress,
@@ -65,11 +72,12 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView textCurrentRingtone, textCurrentNotifSound, textCurrentFlipStyle,
             textSleepTime, textImportWarning, textCurrentMusic;
-    private MaterialSwitch switchMaster, switchFlip, switchLockscreenOnly, switchSleepMode,
-            switchShake, switchVolumeBar, switchVolumeFlipOnly, switchRingNotifHaptics,
-            switchShakeWhileOn, switchAutoBrightness, switchAssistantMic, switchGlyphProgress,
-            switchGlyphProgressFlippedOnly, switchNotifCooldown, switchStopDuringCall, switchTorch,
-            switchMusicVisualizer, switchAssistant;
+    private MaterialSwitch switchMaster, switchFlip, switchFlipVibrate, switchFlipDnd,
+            switchLockscreenOnly, switchSleepMode, switchShake, switchVolumeBar,
+            switchVolumeFlipOnly, switchRingNotifHaptics, switchShakeWhileOn,
+            switchAutoBrightness, switchAssistantMic, switchGlyphProgress,
+            switchGlyphProgressFlippedOnly, switchNotifCooldown, switchStopDuringCall,
+            switchTorch, switchMusicVisualizer, switchAssistant;
     private LinearLayout layoutRingNotifHapticStrength, layoutVolumeFlipOnly,
             layoutGlyphProgressFlippedOnly, layoutGlyphProgressBrightness;
     private Slider slider, sliderShakeSensitivity, sliderHapticStrength,
@@ -361,6 +369,8 @@ public class MainActivity extends AppCompatActivity {
         switchMaster = findViewById(R.id.switchAll);
         switchAutoBrightness = findViewById(R.id.switchAutoBrightness);
         switchFlip = findViewById(R.id.switchFlip);
+        switchFlipVibrate = findViewById(R.id.switchFlipVibrate);
+        switchFlipDnd = findViewById(R.id.switchFlipDnd);
         switchLockscreenOnly = findViewById(R.id.switchLockscreenOnly);
         switchSleepMode = findViewById(R.id.switchSleepMode);
         switchShake = findViewById(R.id.switchShake);
@@ -402,6 +412,8 @@ public class MainActivity extends AppCompatActivity {
 
         switchSleepMode.setChecked(prefs.getBoolean("sleep_mode_enabled", false));
         switchLockscreenOnly.setChecked(prefs.getBoolean("screen_off_only", false));
+        switchFlipVibrate.setChecked(prefs.getBoolean("flip_mode_vibrate", true));
+        switchFlipDnd.setChecked(prefs.getBoolean("flip_mode_dnd", true));
         switchShake.setChecked(prefs.getBoolean("shake_enabled", false));
         switchVolumeBar.setChecked(prefs.getBoolean("volume_bar_enabled", true));
         switchVolumeFlipOnly.setChecked(prefs.getBoolean("volume_flip_only", false));
@@ -585,6 +597,25 @@ public class MainActivity extends AppCompatActivity {
             // ringtones!
             // The service now handles ignoring flip sensor events internally when this is
             // false.
+            refreshUIState();
+        });
+
+        switchFlipVibrate.setChecked(prefs.getBoolean("flip_mode_vibrate", true));
+        switchFlipVibrate.setOnCheckedChangeListener((v, isChecked) -> {
+            quickTick(15, 100);
+            prefs.edit().putBoolean("flip_mode_vibrate", isChecked).apply();
+        });
+
+        switchFlipDnd.setChecked(prefs.getBoolean("flip_mode_dnd", true));
+        switchFlipDnd.setOnCheckedChangeListener((v, isChecked) -> {
+            quickTick(15, 100);
+            prefs.edit().putBoolean("flip_mode_dnd", isChecked).apply();
+            if (isChecked && !hasDndPermission()) {
+                Toast.makeText(this,
+                        "DND access is required for flip-to-glyph DND mode. Grant permission in settings.",
+                        Toast.LENGTH_LONG).show();
+                startActivity(new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS));
+            }
         });
 
         switchAutoBrightness.setOnCheckedChangeListener((v, ic) -> {
@@ -1070,9 +1101,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Specifically handle all switches/sliders/pickers with hierarchical disabling
-        MaterialSwitch[] switches = {switchFlip, switchLockscreenOnly, switchShake, switchVolumeBar,
-                switchVolumeFlipOnly, switchRingNotifHaptics, switchShakeWhileOn,
-                switchAutoBrightness, switchAssistantMic, switchGlyphProgress,
+        MaterialSwitch[] switches = {switchFlip, switchFlipVibrate, switchFlipDnd, switchLockscreenOnly,
+                switchShake, switchVolumeBar, switchVolumeFlipOnly, switchRingNotifHaptics,
+                switchShakeWhileOn, switchAutoBrightness, switchAssistantMic, switchGlyphProgress,
                 switchGlyphProgressFlippedOnly, switchNotifCooldown, switchStopDuringCall,
                 switchAssistant, switchMusicVisualizer, switchTorch};
 
@@ -1093,6 +1124,8 @@ public class MainActivity extends AppCompatActivity {
                     parentEnabled &= switchShake.isChecked();
                 if (s == switchGlyphProgressFlippedOnly)
                     parentEnabled &= switchGlyphProgress.isChecked();
+                if (s == switchFlipVibrate || s == switchFlipDnd)
+                    parentEnabled &= switchFlip.isChecked();
 
                 s.setEnabled(parentEnabled);
                 s.setAlpha(parentEnabled ? 1.0f : 0.6f);
