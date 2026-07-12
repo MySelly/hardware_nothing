@@ -22,16 +22,29 @@ object DolbyHalBridge {
         setParameters(context, listOf(
             "dolby_volmax_boost=$boost",
             "volmax_boost=$boost",
+            "volmax-boost=$boost",
             "DolbyVolMaxBoost=$boost"
         ))
         DolbyConstants.dlog(TAG, "volmax_boost=$boost enabled=$enabled")
+    }
+
+    fun applySurroundBoost(context: Context, enabled: Boolean, value: Int) {
+        val boost = if (enabled) value.coerceIn(0, 64) else 0
+        setParameters(context, listOf(
+            "dolby_surround_boost=$boost",
+            "surround_boost=$boost",
+            "surround-boost=$boost",
+            "DolbySurroundBoost=$boost"
+        ))
+        DolbyConstants.dlog(TAG, "surround_boost=$boost enabled=$enabled")
     }
 
     fun applyHearingProtection(context: Context, enabled: Boolean) {
         val flag = if (enabled) 1 else 0
         setParameters(context, listOf(
             "dolby_hearing_protection=$flag",
-            "hearing_protection_enable=$flag"
+            "hearing_protection_enable=$flag",
+            "hearing-protection-enable=$flag"
         ))
         DolbyConstants.dlog(TAG, "hearing_protection=$flag")
     }
@@ -40,7 +53,9 @@ object DolbyHalBridge {
         val flag = if (enabled) 1 else 0
         setParameters(context, listOf(
             "dolby_virtual_bass=$flag",
-            "virtual_bass_process_enable=$flag"
+            "virtual_bass_process_enable=$flag",
+            "virtual-bass-process-enable=$flag",
+            "virtual_bass_process=$flag"
         ))
         DolbyConstants.dlog(TAG, "virtual_bass=$flag")
     }

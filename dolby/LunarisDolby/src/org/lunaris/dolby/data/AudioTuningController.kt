@@ -7,6 +7,7 @@ package org.lunaris.dolby.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.media.AudioManager
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.DolbyConstants.DsParam
 import org.lunaris.dolby.audio.DolbyAudioEffect
@@ -32,6 +33,7 @@ internal class AudioTuningController(
         applyVolumeLevelerAmount(profile)
         applyVirtualBass(profile)
         applyHearingProtection(profile)
+        applyDspVolumeBoost()
         audioEngine.applySpatialProcessing()
     }
 
@@ -160,7 +162,7 @@ internal class AudioTuningController(
             .putBoolean(DolbyConstants.PREF_SURROUND_BOOST_ENABLED, enabled)
             .putInt(DolbyConstants.PREF_SURROUND_BOOST, clamped)
             .apply()
-        setDapInt(DsParam.SURROUND_BOOST, profile, if (enabled) clamped else 0)
+        applySurroundBoost(profile)
     }
 
     // --- Volume leveler amount ---
@@ -229,6 +231,15 @@ internal class AudioTuningController(
             .putBoolean(DolbyConstants.PREF_DSP_VOLUME_BOOST_ENABLED, enabled)
             .putInt(DolbyConstants.PREF_DSP_VOLUME_BOOST_STRENGTH, clamped)
             .apply()
+        applyDspVolumeBoost()
+    }
+
+    private fun applyDspVolumeBoost() {
+        val enabled = isDspVolumeBoostEnabled()
+        val strength = getDspVolumeBoostStrength()
+        val am = context.getSystemService(AudioManager::class.java) ?: return
+        val step = am.getStreamVolume(AudioManager.STREAM_MUSIC)
+        DolbyHalBridge.syncDspVolume(context, step, enabled, strength)
     }
 
     private fun applyIeqAmount(profile: Int) {
@@ -237,7 +248,9 @@ internal class AudioTuningController(
 
     private fun applySurroundBoost(profile: Int) {
         val enabled = isSurroundBoostEnabled(profile)
-        setDapInt(DsParam.SURROUND_BOOST, profile, if (enabled) getSurroundBoost(profile) else 0)
+        val value = if (enabled) getSurroundBoost(profile) else 0
+        setDapInt(DsParam.SURROUND_BOOST, profile, value)
+        DolbyHalBridge.applySurroundBoost(context, enabled, value)
     }
 
     private fun applyVolumeLevelerAmount(profile: Int) {

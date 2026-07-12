@@ -262,6 +262,7 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
                 DolbyConstants.dlog(TAG, "WARNING: Profile may not have been saved correctly!")
             }
             restoreProfilePreset(profile)
+            applyProfileSettings(profile)
             _currentProfile.value = profile
             DolbyConstants.dlog(TAG, "Profile set to: $profile")
         } catch (e: Exception) {
