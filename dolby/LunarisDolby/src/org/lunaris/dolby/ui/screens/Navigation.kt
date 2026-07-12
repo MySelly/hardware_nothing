@@ -23,7 +23,6 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
     object Equalizer : Screen("equalizer")
     object Advanced : Screen("advanced")
-    object Automation : Screen("automation")
     object AppProfiles : Screen("app_profiles")
     object DeviceMemory : Screen("device_memory")
     object CustomPresets : Screen("custom_presets")
@@ -137,10 +136,6 @@ fun DolbyNavHost(
                 dolbyViewModel = dolbyViewModel,
                 navController = navController
             )
-        }
-
-        composable(Screen.Automation.route) {
-            AutomationHubScreen(navController = navController)
         }
 
         composable(Screen.AutomationSettings.route) {

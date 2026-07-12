@@ -46,7 +46,6 @@ fun FloatingNavToolbar(
     val isHomeSelected = currentRoute == "settings"
     val isEqualizerSelected = currentRoute == "equalizer"
     val isAdvancedSelected = currentRoute == "advanced"
-    val isAutomationSelected = currentRoute == "automation"
     
     val containerColor = MaterialTheme.colorScheme.primaryContainer
     val onContainerColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -125,22 +124,6 @@ fun FloatingNavToolbar(
                     }
                 )
             }
-
-            NavToolbarItem(
-                icon = Icons.Default.AutoAwesome,
-                label = stringResource(R.string.automation_hub_title),
-                selected = isAutomationSelected,
-                primaryColor = primaryColor,
-                onPrimaryColor = onPrimaryColor,
-                containerColor = containerColor,
-                onContainerColor = onContainerColor,
-                onClick = {
-                    scope.launch {
-                        haptic.performHaptic(HapticFeedbackHelper.HapticIntensity.DOUBLE_CLICK)
-                    }
-                    onNavigate("automation")
-                }
-            )
         }
     }
 }

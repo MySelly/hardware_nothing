@@ -297,14 +297,6 @@ private fun ModernDolbySettingsContent(
                         useFft = context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
                             .getBoolean(org.lunaris.dolby.DolbyConstants.PREF_VISUALIZER_FFT_MODE, false)
                     )
-                    TextButton(
-                        onClick = { navController.navigate(Screen.Automation.route) },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.automation_hub_title))
-                    }
                 }
             }
         }
@@ -377,6 +369,93 @@ private fun ModernDolbySettingsContent(
                     onManageClick = { navController.navigate("app_profiles") },
                     onManageDeviceMemoryClick = { navController.navigate("device_memory") }
                 )
+            }
+        }
+
+        item {
+            AnimatedVisibility(
+                visible = state.settings.enabled,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                ModernSettingsCard(
+                    title = stringResource(R.string.bt_rules_title),
+                    icon = Icons.Default.Bluetooth
+                ) {
+                    Text(
+                        text = stringResource(R.string.bt_rules_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Button(
+                        onClick = { navController.navigate(Screen.BluetoothRules.route) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Icon(Icons.Default.Bluetooth, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.bt_rules_title))
+                    }
+                }
+            }
+        }
+
+        item {
+            AnimatedVisibility(
+                visible = state.settings.enabled,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                ModernSettingsCard(
+                    title = stringResource(R.string.automation_settings_title),
+                    icon = Icons.Default.Tune
+                ) {
+                    Text(
+                        text = stringResource(R.string.automation_settings_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Button(
+                        onClick = { navController.navigate(Screen.AutomationSettings.route) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.automation_settings_title))
+                    }
+                }
+            }
+        }
+
+        item {
+            AnimatedVisibility(
+                visible = state.settings.enabled,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                ModernSettingsCard(
+                    title = stringResource(R.string.profile_history_title),
+                    icon = Icons.Default.History
+                ) {
+                    Text(
+                        text = stringResource(R.string.profile_history_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Button(
+                        onClick = { navController.navigate(Screen.ProfileHistory.route) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.profile_history_title))
+                    }
+                }
             }
         }
         

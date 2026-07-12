@@ -139,6 +139,7 @@ fun ModernEqualizerScreen(
                     viewModel = viewModel,
                     viewMode = viewMode,
                     onViewModeChange = { viewMode = it },
+                    navController = navController,
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -258,6 +259,7 @@ private fun ModernEqualizerContent(
     viewModel: EqualizerViewModel,
     viewMode: EqualizerViewMode,
     onViewModeChange: (EqualizerViewMode) -> Unit,
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
     val isFlatPreset = state.currentPreset.name == stringResource(R.string.dolby_preset_default)
@@ -429,6 +431,46 @@ private fun ModernEqualizerContent(
                         viewModel = viewModel,
                         canEdit = canEdit
                     )
+                }
+            }
+        }
+        
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceBright)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.GraphicEq,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.calibration_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.calibration_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                OutlinedButton(
+                    onClick = { navController.navigate(Screen.Calibration.route) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.GraphicEq, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.calibration_title))
                 }
             }
         }

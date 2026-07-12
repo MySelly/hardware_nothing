@@ -445,6 +445,28 @@ private fun ModernAdvancedSettingsContent(
         }
         
         item {
+            ModernSettingsCard(
+                title = stringResource(R.string.diagnostics_title),
+                icon = Icons.Default.MedicalServices
+            ) {
+                Text(
+                    text = stringResource(R.string.diagnostics_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                OutlinedButton(
+                    onClick = { navController.navigate(Screen.Diagnostics.route) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.MedicalServices, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.diagnostics_title))
+                }
+            }
+        }
+        
+        item {
             Spacer(modifier = Modifier.height(70.dp))
         }
     }
