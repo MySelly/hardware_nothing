@@ -299,37 +299,3 @@ private fun DiagRow(label: String, value: String) {
         Text(value, fontWeight = FontWeight.Medium)
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CalibrationScreen(navController: NavController) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.calibration_title), fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            Modifier.fillMaxSize().padding(padding).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(stringResource(R.string.calibration_desc))
-            org.lunaris.dolby.ui.components.AudioVisualizerBars(
-                modifier = Modifier.fillMaxWidth().height(120.dp),
-                enabled = true,
-                useFft = true
-            )
-            Text(
-                stringResource(R.string.calibration_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}

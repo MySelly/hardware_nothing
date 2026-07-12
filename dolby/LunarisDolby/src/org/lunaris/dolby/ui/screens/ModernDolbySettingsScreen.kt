@@ -290,23 +290,6 @@ private fun ModernDolbySettingsContent(
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AudioVisualizerBars(
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = true,
-                        useFft = context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
-                            .getBoolean(org.lunaris.dolby.DolbyConstants.PREF_VISUALIZER_FFT_MODE, false)
-                    )
-                }
-            }
-        }
-
-        item {
-            AnimatedVisibility(
-                visible = state.settings.enabled,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
                 ModernSettingsCard(
                     title = stringResource(R.string.custom_presets_title),
                     icon = Icons.Default.Bookmark
