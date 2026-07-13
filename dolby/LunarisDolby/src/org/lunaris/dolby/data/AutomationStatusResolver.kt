@@ -40,7 +40,7 @@ class AutomationStatusResolver(context: Context) {
 
         var effectHealthy = false
         try {
-            effectHealthy = repository.getDolbyEnabled()
+            effectHealthy = repository.hasEffectControl()
         } catch (_: Exception) {
         }
 

@@ -9,6 +9,7 @@ import android.media.AudioManager;
 public class VolumeListenerReceiver extends BroadcastReceiver {
 
     private static final String PREFS = "dolby_prefs";
+    private static final String DOLBY_PACKAGE = "org.lunaris.dolby";
     private static final String KEY_ENABLED = "dsp_volume_boost_enabled";
     private static final String KEY_STRENGTH = "dsp_volume_boost_strength";
 
@@ -25,7 +26,15 @@ public class VolumeListenerReceiver extends BroadcastReceiver {
         AudioManager audioManager = context.getSystemService(AudioManager.class);
         int current = intent.getIntExtra("android.media.EXTRA_VOLUME_STREAM_VALUE", 0);
 
-        SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        SharedPreferences prefs;
+        try {
+            Context dolbyContext = context.createPackageContext(
+                    DOLBY_PACKAGE, Context.CONTEXT_IGNORE_SECURITY)
+                    .createDeviceProtectedStorageContext();
+            prefs = dolbyContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        } catch (Exception e) {
+            prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        }
         boolean boostEnabled = prefs.getBoolean(KEY_ENABLED, false);
         int strength = prefs.getInt(KEY_STRENGTH, 0);
 

@@ -91,7 +91,7 @@ object LoudnessPresetManager {
         val config = buildForPreset(preset, engine)
         repository.setOutputBoost(profile, config.outputBoostEnabled, config.outputBoostTenths)
         repository.setVolmaxBoost(profile, config.volmaxEnabled, config.volmaxValue)
-        repository.setVirtualBassEnabled(profile, config.virtualBassEnabled)
+        repository.setVirtualBassSpeakerEnabled(profile, config.virtualBassEnabled)
         repository.setBassLevel(profile, config.bassLevel)
         repository.setBassCurve(profile, config.bassCurve)
         repository.setVolumeLevelerEnabled(profile, config.volumeLevelerEnabled)

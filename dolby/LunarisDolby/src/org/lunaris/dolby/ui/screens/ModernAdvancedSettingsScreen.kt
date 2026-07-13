@@ -589,10 +589,19 @@ private fun AudioTuningSettingsCard(
 
         Spacer(modifier = Modifier.height(12.dp))
         ModernSettingSwitch(
-            title = stringResource(R.string.virtual_bass_title),
-            subtitle = stringResource(R.string.virtual_bass_summary),
-            checked = profileSettings.virtualBassEnabled,
-            onCheckedChange = { viewModel.setVirtualBass(it) },
+            title = stringResource(R.string.virtual_bass_speaker_title),
+            subtitle = stringResource(R.string.virtual_bass_speaker_summary),
+            checked = profileSettings.virtualBassSpeakerEnabled,
+            onCheckedChange = { viewModel.setVirtualBassSpeaker(it) },
+            icon = Icons.Default.GraphicEq
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+        ModernSettingSwitch(
+            title = stringResource(R.string.virtual_bass_bluetooth_title),
+            subtitle = stringResource(R.string.virtual_bass_bluetooth_summary),
+            checked = profileSettings.virtualBassBluetoothEnabled,
+            onCheckedChange = { viewModel.setVirtualBassBluetooth(it) },
             icon = Icons.Default.GraphicEq
         )
 

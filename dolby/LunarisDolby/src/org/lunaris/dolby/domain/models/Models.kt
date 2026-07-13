@@ -50,7 +50,8 @@ data class ProfileSettings(
     val surroundBoostEnabled: Boolean = false,
     val surroundBoost: Int = 0,
     val volumeLevelerAmount: Int = 0,
-    val virtualBassEnabled: Boolean = false,
+    val virtualBassSpeakerEnabled: Boolean = false,
+    val virtualBassBluetoothEnabled: Boolean = false,
     val hearingProtectionEnabled: Boolean = false,
     val dspVolumeBoostEnabled: Boolean = false,
     val dspVolumeBoostStrength: Int = 0

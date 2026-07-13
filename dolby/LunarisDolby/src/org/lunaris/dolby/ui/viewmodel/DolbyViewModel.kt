@@ -103,7 +103,8 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     surroundBoostEnabled = repository.isSurroundBoostEnabled(profile),
                     surroundBoost = repository.getSurroundBoost(profile),
                     volumeLevelerAmount = repository.getVolumeLevelerAmount(profile),
-                    virtualBassEnabled = repository.isVirtualBassEnabled(profile),
+                    virtualBassSpeakerEnabled = repository.isVirtualBassSpeakerEnabled(profile),
+                    virtualBassBluetoothEnabled = repository.isVirtualBassBluetoothEnabled(profile),
                     hearingProtectionEnabled = repository.isHearingProtectionEnabled(profile),
                     dspVolumeBoostEnabled = repository.isDspVolumeBoostEnabled(),
                     dspVolumeBoostStrength = repository.getDspVolumeBoostStrength()
@@ -406,6 +407,30 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun setVirtualBassSpeaker(enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setVirtualBassSpeakerEnabled(profile, enabled)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting speaker virtual bass: ${e.message}")
+            }
+        }
+    }
+
+    fun setVirtualBassBluetooth(enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setVirtualBassBluetoothEnabled(profile, enabled)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting Bluetooth virtual bass: ${e.message}")
+            }
+        }
+    }
+
     fun setHearingProtection(enabled: Boolean) {
         viewModelScope.launch {
             try {
@@ -431,7 +456,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getOutputBoostMinTenths(): Int {
         return try {
-            DolbyRepository(getApplication()).getOutputBoostMinTenths()
+            repository.getOutputBoostMinTenths()
         } catch (_: Exception) {
             DolbyConstants.OUTPUT_BOOST_MIN_TENTHS
         }
@@ -439,7 +464,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getOutputBoostMaxTenths(): Int {
         return try {
-            DolbyRepository(getApplication()).getOutputBoostMaxTenths()
+            repository.getOutputBoostMaxTenths()
         } catch (_: Exception) {
             DolbyConstants.OUTPUT_BOOST_STANDARD_MAX
         }
@@ -447,10 +472,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getHeadroomInfo(): HeadroomInfo? {
         return try {
-            val repo = DolbyRepository(getApplication())
-            val info = repo.getHeadroomInfo(repo.getCurrentProfile())
-            repo.close()
-            info
+            repository.getHeadroomInfo(repository.getCurrentProfile())
         } catch (_: Exception) {
             null
         }
@@ -459,9 +481,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
     fun applyLoudnessPreset(preset: LoudnessPreset) {
         viewModelScope.launch {
             try {
-                val repo = DolbyRepository(getApplication())
-                repo.applyLoudnessPreset(preset)
-                repo.close()
+                repository.applyLoudnessPreset(preset)
                 loadSettings()
             } catch (e: Exception) {
                 DolbyConstants.dlog(TAG, "Error applying loudness preset: ${e.message}")

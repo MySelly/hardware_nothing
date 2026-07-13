@@ -311,6 +311,10 @@
     <string name="volume_leveler_amount_summary">Dengeleyici açıkken dinamik ses normalizasyon miktarı</string>
     <string name="virtual_bass_title">Sanal bas</string>
     <string name="virtual_bass_summary">Küçük hoparlörlerde daha derin bas için DAX sanal bas işleme</string>
+    <string name="virtual_bass_speaker_title">Telefon hoparlörü sanal bası</string>
+    <string name="virtual_bass_speaker_summary">Telefon hoparlörleri için DAX sanal bas işleme</string>
+    <string name="virtual_bass_bluetooth_title">Bluetooth sanal bası</string>
+    <string name="virtual_bass_bluetooth_summary">Deneyseldir; kullanılabilirlik bağlı cihaza ve ses HAL desteğine bağlıdır</string>
     <string name="hearing_protection_title">İşitme koruması</string>
     <string name="hearing_protection_summary">Yüksek çıkış güçlendirme kullanırken tepe seviyeleri sınırlar</string>
     <string name="dsp_volume_boost_title">DSP ses yükseltme</string>

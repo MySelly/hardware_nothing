@@ -37,6 +37,8 @@ object DolbyConstants {
     const val PREF_SURROUND_BOOST_ENABLED = "dolby_surround_boost_enabled"
     const val PREF_SURROUND_BOOST = "dolby_surround_boost"
     const val PREF_VIRTUAL_BASS = "dolby_virtual_bass"
+    const val PREF_VIRTUAL_BASS_SPEAKER = "dolby_virtual_bass_speaker"
+    const val PREF_VIRTUAL_BASS_BLUETOOTH = "dolby_virtual_bass_bluetooth"
     const val PREF_HEARING_PROTECTION = "dolby_hearing_protection"
     const val PREF_DSP_VOLUME_BOOST_ENABLED = "dsp_volume_boost_enabled"
     const val PREF_DSP_VOLUME_BOOST_STRENGTH = "dsp_volume_boost_strength"

@@ -24,7 +24,8 @@ import org.json.JSONObject
 class DolbyRepository(private val context: Context) : AutoCloseable {
 
     private val audioManager = context.getSystemService(AudioManager::class.java)
-    private var dolbyEffect = createDolbyEffect()
+    private val dolbyEffect: DolbyAudioEffect
+        get() = getOrCreateDolbyEffect()
     
     private val defaultPrefs = context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
     private val presetsPrefs = context.getSharedPreferences(DolbyConstants.PREF_FILE_PRESETS, Context.MODE_PRIVATE)
@@ -44,7 +45,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
         checkEffect = { checkEffect() },
         isReleased = { isReleased },
         profilePrefs = { getProfilePrefs(it) },
-        defaultPrefs = defaultPrefs
+        defaultPrefs = defaultPrefs,
+        activeDeviceCategory = { resolveActiveAudioDevice().category }
     )
 
     private val _activeAudioDevice = MutableStateFlow(resolveActiveAudioDevice())
@@ -65,30 +67,36 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     private val presetCacheLock = Any()
     private var isBypassActive = false
 
-    private fun createDolbyEffect(): DolbyAudioEffect {
-        return try {
-            DolbyAudioEffect(EFFECT_PRIORITY, audioSession = 0)
-        } catch (e: Exception) {
-            DolbyConstants.dlog(TAG, "Failed to create Dolby effect: ${e.message}")
-            throw e
-        }
-    }
-
     private fun checkEffect() {
         if (isReleased) {
             DolbyConstants.dlog(TAG, "Repository released, skipping effect check")
             return
         }
-        
+
+        var recovered = false
         try {
-            if (!dolbyEffect.hasControl()) {
-                DolbyConstants.dlog(TAG, "Lost audio effect control, recreating")
-                dolbyEffect.release()
-                dolbyEffect = createDolbyEffect()
-                restoreSavedProfileIfNeeded()
+            synchronized(EFFECT_LOCK) {
+                val effect = getOrCreateDolbyEffect()
+                if (!effect.hasControl()) {
+                    DolbyConstants.dlog(TAG, "Shared audio effect lost control, recreating once")
+                    effect.release()
+                    sharedDolbyEffect = null
+                    getOrCreateDolbyEffect()
+                    recovered = true
+                }
             }
+            if (recovered) restoreSavedProfileIfNeeded()
         } catch (e: Exception) {
             DolbyConstants.dlog(TAG, "Error checking effect: ${e.message}")
+        }
+    }
+
+    fun hasEffectControl(): Boolean {
+        if (isReleased) return false
+        return try {
+            synchronized(EFFECT_LOCK) { getOrCreateDolbyEffect().hasControl() }
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -1181,11 +1189,6 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
         if (!isReleased) {
             DolbyConstants.dlog(TAG, "Releasing repository resources")
             isReleased = true
-            try {
-                dolbyEffect.release()
-            } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error releasing effect: ${e.message}")
-            }
         }
     }
     
@@ -1248,6 +1251,16 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     fun isVirtualBassEnabled(profile: Int) = audioTuning.isVirtualBassEnabled(profile)
     fun setVirtualBassEnabled(profile: Int, enabled: Boolean) =
         audioTuning.setVirtualBassEnabled(profile, enabled)
+    fun isVirtualBassSpeakerEnabled(profile: Int) =
+        audioTuning.isVirtualBassSpeakerEnabled(profile)
+    fun setVirtualBassSpeakerEnabled(profile: Int, enabled: Boolean) =
+        audioTuning.setVirtualBassSpeakerEnabled(profile, enabled)
+    fun isVirtualBassBluetoothEnabled(profile: Int) =
+        audioTuning.isVirtualBassBluetoothEnabled(profile)
+    fun setVirtualBassBluetoothEnabled(profile: Int, enabled: Boolean) =
+        audioTuning.setVirtualBassBluetoothEnabled(profile, enabled)
+    fun reapplyVirtualBass(profile: Int = getCurrentProfile()) =
+        audioTuning.reapplyVirtualBass(profile)
 
     fun isHearingProtectionEnabled(profile: Int) = audioTuning.isHearingProtectionEnabled(profile)
     fun setHearingProtectionEnabled(profile: Int, enabled: Boolean) =
@@ -1261,6 +1274,25 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     companion object {
         private const val TAG = "DolbyRepository"
         private const val EFFECT_PRIORITY = 100
+        private val EFFECT_LOCK = Any()
+
+        @Volatile
+        private var sharedDolbyEffect: DolbyAudioEffect? = null
+
+        private fun getOrCreateDolbyEffect(): DolbyAudioEffect {
+            sharedDolbyEffect?.let { return it }
+            return synchronized(EFFECT_LOCK) {
+                sharedDolbyEffect ?: try {
+                    DolbyAudioEffect(EFFECT_PRIORITY, audioSession = 0).also {
+                        sharedDolbyEffect = it
+                    }
+                } catch (e: Exception) {
+                    DolbyConstants.dlog(TAG, "Failed to create shared Dolby effect: ${e.message}")
+                    throw e
+                }
+            }
+        }
+
         private const val BACKUP_TYPE = "dolby_full_backup"
         private const val BACKUP_VERSION = 1
 

@@ -158,6 +158,8 @@ class DolbyEffectService : Service() {
             repository.applySavedState()
             previousActiveDevice = null
         }
+        repository.updateSpeakerState()
+        repository.reapplyVirtualBass()
     }
 
     private fun getCurrentOutputDevice(): AudioDeviceInfo? {
@@ -210,6 +212,7 @@ class DolbyEffectService : Service() {
         audioManager.unregisterAudioDeviceCallback(audioDeviceCallback)
         audioManager.unregisterAudioPlaybackCallback(playbackCallback)
         handler.removeCallbacksAndMessages(null)
+        repository.close()
         Log.d(TAG, "Dolby effect service destroyed")
     }
 

@@ -311,6 +311,10 @@
     <string name="volume_leveler_amount_summary">Dynamic loudness normalization amount when leveler is on</string>
     <string name="virtual_bass_title">Virtual bass</string>
     <string name="virtual_bass_summary">DAX virtual bass processing for deeper low-end on small drivers</string>
+    <string name="virtual_bass_speaker_title">Speaker virtual bass</string>
+    <string name="virtual_bass_speaker_summary">DAX virtual bass processing for the phone speakers</string>
+    <string name="virtual_bass_bluetooth_title">Bluetooth virtual bass</string>
+    <string name="virtual_bass_bluetooth_summary">Experimental HAL processing; availability depends on the connected device and audio HAL</string>
     <string name="hearing_protection_title">Hearing protection</string>
     <string name="hearing_protection_summary">Limit peak levels when using high output boost</string>
     <string name="dsp_volume_boost_title">DSP volume lift</string>

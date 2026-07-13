@@ -96,7 +96,18 @@ class DeviceStateManager(private val context: Context) {
             editor.putBoolean(KEY_SURROUND_BOOST, repository.isSurroundBoostEnabled(profile))
             editor.putInt(KEY_SURROUND_VALUE, repository.getSurroundBoost(profile))
             editor.putInt(KEY_LEVELER_AMOUNT, repository.getVolumeLevelerAmount(profile))
-            editor.putBoolean(KEY_VIRTUAL_BASS, repository.isVirtualBassEnabled(profile))
+            when {
+                deviceKey == "builtin_speaker" ->
+                    editor.putBoolean(
+                        KEY_VIRTUAL_BASS_SPEAKER,
+                        repository.isVirtualBassSpeakerEnabled(profile)
+                    )
+                deviceKey.startsWith("bt_") ->
+                    editor.putBoolean(
+                        KEY_VIRTUAL_BASS_BLUETOOTH,
+                        repository.isVirtualBassBluetoothEnabled(profile)
+                    )
+            }
             editor.putBoolean(KEY_HEARING, repository.isHearingProtectionEnabled(profile))
 
             val gains = repository.getEqualizerGains(profile, BandMode.TWENTY_BAND)
@@ -201,8 +212,17 @@ class DeviceStateManager(private val context: Context) {
             if (prefs.contains(KEY_LEVELER_AMOUNT)) {
                 repository.setVolumeLevelerAmount(profile, prefs.getInt(KEY_LEVELER_AMOUNT, 0))
             }
-            if (prefs.contains(KEY_VIRTUAL_BASS)) {
-                repository.setVirtualBassEnabled(profile, prefs.getBoolean(KEY_VIRTUAL_BASS, false))
+            if (prefs.contains(KEY_VIRTUAL_BASS_SPEAKER)) {
+                repository.setVirtualBassSpeakerEnabled(
+                    profile,
+                    prefs.getBoolean(KEY_VIRTUAL_BASS_SPEAKER, false)
+                )
+            }
+            if (prefs.contains(KEY_VIRTUAL_BASS_BLUETOOTH)) {
+                repository.setVirtualBassBluetoothEnabled(
+                    profile,
+                    prefs.getBoolean(KEY_VIRTUAL_BASS_BLUETOOTH, false)
+                )
             }
             if (prefs.contains(KEY_HEARING)) {
                 repository.setHearingProtectionEnabled(profile, prefs.getBoolean(KEY_HEARING, false))
@@ -294,7 +314,7 @@ class DeviceStateManager(private val context: Context) {
     companion object {
         private const val TAG = "DeviceStateManager"
 
-        const val SNAPSHOT_VERSION = 2
+        const val SNAPSHOT_VERSION = 3
 
         private const val KEY_VERSION = "snapshot_version"
         private const val KEY_DOLBY_ENABLED = "enabled"
@@ -321,7 +341,8 @@ class DeviceStateManager(private val context: Context) {
         private const val KEY_SURROUND_BOOST = "surround_boost"
         private const val KEY_SURROUND_VALUE = "surround_value"
         private const val KEY_LEVELER_AMOUNT = "leveler_amount"
-        private const val KEY_VIRTUAL_BASS = "virtual_bass"
+        private const val KEY_VIRTUAL_BASS_SPEAKER = "virtual_bass_speaker"
+        private const val KEY_VIRTUAL_BASS_BLUETOOTH = "virtual_bass_bluetooth"
         private const val KEY_HEARING = "hearing_protection"
         private const val KEY_EQ_BAND_COUNT = "eq_band_count"
         private const val KEY_EQ_GAINS = "eq_gains"

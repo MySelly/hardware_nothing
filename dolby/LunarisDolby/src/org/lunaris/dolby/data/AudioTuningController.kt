@@ -12,6 +12,7 @@ import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.DolbyConstants.DsParam
 import org.lunaris.dolby.audio.DolbyAudioEffect
 import org.lunaris.dolby.audio.DolbyHalBridge
+import org.lunaris.dolby.domain.models.AudioDeviceCategory
 
 internal class AudioTuningController(
     private val context: Context,
@@ -19,7 +20,8 @@ internal class AudioTuningController(
     private val checkEffect: () -> Unit,
     private val isReleased: () -> Boolean,
     private val profilePrefs: (Int) -> SharedPreferences,
-    private val defaultPrefs: SharedPreferences
+    private val defaultPrefs: SharedPreferences,
+    private val activeDeviceCategory: () -> AudioDeviceCategory
 ) {
 
     private val audioEngine = AudioEngineProcessor(context)
@@ -185,19 +187,73 @@ internal class AudioTuningController(
 
     // --- Virtual bass ---
 
-    fun isVirtualBassEnabled(profile: Int): Boolean =
-        profilePrefs(profile).getBoolean(DolbyConstants.PREF_VIRTUAL_BASS, false)
+    private fun migrateVirtualBassPreference(profile: Int) {
+        val prefs = profilePrefs(profile)
+        if (!prefs.contains(DolbyConstants.PREF_VIRTUAL_BASS_SPEAKER)) {
+            prefs.edit()
+                .putBoolean(
+                    DolbyConstants.PREF_VIRTUAL_BASS_SPEAKER,
+                    prefs.getBoolean(DolbyConstants.PREF_VIRTUAL_BASS, false)
+                )
+                .apply()
+        }
+    }
+
+    fun isVirtualBassSpeakerEnabled(profile: Int): Boolean {
+        migrateVirtualBassPreference(profile)
+        return profilePrefs(profile).getBoolean(DolbyConstants.PREF_VIRTUAL_BASS_SPEAKER, false)
+    }
+
+    fun isVirtualBassBluetoothEnabled(profile: Int): Boolean =
+        profilePrefs(profile).getBoolean(DolbyConstants.PREF_VIRTUAL_BASS_BLUETOOTH, false)
+
+    fun isVirtualBassEnabled(profile: Int): Boolean = when (activeDeviceCategory()) {
+        AudioDeviceCategory.BLUETOOTH -> isVirtualBassBluetoothEnabled(profile)
+        else -> isVirtualBassSpeakerEnabled(profile)
+    }
 
     fun setVirtualBassEnabled(profile: Int, enabled: Boolean) {
+        when (activeDeviceCategory()) {
+            AudioDeviceCategory.BLUETOOTH -> setVirtualBassBluetoothEnabled(profile, enabled)
+            else -> setVirtualBassSpeakerEnabled(profile, enabled)
+        }
+    }
+
+    fun setVirtualBassSpeakerEnabled(profile: Int, enabled: Boolean) {
         if (isReleased()) return
-        profilePrefs(profile).edit().putBoolean(DolbyConstants.PREF_VIRTUAL_BASS, enabled).apply()
+        profilePrefs(profile).edit()
+            .putBoolean(DolbyConstants.PREF_VIRTUAL_BASS_SPEAKER, enabled)
+            .apply()
         applyVirtualBass(profile)
     }
 
+    fun setVirtualBassBluetoothEnabled(profile: Int, enabled: Boolean) {
+        if (isReleased()) return
+        profilePrefs(profile).edit()
+            .putBoolean(DolbyConstants.PREF_VIRTUAL_BASS_BLUETOOTH, enabled)
+            .apply()
+        applyVirtualBass(profile)
+    }
+
+    fun reapplyVirtualBass(profile: Int) = applyVirtualBass(profile)
+
     private fun applyVirtualBass(profile: Int) {
-        val enabled = isVirtualBassEnabled(profile)
-        setDapInt(DsParam.VIRTUAL_BASS_ENABLE, profile, if (enabled) 1 else 0)
-        DolbyHalBridge.applyVirtualBassHal(context, enabled)
+        when (activeDeviceCategory()) {
+            AudioDeviceCategory.SPEAKER -> {
+                val enabled = isVirtualBassSpeakerEnabled(profile)
+                setDapInt(DsParam.VIRTUAL_BASS_ENABLE, profile, if (enabled) 1 else 0)
+                DolbyHalBridge.applyVirtualBassHal(context, enabled)
+            }
+            AudioDeviceCategory.BLUETOOTH -> {
+                // DAX rejects VIRTUAL_BASS_ENABLE on non-speaker endpoints. Keep an
+                // experimental HAL-only path for vendors that expose a BT-capable handler.
+                DolbyHalBridge.applyVirtualBassHal(
+                    context,
+                    isVirtualBassBluetoothEnabled(profile)
+                )
+            }
+            else -> DolbyHalBridge.applyVirtualBassHal(context, false)
+        }
     }
 
     // --- Hearing protection ---

@@ -17,7 +17,7 @@ class DolbyStatusHelper(context: Context) {
     fun getDiagnostics(): DolbyDiagnostics {
         var hasControl = false
         try {
-            hasControl = repository.getDolbyEnabled()
+            hasControl = repository.hasEffectControl()
         } catch (_: Exception) {
         }
         return DolbyDiagnostics(
