@@ -91,6 +91,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     stereoWideningAmount = repository.getStereoWideningAmount(profile),
                     dialogueEnhancerEnabled = repository.getDialogueEnhancerEnabled(profile),
                     dialogueEnhancerAmount = repository.getDialogueEnhancerAmount(profile),
+                    graphicEqEnabled = repository.isGraphicEqEnabled(profile),
                     dialogueDuckingEnabled = repository.isDialogueDuckingEnabled(profile),
                     dialogueDuckingAmount = repository.getDialogueDuckingAmount(profile),
                     bassLevel = repository.getBassLevel(profile),
@@ -431,6 +432,18 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 loadSettings()
             } catch (e: Exception) {
                 DolbyConstants.dlog(TAG, "Error setting Bluetooth virtual bass: ${e.message}")
+            }
+        }
+    }
+
+    fun setGraphicEqEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setGraphicEqEnabled(profile, enabled)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting graphic EQ enable: ${e.message}")
             }
         }
     }

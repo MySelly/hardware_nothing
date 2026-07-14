@@ -44,6 +44,7 @@ object DolbyConstants {
     const val PREF_REVERB_SUPPRESSION_AMOUNT = "dolby_reverb_suppression_amount"
     const val PREF_DIALOGUE_DUCKING_ENABLED = "dolby_dialogue_ducking_enabled"
     const val PREF_DIALOGUE_DUCKING_AMOUNT = "dolby_dialogue_ducking_amount"
+    const val PREF_GRAPHIC_EQ_ENABLED = "dolby_graphic_eq_enabled"
     const val PREF_DSP_VOLUME_BOOST_ENABLED = "dsp_volume_boost_enabled"
     const val PREF_DSP_VOLUME_BOOST_STRENGTH = "dsp_volume_boost_strength"
     const val PREF_PRESETS_MIGRATED = "presets_migrated"
@@ -132,7 +133,7 @@ object DolbyConstants {
         BASS_ENHANCER_ENABLE(111),
         STEREO_WIDENING_AMOUNT(113),
         VOLMAX_BOOST(114),
-        IEQ_ENABLE(106),
+        GRAPHIC_EQ_ENABLE(106),
         IEQ_AMOUNT(107),
         DIALOGUE_DUCKING(109),
         VIRTUAL_BASS_ENABLE(112),

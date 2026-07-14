@@ -315,6 +315,8 @@
     <string name="virtual_bass_speaker_summary">DAX virtual bass processing for the phone speakers</string>
     <string name="virtual_bass_bluetooth_title">Bluetooth virtual bass</string>
     <string name="virtual_bass_bluetooth_summary">Experimental HAL processing; availability depends on the connected device and audio HAL</string>
+    <string name="graphic_eq_enable_title">Graphic equalizer processing</string>
+    <string name="graphic_eq_enable_summary">Master switch for the 20-band equalizer stage. Turn off to bypass all band gains instantly</string>
     <string name="dialogue_ducking_title">Dialogue ducking</string>
     <string name="dialogue_ducking_summary">Lowers music and effects while speech is detected so dialogue stays on top</string>
     <string name="dialogue_ducking_amount_title">Ducking strength</string>

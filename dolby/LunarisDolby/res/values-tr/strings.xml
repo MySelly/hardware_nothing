@@ -315,6 +315,8 @@
     <string name="virtual_bass_speaker_summary">Telefon hoparlörleri için DAX sanal bas işleme</string>
     <string name="virtual_bass_bluetooth_title">Bluetooth sanal bası</string>
     <string name="virtual_bass_bluetooth_summary">Deneyseldir; kullanılabilirlik bağlı cihaza ve ses HAL desteğine bağlıdır</string>
+    <string name="graphic_eq_enable_title">Grafik ekolayzer işleme</string>
+    <string name="graphic_eq_enable_summary">20 bantlı ekolayzer aşamasının ana anahtarı. Kapatınca tüm bant kazançları anında baypas edilir</string>
     <string name="dialogue_ducking_title">Diyalog önceliği (ducking)</string>
     <string name="dialogue_ducking_summary">Konuşma algılandığında müzik ve efektleri kısar, diyalog önde kalır</string>
     <string name="dialogue_ducking_amount_title">Kısma gücü</string>

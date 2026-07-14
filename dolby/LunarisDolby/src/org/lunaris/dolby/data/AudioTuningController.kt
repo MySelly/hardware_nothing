@@ -29,6 +29,7 @@ internal class AudioTuningController(
     fun applyAll(profile: Int) {
         if (isReleased()) return
         pushGeqToHardware(profile)
+        applyGraphicEqEnable(profile)
         applyVolmaxBoost(profile)
         applyIeqAmount(profile)
         applySurroundBoost(profile)
@@ -256,6 +257,23 @@ internal class AudioTuningController(
             }
             else -> DolbyHalBridge.applyVirtualBassHal(context, false)
         }
+    }
+
+    // --- Graphic EQ processing enable ---
+
+    fun isGraphicEqEnabled(profile: Int): Boolean =
+        profilePrefs(profile).getBoolean(DolbyConstants.PREF_GRAPHIC_EQ_ENABLED, true)
+
+    fun setGraphicEqEnabled(profile: Int, enabled: Boolean) {
+        if (isReleased()) return
+        profilePrefs(profile).edit()
+            .putBoolean(DolbyConstants.PREF_GRAPHIC_EQ_ENABLED, enabled)
+            .apply()
+        applyGraphicEqEnable(profile)
+    }
+
+    private fun applyGraphicEqEnable(profile: Int) {
+        setDapInt(DsParam.GRAPHIC_EQ_ENABLE, profile, if (isGraphicEqEnabled(profile)) 1 else 0)
     }
 
     // --- Dialogue ducking ---

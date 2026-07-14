@@ -183,6 +183,14 @@ private fun ModernAdvancedSettingsContent(
                     title = stringResource(R.string.dolby_category_settings),
                     icon = Icons.Default.Tune
                 ) {
+                    ModernSettingSwitch(
+                        title = stringResource(R.string.graphic_eq_enable_title),
+                        subtitle = stringResource(R.string.graphic_eq_enable_summary),
+                        checked = state.profileSettings.graphicEqEnabled,
+                        onCheckedChange = { viewModel.setGraphicEqEnabled(it) },
+                        icon = Icons.Default.Equalizer
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
                     Column {
                         ModernSettingSwitch(
                             title = stringResource(R.string.dolby_bass_enhancer),

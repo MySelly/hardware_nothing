@@ -38,6 +38,7 @@ data class ProfileSettings(
     val stereoWideningAmount: Int = 32,
     val dialogueEnhancerEnabled: Boolean = false,
     val dialogueEnhancerAmount: Int = 6,
+    val graphicEqEnabled: Boolean = true,
     val dialogueDuckingEnabled: Boolean = false,
     val dialogueDuckingAmount: Int = 8,
     val bassLevel: Int = 0,
