@@ -72,6 +72,26 @@ object DolbyHalBridge {
         DolbyConstants.dlog(TAG, "reverb_suppression enable=$flag amount=$amt")
     }
 
+    fun applyAdvancedBass(context: Context, enabled: Boolean, boostPercent: Int, cutoffHz: Int) {
+        val rawBoost = if (enabled) {
+            boostPercent.coerceIn(0, 100) * DolbyConstants.ADV_BASS_BOOST_RAW_MAX / 100
+        } else {
+            DolbyConstants.ADV_BASS_BOOST_RAW_STOCK
+        }
+        val cutoff = if (enabled) {
+            cutoffHz.coerceIn(DolbyConstants.ADV_BASS_CUTOFF_MIN_HZ, DolbyConstants.ADV_BASS_CUTOFF_MAX_HZ)
+        } else {
+            DolbyConstants.ADV_BASS_CUTOFF_STOCK_HZ
+        }
+        setParameters(context, listOf(
+            "bass_enhancer_boost=$rawBoost",
+            "bass-enhancer-boost=$rawBoost",
+            "bass_enhancer_cutoff_frequency=$cutoff",
+            "bass-enhancer-cutoff-frequency=$cutoff"
+        ))
+        DolbyConstants.dlog(TAG, "adv_bass enabled=$enabled boost=$rawBoost cutoff=$cutoff")
+    }
+
     fun applySpatialAudio(
         context: Context,
         balanceEnabled: Boolean,

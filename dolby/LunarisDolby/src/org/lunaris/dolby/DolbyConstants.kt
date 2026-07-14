@@ -45,6 +45,9 @@ object DolbyConstants {
     const val PREF_DIALOGUE_DUCKING_ENABLED = "dolby_dialogue_ducking_enabled"
     const val PREF_DIALOGUE_DUCKING_AMOUNT = "dolby_dialogue_ducking_amount"
     const val PREF_GRAPHIC_EQ_ENABLED = "dolby_graphic_eq_enabled"
+    const val PREF_ADV_BASS_ENABLED = "dolby_adv_bass_enabled"
+    const val PREF_ADV_BASS_BOOST = "dolby_adv_bass_boost"
+    const val PREF_ADV_BASS_CUTOFF = "dolby_adv_bass_cutoff"
     const val PREF_DSP_VOLUME_BOOST_ENABLED = "dsp_volume_boost_enabled"
     const val PREF_DSP_VOLUME_BOOST_STRENGTH = "dsp_volume_boost_strength"
     const val PREF_PRESETS_MIGRATED = "presets_migrated"
@@ -155,6 +158,12 @@ object DolbyConstants {
     const val SURROUND_BOOST_MAX = 64
     const val REVERB_SUPPRESSION_MAX = 16
     const val DIALOGUE_DUCKING_MAX = 16
+    // Raw DAX units for the vendor bass-enhancer stage (see configs/dax-default.xml)
+    const val ADV_BASS_BOOST_RAW_MAX = 480
+    const val ADV_BASS_BOOST_RAW_STOCK = 36
+    const val ADV_BASS_CUTOFF_MIN_HZ = 50
+    const val ADV_BASS_CUTOFF_MAX_HZ = 1000
+    const val ADV_BASS_CUTOFF_STOCK_HZ = 303
     const val IEQ_AMOUNT_MAX = 10
     const val VOLUME_LEVELER_AMOUNT_MAX = 10
 

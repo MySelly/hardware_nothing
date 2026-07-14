@@ -642,6 +642,47 @@ private fun AudioTuningSettingsCard(
 
         Spacer(modifier = Modifier.height(12.dp))
         ModernSettingSwitch(
+            title = stringResource(R.string.adv_bass_title),
+            subtitle = stringResource(R.string.adv_bass_summary),
+            checked = profileSettings.advancedBassEnabled,
+            onCheckedChange = { enabled ->
+                viewModel.setAdvancedBass(
+                    enabled,
+                    profileSettings.advancedBassBoost,
+                    profileSettings.advancedBassCutoff
+                )
+            },
+            icon = Icons.Default.Speaker
+        )
+        AnimatedVisibility(visible = profileSettings.advancedBassEnabled) {
+            Column {
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.adv_bass_boost_title),
+                    value = profileSettings.advancedBassBoost,
+                    onValueChange = {
+                        viewModel.setAdvancedBass(true, it.toInt(), profileSettings.advancedBassCutoff)
+                    },
+                    valueRange = 0f..100f,
+                    steps = 19,
+                    valueLabel = { "$it%" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.adv_bass_cutoff_title),
+                    value = profileSettings.advancedBassCutoff,
+                    onValueChange = {
+                        viewModel.setAdvancedBass(true, profileSettings.advancedBassBoost, it.toInt())
+                    },
+                    valueRange = 50f..1000f,
+                    steps = 18,
+                    valueLabel = { "$it Hz" }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        ModernSettingSwitch(
             title = stringResource(R.string.reverb_suppression_title),
             subtitle = stringResource(R.string.reverb_suppression_summary),
             checked = profileSettings.reverbSuppressionEnabled,

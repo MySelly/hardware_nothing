@@ -108,6 +108,9 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     volumeLevelerAmount = repository.getVolumeLevelerAmount(profile),
                     virtualBassSpeakerEnabled = repository.isVirtualBassSpeakerEnabled(profile),
                     virtualBassBluetoothEnabled = repository.isVirtualBassBluetoothEnabled(profile),
+                    advancedBassEnabled = repository.isAdvancedBassEnabled(profile),
+                    advancedBassBoost = repository.getAdvancedBassBoost(profile),
+                    advancedBassCutoff = repository.getAdvancedBassCutoff(profile),
                     reverbSuppressionEnabled = repository.isReverbSuppressionEnabled(profile),
                     reverbSuppressionAmount = repository.getReverbSuppressionAmount(profile),
                     hearingProtectionEnabled = repository.isHearingProtectionEnabled(profile),
@@ -456,6 +459,18 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 loadSettings()
             } catch (e: Exception) {
                 DolbyConstants.dlog(TAG, "Error setting dialogue ducking: ${e.message}")
+            }
+        }
+    }
+
+    fun setAdvancedBass(enabled: Boolean, boostPercent: Int, cutoffHz: Int) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setAdvancedBass(profile, enabled, boostPercent, cutoffHz)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting advanced bass: ${e.message}")
             }
         }
     }

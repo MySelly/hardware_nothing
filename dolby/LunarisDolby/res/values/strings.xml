@@ -320,6 +320,10 @@
     <string name="dialogue_ducking_title">Dialogue ducking</string>
     <string name="dialogue_ducking_summary">Lowers music and effects while speech is detected so dialogue stays on top</string>
     <string name="dialogue_ducking_amount_title">Ducking strength</string>
+    <string name="adv_bass_title">Advanced bass engine</string>
+    <string name="adv_bass_summary">Custom tuning of the DAX bass-enhancer stage: boost level and crossover frequency. Turning off restores stock tuning</string>
+    <string name="adv_bass_boost_title">Bass boost</string>
+    <string name="adv_bass_cutoff_title">Bass crossover frequency</string>
     <string name="reverb_suppression_title">Reverb suppression</string>
     <string name="reverb_suppression_summary">Reduces room echo and ambience for clearer speech, podcasts and audiobooks</string>
     <string name="reverb_suppression_amount_title">Suppression strength</string>

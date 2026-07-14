@@ -320,6 +320,10 @@
     <string name="dialogue_ducking_title">Diyalog önceliği (ducking)</string>
     <string name="dialogue_ducking_summary">Konuşma algılandığında müzik ve efektleri kısar, diyalog önde kalır</string>
     <string name="dialogue_ducking_amount_title">Kısma gücü</string>
+    <string name="adv_bass_title">Gelişmiş bas motoru</string>
+    <string name="adv_bass_summary">DAX bas güçlendirici aşamasının özel ayarı: güçlendirme seviyesi ve geçiş frekansı. Kapatınca fabrika ayarına döner</string>
+    <string name="adv_bass_boost_title">Bas güçlendirme</string>
+    <string name="adv_bass_cutoff_title">Bas geçiş frekansı</string>
     <string name="reverb_suppression_title">Yankı bastırma</string>
     <string name="reverb_suppression_summary">Konuşma, podcast ve sesli kitaplarda oda yankısını ve ortam sesini azaltır</string>
     <string name="reverb_suppression_amount_title">Bastırma gücü</string>

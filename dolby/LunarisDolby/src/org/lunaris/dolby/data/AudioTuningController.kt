@@ -36,6 +36,7 @@ internal class AudioTuningController(
         applyVolumeLevelerAmount(profile)
         applyDialogueDucking(profile)
         applyVirtualBass(profile)
+        applyAdvancedBass(profile)
         applyReverbSuppression(profile)
         applyHearingProtection(profile)
         applyDspVolumeBoost()
@@ -299,6 +300,44 @@ internal class AudioTuningController(
         val enabled = isDialogueDuckingEnabled(profile)
         val amount = if (enabled) getDialogueDuckingAmount(profile) else 0
         setDapInt(DsParam.DIALOGUE_DUCKING, profile, amount)
+    }
+
+    // --- Advanced bass engine (vendor HAL tuning) ---
+
+    fun isAdvancedBassEnabled(profile: Int): Boolean =
+        profilePrefs(profile).getBoolean(DolbyConstants.PREF_ADV_BASS_ENABLED, false)
+
+    fun getAdvancedBassBoost(profile: Int): Int =
+        profilePrefs(profile).getInt(DolbyConstants.PREF_ADV_BASS_BOOST, 40)
+            .coerceIn(0, 100)
+
+    fun getAdvancedBassCutoff(profile: Int): Int =
+        profilePrefs(profile).getInt(
+            DolbyConstants.PREF_ADV_BASS_CUTOFF, DolbyConstants.ADV_BASS_CUTOFF_STOCK_HZ
+        ).coerceIn(DolbyConstants.ADV_BASS_CUTOFF_MIN_HZ, DolbyConstants.ADV_BASS_CUTOFF_MAX_HZ)
+
+    fun setAdvancedBass(profile: Int, enabled: Boolean, boostPercent: Int, cutoffHz: Int) {
+        if (isReleased()) return
+        profilePrefs(profile).edit()
+            .putBoolean(DolbyConstants.PREF_ADV_BASS_ENABLED, enabled)
+            .putInt(DolbyConstants.PREF_ADV_BASS_BOOST, boostPercent.coerceIn(0, 100))
+            .putInt(
+                DolbyConstants.PREF_ADV_BASS_CUTOFF,
+                cutoffHz.coerceIn(
+                    DolbyConstants.ADV_BASS_CUTOFF_MIN_HZ, DolbyConstants.ADV_BASS_CUTOFF_MAX_HZ
+                )
+            )
+            .apply()
+        applyAdvancedBass(profile)
+    }
+
+    private fun applyAdvancedBass(profile: Int) {
+        DolbyHalBridge.applyAdvancedBass(
+            context,
+            isAdvancedBassEnabled(profile),
+            getAdvancedBassBoost(profile),
+            getAdvancedBassCutoff(profile)
+        )
     }
 
     // --- Reverb suppression ---
