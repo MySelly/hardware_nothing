@@ -1262,6 +1262,11 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     fun reapplyVirtualBass(profile: Int = getCurrentProfile()) =
         audioTuning.reapplyVirtualBass(profile)
 
+    fun isDialogueDuckingEnabled(profile: Int) = audioTuning.isDialogueDuckingEnabled(profile)
+    fun getDialogueDuckingAmount(profile: Int) = audioTuning.getDialogueDuckingAmount(profile)
+    fun setDialogueDucking(profile: Int, enabled: Boolean, amount: Int) =
+        audioTuning.setDialogueDucking(profile, enabled, amount)
+
     fun isReverbSuppressionEnabled(profile: Int) = audioTuning.isReverbSuppressionEnabled(profile)
     fun getReverbSuppressionAmount(profile: Int) = audioTuning.getReverbSuppressionAmount(profile)
     fun setReverbSuppression(profile: Int, enabled: Boolean, amount: Int) =

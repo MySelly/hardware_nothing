@@ -315,6 +315,9 @@
     <string name="virtual_bass_speaker_summary">DAX virtual bass processing for the phone speakers</string>
     <string name="virtual_bass_bluetooth_title">Bluetooth virtual bass</string>
     <string name="virtual_bass_bluetooth_summary">Experimental HAL processing; availability depends on the connected device and audio HAL</string>
+    <string name="dialogue_ducking_title">Dialogue ducking</string>
+    <string name="dialogue_ducking_summary">Lowers music and effects while speech is detected so dialogue stays on top</string>
+    <string name="dialogue_ducking_amount_title">Ducking strength</string>
     <string name="reverb_suppression_title">Reverb suppression</string>
     <string name="reverb_suppression_summary">Reduces room echo and ambience for clearer speech, podcasts and audiobooks</string>
     <string name="reverb_suppression_amount_title">Suppression strength</string>

@@ -91,6 +91,8 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     stereoWideningAmount = repository.getStereoWideningAmount(profile),
                     dialogueEnhancerEnabled = repository.getDialogueEnhancerEnabled(profile),
                     dialogueEnhancerAmount = repository.getDialogueEnhancerAmount(profile),
+                    dialogueDuckingEnabled = repository.isDialogueDuckingEnabled(profile),
+                    dialogueDuckingAmount = repository.getDialogueDuckingAmount(profile),
                     bassLevel = repository.getBassLevel(profile),
                     midLevel = repository.getMidLevel(profile),
                     trebleLevel = repository.getTrebleLevel(profile),
@@ -429,6 +431,18 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 loadSettings()
             } catch (e: Exception) {
                 DolbyConstants.dlog(TAG, "Error setting Bluetooth virtual bass: ${e.message}")
+            }
+        }
+    }
+
+    fun setDialogueDucking(enabled: Boolean, amount: Int) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setDialogueDucking(profile, enabled, amount)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting dialogue ducking: ${e.message}")
             }
         }
     }

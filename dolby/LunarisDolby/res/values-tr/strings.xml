@@ -315,6 +315,9 @@
     <string name="virtual_bass_speaker_summary">Telefon hoparlörleri için DAX sanal bas işleme</string>
     <string name="virtual_bass_bluetooth_title">Bluetooth sanal bası</string>
     <string name="virtual_bass_bluetooth_summary">Deneyseldir; kullanılabilirlik bağlı cihaza ve ses HAL desteğine bağlıdır</string>
+    <string name="dialogue_ducking_title">Diyalog önceliği (ducking)</string>
+    <string name="dialogue_ducking_summary">Konuşma algılandığında müzik ve efektleri kısar, diyalog önde kalır</string>
+    <string name="dialogue_ducking_amount_title">Kısma gücü</string>
     <string name="reverb_suppression_title">Yankı bastırma</string>
     <string name="reverb_suppression_summary">Konuşma, podcast ve sesli kitaplarda oda yankısını ve ortam sesini azaltır</string>
     <string name="reverb_suppression_amount_title">Bastırma gücü</string>

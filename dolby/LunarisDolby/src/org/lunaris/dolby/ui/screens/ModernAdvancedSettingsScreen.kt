@@ -387,6 +387,33 @@ private fun ModernAdvancedSettingsContent(
                                 )
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        ModernSettingSwitch(
+                            title = stringResource(R.string.dialogue_ducking_title),
+                            subtitle = stringResource(R.string.dialogue_ducking_summary),
+                            checked = state.profileSettings.dialogueDuckingEnabled,
+                            onCheckedChange = { enabled ->
+                                viewModel.setDialogueDucking(
+                                    enabled,
+                                    state.profileSettings.dialogueDuckingAmount
+                                )
+                            },
+                            icon = Icons.Default.VoiceOverOff
+                        )
+                        AnimatedVisibility(visible = state.profileSettings.dialogueDuckingEnabled) {
+                            Column {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                ModernSettingSlider(
+                                    title = stringResource(R.string.dialogue_ducking_amount_title),
+                                    value = state.profileSettings.dialogueDuckingAmount,
+                                    onValueChange = { viewModel.setDialogueDucking(true, it.toInt()) },
+                                    valueRange = 0f..16f,
+                                    steps = 15,
+                                    valueLabel = { "$it" }
+                                )
+                            }
+                        }
                     }
                 }
             }

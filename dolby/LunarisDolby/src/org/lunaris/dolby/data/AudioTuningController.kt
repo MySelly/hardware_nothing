@@ -33,6 +33,7 @@ internal class AudioTuningController(
         applyIeqAmount(profile)
         applySurroundBoost(profile)
         applyVolumeLevelerAmount(profile)
+        applyDialogueDucking(profile)
         applyVirtualBass(profile)
         applyReverbSuppression(profile)
         applyHearingProtection(profile)
@@ -255,6 +256,31 @@ internal class AudioTuningController(
             }
             else -> DolbyHalBridge.applyVirtualBassHal(context, false)
         }
+    }
+
+    // --- Dialogue ducking ---
+
+    fun isDialogueDuckingEnabled(profile: Int): Boolean =
+        profilePrefs(profile).getBoolean(DolbyConstants.PREF_DIALOGUE_DUCKING_ENABLED, false)
+
+    fun getDialogueDuckingAmount(profile: Int): Int =
+        profilePrefs(profile).getInt(DolbyConstants.PREF_DIALOGUE_DUCKING_AMOUNT, 8)
+            .coerceIn(0, DolbyConstants.DIALOGUE_DUCKING_MAX)
+
+    fun setDialogueDucking(profile: Int, enabled: Boolean, amount: Int) {
+        if (isReleased()) return
+        val clamped = amount.coerceIn(0, DolbyConstants.DIALOGUE_DUCKING_MAX)
+        profilePrefs(profile).edit()
+            .putBoolean(DolbyConstants.PREF_DIALOGUE_DUCKING_ENABLED, enabled)
+            .putInt(DolbyConstants.PREF_DIALOGUE_DUCKING_AMOUNT, clamped)
+            .apply()
+        applyDialogueDucking(profile)
+    }
+
+    private fun applyDialogueDucking(profile: Int) {
+        val enabled = isDialogueDuckingEnabled(profile)
+        val amount = if (enabled) getDialogueDuckingAmount(profile) else 0
+        setDapInt(DsParam.DIALOGUE_DUCKING, profile, amount)
     }
 
     // --- Reverb suppression ---
