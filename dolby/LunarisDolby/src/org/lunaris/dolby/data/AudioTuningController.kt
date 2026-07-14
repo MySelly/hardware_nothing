@@ -305,7 +305,10 @@ internal class AudioTuningController(
     private fun applySurroundBoost(profile: Int) {
         val enabled = isSurroundBoostEnabled(profile)
         val value = if (enabled) getSurroundBoost(profile) else 0
-        setDapInt(DsParam.SURROUND_BOOST, profile, value)
+        // NOTE: DAX surround-boost (Parameter 70) is not exposed through the
+        // AudioEffect profile-parameter table (only ids 100-116 are addressable,
+        // and id 112 is virtual-bass-process-enable). Drive it via the vendor HAL
+        // only; sending it through setDapParameter would collide with virtual bass.
         DolbyHalBridge.applySurroundBoost(context, enabled, value)
     }
 

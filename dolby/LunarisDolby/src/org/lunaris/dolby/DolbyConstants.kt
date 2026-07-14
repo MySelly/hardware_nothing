@@ -131,8 +131,7 @@ object DolbyConstants {
         IEQ_ENABLE(106),
         IEQ_AMOUNT(107),
         VOLUME_LEVELER_AMOUNT(109),
-        SURROUND_BOOST(112),
-        VIRTUAL_BASS_ENABLE(117),
+        VIRTUAL_BASS_ENABLE(112),
         HEARING_PROTECTION_ENABLE(118);
 
         override fun toString(): String = "${name}(${id})"
