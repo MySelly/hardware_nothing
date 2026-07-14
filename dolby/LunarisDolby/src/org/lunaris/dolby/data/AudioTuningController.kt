@@ -34,6 +34,7 @@ internal class AudioTuningController(
         applyIeqAmount(profile)
         applySurroundBoost(profile)
         applyVolumeLevelerAmount(profile)
+        applyLevelerTarget(profile)
         applyDialogueDucking(profile)
         applyVirtualBass(profile)
         applyAdvancedBass(profile)
@@ -300,6 +301,38 @@ internal class AudioTuningController(
         val enabled = isDialogueDuckingEnabled(profile)
         val amount = if (enabled) getDialogueDuckingAmount(profile) else 0
         setDapInt(DsParam.DIALOGUE_DUCKING, profile, amount)
+    }
+
+    // --- Volume leveler target level (vendor HAL tuning) ---
+
+    fun isLevelerTargetEnabled(profile: Int): Boolean =
+        profilePrefs(profile).getBoolean(DolbyConstants.PREF_LEVELER_TARGET_ENABLED, false)
+
+    fun getLevelerTargetDb(profile: Int): Int =
+        profilePrefs(profile).getInt(
+            DolbyConstants.PREF_LEVELER_TARGET_DB, DolbyConstants.LEVELER_TARGET_STOCK_DB
+        ).coerceIn(DolbyConstants.LEVELER_TARGET_MIN_DB, DolbyConstants.LEVELER_TARGET_MAX_DB)
+
+    fun setLevelerTarget(profile: Int, enabled: Boolean, targetDb: Int) {
+        if (isReleased()) return
+        profilePrefs(profile).edit()
+            .putBoolean(DolbyConstants.PREF_LEVELER_TARGET_ENABLED, enabled)
+            .putInt(
+                DolbyConstants.PREF_LEVELER_TARGET_DB,
+                targetDb.coerceIn(
+                    DolbyConstants.LEVELER_TARGET_MIN_DB, DolbyConstants.LEVELER_TARGET_MAX_DB
+                )
+            )
+            .apply()
+        applyLevelerTarget(profile)
+    }
+
+    private fun applyLevelerTarget(profile: Int) {
+        DolbyHalBridge.applyLevelerTarget(
+            context,
+            isLevelerTargetEnabled(profile),
+            getLevelerTargetDb(profile)
+        )
     }
 
     // --- Advanced bass engine (vendor HAL tuning) ---

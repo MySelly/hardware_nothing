@@ -92,6 +92,22 @@ object DolbyHalBridge {
         DolbyConstants.dlog(TAG, "adv_bass enabled=$enabled boost=$rawBoost cutoff=$cutoff")
     }
 
+    fun applyLevelerTarget(context: Context, enabled: Boolean, targetDb: Int) {
+        val db = if (enabled) {
+            targetDb.coerceIn(DolbyConstants.LEVELER_TARGET_MIN_DB, DolbyConstants.LEVELER_TARGET_MAX_DB)
+        } else {
+            DolbyConstants.LEVELER_TARGET_STOCK_DB
+        }
+        val raw = db * 16
+        setParameters(context, listOf(
+            "volume_leveler_in_target=$raw",
+            "volume-leveler-in-target=$raw",
+            "volume_leveler_out_target=$raw",
+            "volume-leveler-out-target=$raw"
+        ))
+        DolbyConstants.dlog(TAG, "leveler_target enabled=$enabled db=$db raw=$raw")
+    }
+
     fun applySpatialAudio(
         context: Context,
         balanceEnabled: Boolean,

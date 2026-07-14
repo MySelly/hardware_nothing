@@ -48,6 +48,8 @@ object DolbyConstants {
     const val PREF_ADV_BASS_ENABLED = "dolby_adv_bass_enabled"
     const val PREF_ADV_BASS_BOOST = "dolby_adv_bass_boost"
     const val PREF_ADV_BASS_CUTOFF = "dolby_adv_bass_cutoff"
+    const val PREF_LEVELER_TARGET_ENABLED = "dolby_leveler_target_enabled"
+    const val PREF_LEVELER_TARGET_DB = "dolby_leveler_target_db"
     const val PREF_DSP_VOLUME_BOOST_ENABLED = "dsp_volume_boost_enabled"
     const val PREF_DSP_VOLUME_BOOST_STRENGTH = "dsp_volume_boost_strength"
     const val PREF_PRESETS_MIGRATED = "presets_migrated"
@@ -164,6 +166,10 @@ object DolbyConstants {
     const val ADV_BASS_CUTOFF_MIN_HZ = 50
     const val ADV_BASS_CUTOFF_MAX_HZ = 1000
     const val ADV_BASS_CUTOFF_STOCK_HZ = 303
+    // Leveler target in whole dB; vendor raw units are 1/16 dB (stock -256 = -16 dB)
+    const val LEVELER_TARGET_MIN_DB = -40
+    const val LEVELER_TARGET_MAX_DB = 0
+    const val LEVELER_TARGET_STOCK_DB = -16
     const val IEQ_AMOUNT_MAX = 10
     const val VOLUME_LEVELER_AMOUNT_MAX = 10
 

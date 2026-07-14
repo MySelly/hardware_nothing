@@ -320,6 +320,9 @@
     <string name="dialogue_ducking_title">Diyalog önceliği (ducking)</string>
     <string name="dialogue_ducking_summary">Konuşma algılandığında müzik ve efektleri kısar, diyalog önde kalır</string>
     <string name="dialogue_ducking_amount_title">Kısma gücü</string>
+    <string name="leveler_target_title">Özel dengeleyici hedefi</string>
+    <string name="leveler_target_summary">Dengeleyicinin normalize ettiği referans ses seviyesi. Yüksek = daha gür ortalama seviye. Kapalı = fabrika (-16 dB)</string>
+    <string name="leveler_target_slider_title">Hedef seviye</string>
     <string name="adv_bass_title">Gelişmiş bas motoru</string>
     <string name="adv_bass_summary">DAX bas güçlendirici aşamasının özel ayarı: güçlendirme seviyesi ve geçiş frekansı. Kapatınca fabrika ayarına döner</string>
     <string name="adv_bass_boost_title">Bas güçlendirme</string>

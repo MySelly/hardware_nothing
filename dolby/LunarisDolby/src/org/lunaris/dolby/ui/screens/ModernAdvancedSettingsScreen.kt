@@ -326,6 +326,32 @@ private fun ModernAdvancedSettingsContent(
                                 steps = 9,
                                 valueLabel = { "$it" }
                             )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            ModernSettingSwitch(
+                                title = stringResource(R.string.leveler_target_title),
+                                subtitle = stringResource(R.string.leveler_target_summary),
+                                checked = state.profileSettings.levelerTargetEnabled,
+                                onCheckedChange = { enabled ->
+                                    viewModel.setLevelerTarget(
+                                        enabled,
+                                        state.profileSettings.levelerTargetDb
+                                    )
+                                },
+                                icon = Icons.Default.Tune
+                            )
+                            AnimatedVisibility(visible = state.profileSettings.levelerTargetEnabled) {
+                                Column {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    ModernSettingSlider(
+                                        title = stringResource(R.string.leveler_target_slider_title),
+                                        value = state.profileSettings.levelerTargetDb,
+                                        onValueChange = { viewModel.setLevelerTarget(true, it.toInt()) },
+                                        valueRange = -40f..0f,
+                                        steps = 39,
+                                        valueLabel = { "$it dB" }
+                                    )
+                                }
+                            }
                         }
                     }
                 }

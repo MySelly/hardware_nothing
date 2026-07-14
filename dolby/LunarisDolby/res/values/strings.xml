@@ -320,6 +320,9 @@
     <string name="dialogue_ducking_title">Dialogue ducking</string>
     <string name="dialogue_ducking_summary">Lowers music and effects while speech is detected so dialogue stays on top</string>
     <string name="dialogue_ducking_amount_title">Ducking strength</string>
+    <string name="leveler_target_title">Custom leveler target</string>
+    <string name="leveler_target_summary">Reference loudness the leveler normalizes towards. Higher = louder average level. Off = stock (-16 dB)</string>
+    <string name="leveler_target_slider_title">Target level</string>
     <string name="adv_bass_title">Advanced bass engine</string>
     <string name="adv_bass_summary">Custom tuning of the DAX bass-enhancer stage: boost level and crossover frequency. Turning off restores stock tuning</string>
     <string name="adv_bass_boost_title">Bass boost</string>

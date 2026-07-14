@@ -106,6 +106,8 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     surroundBoostEnabled = repository.isSurroundBoostEnabled(profile),
                     surroundBoost = repository.getSurroundBoost(profile),
                     volumeLevelerAmount = repository.getVolumeLevelerAmount(profile),
+                    levelerTargetEnabled = repository.isLevelerTargetEnabled(profile),
+                    levelerTargetDb = repository.getLevelerTargetDb(profile),
                     virtualBassSpeakerEnabled = repository.isVirtualBassSpeakerEnabled(profile),
                     virtualBassBluetoothEnabled = repository.isVirtualBassBluetoothEnabled(profile),
                     advancedBassEnabled = repository.isAdvancedBassEnabled(profile),
@@ -459,6 +461,18 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 loadSettings()
             } catch (e: Exception) {
                 DolbyConstants.dlog(TAG, "Error setting dialogue ducking: ${e.message}")
+            }
+        }
+    }
+
+    fun setLevelerTarget(enabled: Boolean, targetDb: Int) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setLevelerTarget(profile, enabled, targetDb)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting leveler target: ${e.message}")
             }
         }
     }
