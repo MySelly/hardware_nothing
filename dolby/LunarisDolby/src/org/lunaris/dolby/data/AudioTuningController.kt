@@ -40,6 +40,7 @@ internal class AudioTuningController(
         applyVirtualBass(profile)
         applyAdvancedBass(profile)
         applyReverbSuppression(profile)
+        applyRegulator(profile)
         applyHearingProtection(profile)
         applyDspVolumeBoost()
         audioEngine.applySpatialProcessing()
@@ -415,6 +416,35 @@ internal class AudioTuningController(
         val amount = getReverbSuppressionAmount(profile)
         setDapInt(DsParam.REVERB_SUPPRESSION_AMOUNT, profile, if (enabled) amount else 0)
         DolbyHalBridge.applyReverbSuppression(context, enabled, amount)
+    }
+
+    // --- Speaker regulator (vendor HAL tuning) ---
+
+    fun isRegulatorEnabled(profile: Int): Boolean =
+        profilePrefs(profile).getBoolean(DolbyConstants.PREF_REGULATOR_ENABLED, true)
+
+    fun getRegulatorOverdriveDb(profile: Int): Int =
+        profilePrefs(profile).getInt(DolbyConstants.PREF_REGULATOR_OVERDRIVE_DB, 0)
+            .coerceIn(0, DolbyConstants.REGULATOR_OVERDRIVE_MAX_DB)
+
+    fun setRegulator(profile: Int, enabled: Boolean, overdriveDb: Int) {
+        if (isReleased()) return
+        profilePrefs(profile).edit()
+            .putBoolean(DolbyConstants.PREF_REGULATOR_ENABLED, enabled)
+            .putInt(
+                DolbyConstants.PREF_REGULATOR_OVERDRIVE_DB,
+                overdriveDb.coerceIn(0, DolbyConstants.REGULATOR_OVERDRIVE_MAX_DB)
+            )
+            .apply()
+        applyRegulator(profile)
+    }
+
+    private fun applyRegulator(profile: Int) {
+        DolbyHalBridge.applyRegulator(
+            context,
+            isRegulatorEnabled(profile),
+            getRegulatorOverdriveDb(profile)
+        )
     }
 
     // --- Hearing protection ---

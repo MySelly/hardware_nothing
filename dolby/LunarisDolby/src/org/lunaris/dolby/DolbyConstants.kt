@@ -51,6 +51,8 @@ object DolbyConstants {
     const val PREF_LEVELER_TARGET_ENABLED = "dolby_leveler_target_enabled"
     const val PREF_LEVELER_TARGET_DB = "dolby_leveler_target_db"
     const val PREF_SURROUND_DECODER_ENABLED = "dolby_surround_decoder_enabled"
+    const val PREF_REGULATOR_ENABLED = "dolby_regulator_enabled"
+    const val PREF_REGULATOR_OVERDRIVE_DB = "dolby_regulator_overdrive_db"
     const val PREF_DSP_VOLUME_BOOST_ENABLED = "dsp_volume_boost_enabled"
     const val PREF_DSP_VOLUME_BOOST_STRENGTH = "dsp_volume_boost_strength"
     const val PREF_PRESETS_MIGRATED = "presets_migrated"
@@ -171,6 +173,8 @@ object DolbyConstants {
     const val LEVELER_TARGET_MIN_DB = -40
     const val LEVELER_TARGET_MAX_DB = 0
     const val LEVELER_TARGET_STOCK_DB = -16
+    // Regulator overdrive in whole dB; vendor raw units are 1/16 dB (stock 0)
+    const val REGULATOR_OVERDRIVE_MAX_DB = 12
     const val IEQ_AMOUNT_MAX = 10
     const val VOLUME_LEVELER_AMOUNT_MAX = 10
 

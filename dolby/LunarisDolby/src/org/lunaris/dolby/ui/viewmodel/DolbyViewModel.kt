@@ -116,6 +116,8 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     advancedBassCutoff = repository.getAdvancedBassCutoff(profile),
                     reverbSuppressionEnabled = repository.isReverbSuppressionEnabled(profile),
                     reverbSuppressionAmount = repository.getReverbSuppressionAmount(profile),
+                    regulatorEnabled = repository.isRegulatorEnabled(profile),
+                    regulatorOverdriveDb = repository.getRegulatorOverdriveDb(profile),
                     hearingProtectionEnabled = repository.isHearingProtectionEnabled(profile),
                     dspVolumeBoostEnabled = repository.isDspVolumeBoostEnabled(),
                     dspVolumeBoostStrength = repository.getDspVolumeBoostStrength()
@@ -510,6 +512,18 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 loadSettings()
             } catch (e: Exception) {
                 DolbyConstants.dlog(TAG, "Error setting reverb suppression: ${e.message}")
+            }
+        }
+    }
+
+    fun setRegulator(enabled: Boolean, overdriveDb: Int) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setRegulator(profile, enabled, overdriveDb)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting regulator: ${e.message}")
             }
         }
     }

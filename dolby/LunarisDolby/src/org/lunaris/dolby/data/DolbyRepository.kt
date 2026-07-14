@@ -1291,6 +1291,11 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     fun setReverbSuppression(profile: Int, enabled: Boolean, amount: Int) =
         audioTuning.setReverbSuppression(profile, enabled, amount)
 
+    fun isRegulatorEnabled(profile: Int) = audioTuning.isRegulatorEnabled(profile)
+    fun getRegulatorOverdriveDb(profile: Int) = audioTuning.getRegulatorOverdriveDb(profile)
+    fun setRegulator(profile: Int, enabled: Boolean, overdriveDb: Int) =
+        audioTuning.setRegulator(profile, enabled, overdriveDb)
+
     fun isHearingProtectionEnabled(profile: Int) = audioTuning.isHearingProtectionEnabled(profile)
     fun setHearingProtectionEnabled(profile: Int, enabled: Boolean) =
         audioTuning.setHearingProtectionEnabled(profile, enabled)

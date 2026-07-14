@@ -63,6 +63,8 @@ data class ProfileSettings(
     val advancedBassCutoff: Int = 303,
     val reverbSuppressionEnabled: Boolean = false,
     val reverbSuppressionAmount: Int = 9,
+    val regulatorEnabled: Boolean = true,
+    val regulatorOverdriveDb: Int = 0,
     val hearingProtectionEnabled: Boolean = false,
     val dspVolumeBoostEnabled: Boolean = false,
     val dspVolumeBoostStrength: Int = 0

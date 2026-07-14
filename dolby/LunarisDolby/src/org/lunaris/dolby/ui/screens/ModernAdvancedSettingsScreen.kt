@@ -742,6 +742,30 @@ private fun AudioTuningSettingsCard(
 
         Spacer(modifier = Modifier.height(12.dp))
         ModernSettingSwitch(
+            title = stringResource(R.string.regulator_title),
+            subtitle = stringResource(R.string.regulator_summary),
+            checked = profileSettings.regulatorEnabled,
+            onCheckedChange = { enabled ->
+                viewModel.setRegulator(enabled, profileSettings.regulatorOverdriveDb)
+            },
+            icon = Icons.Default.Shield
+        )
+        AnimatedVisibility(visible = profileSettings.regulatorEnabled) {
+            Column {
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.regulator_overdrive_title),
+                    value = profileSettings.regulatorOverdriveDb,
+                    onValueChange = { viewModel.setRegulator(true, it.toInt()) },
+                    valueRange = 0f..12f,
+                    steps = 11,
+                    valueLabel = { "+$it dB" }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        ModernSettingSwitch(
             title = stringResource(R.string.hearing_protection_title),
             subtitle = stringResource(R.string.hearing_protection_summary),
             checked = profileSettings.hearingProtectionEnabled,

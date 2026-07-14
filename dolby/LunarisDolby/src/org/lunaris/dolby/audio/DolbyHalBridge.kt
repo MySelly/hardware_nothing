@@ -118,6 +118,22 @@ object DolbyHalBridge {
         DolbyConstants.dlog(TAG, "surround_decoder=$flag")
     }
 
+    fun applyRegulator(context: Context, enabled: Boolean, overdriveDb: Int) {
+        val flag = if (enabled) 1 else 0
+        val rawOverdrive = if (enabled) {
+            overdriveDb.coerceIn(0, DolbyConstants.REGULATOR_OVERDRIVE_MAX_DB) * 16
+        } else {
+            0
+        }
+        setParameters(context, listOf(
+            "regulator_enable=$flag",
+            "regulator-enable=$flag",
+            "regulator_overdrive=$rawOverdrive",
+            "regulator-overdrive=$rawOverdrive"
+        ))
+        DolbyConstants.dlog(TAG, "regulator enable=$flag overdrive=$rawOverdrive")
+    }
+
     fun applySpatialAudio(
         context: Context,
         balanceEnabled: Boolean,

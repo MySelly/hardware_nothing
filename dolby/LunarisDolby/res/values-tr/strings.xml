@@ -332,6 +332,9 @@
     <string name="reverb_suppression_title">Yankı bastırma</string>
     <string name="reverb_suppression_summary">Konuşma, podcast ve sesli kitaplarda oda yankısını ve ortam sesini azaltır</string>
     <string name="reverb_suppression_amount_title">Bastırma gücü</string>
+    <string name="regulator_title">Hoparlör regülatörü</string>
+    <string name="regulator_summary">Hoparlörler için distorsiyon koruması. Overdrive, bir miktar distorsiyon karşılığında tepe seviyelerin limiti aşmasına izin verir</string>
+    <string name="regulator_overdrive_title">Regülatör overdrive</string>
     <string name="hearing_protection_title">İşitme koruması</string>
     <string name="hearing_protection_summary">Yüksek çıkış güçlendirme kullanırken tepe seviyeleri sınırlar</string>
     <string name="dsp_volume_boost_title">DSP ses yükseltme</string>

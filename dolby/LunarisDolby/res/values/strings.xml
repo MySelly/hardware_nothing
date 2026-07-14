@@ -332,6 +332,9 @@
     <string name="reverb_suppression_title">Reverb suppression</string>
     <string name="reverb_suppression_summary">Reduces room echo and ambience for clearer speech, podcasts and audiobooks</string>
     <string name="reverb_suppression_amount_title">Suppression strength</string>
+    <string name="regulator_title">Speaker regulator</string>
+    <string name="regulator_summary">Distortion protection for the speakers. Overdrive lets peaks push past the limit for extra loudness at some distortion cost</string>
+    <string name="regulator_overdrive_title">Regulator overdrive</string>
     <string name="hearing_protection_title">Hearing protection</string>
     <string name="hearing_protection_summary">Limit peak levels when using high output boost</string>
     <string name="dsp_volume_boost_title">DSP volume lift</string>
