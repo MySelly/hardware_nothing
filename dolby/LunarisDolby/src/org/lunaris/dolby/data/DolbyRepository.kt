@@ -1271,6 +1271,10 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     fun setDialogueDucking(profile: Int, enabled: Boolean, amount: Int) =
         audioTuning.setDialogueDucking(profile, enabled, amount)
 
+    fun isSurroundDecoderEnabled(profile: Int) = audioTuning.isSurroundDecoderEnabled(profile)
+    fun setSurroundDecoderEnabled(profile: Int, enabled: Boolean) =
+        audioTuning.setSurroundDecoderEnabled(profile, enabled)
+
     fun isLevelerTargetEnabled(profile: Int) = audioTuning.isLevelerTargetEnabled(profile)
     fun getLevelerTargetDb(profile: Int) = audioTuning.getLevelerTargetDb(profile)
     fun setLevelerTarget(profile: Int, enabled: Boolean, targetDb: Int) =

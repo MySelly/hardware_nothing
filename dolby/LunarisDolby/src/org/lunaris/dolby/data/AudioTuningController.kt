@@ -33,6 +33,7 @@ internal class AudioTuningController(
         applyVolmaxBoost(profile)
         applyIeqAmount(profile)
         applySurroundBoost(profile)
+        applySurroundDecoder(profile)
         applyVolumeLevelerAmount(profile)
         applyLevelerTarget(profile)
         applyDialogueDucking(profile)
@@ -301,6 +302,23 @@ internal class AudioTuningController(
         val enabled = isDialogueDuckingEnabled(profile)
         val amount = if (enabled) getDialogueDuckingAmount(profile) else 0
         setDapInt(DsParam.DIALOGUE_DUCKING, profile, amount)
+    }
+
+    // --- Surround decoder / upmix (vendor HAL tuning) ---
+
+    fun isSurroundDecoderEnabled(profile: Int): Boolean =
+        profilePrefs(profile).getBoolean(DolbyConstants.PREF_SURROUND_DECODER_ENABLED, true)
+
+    fun setSurroundDecoderEnabled(profile: Int, enabled: Boolean) {
+        if (isReleased()) return
+        profilePrefs(profile).edit()
+            .putBoolean(DolbyConstants.PREF_SURROUND_DECODER_ENABLED, enabled)
+            .apply()
+        applySurroundDecoder(profile)
+    }
+
+    private fun applySurroundDecoder(profile: Int) {
+        DolbyHalBridge.applySurroundDecoder(context, isSurroundDecoderEnabled(profile))
     }
 
     // --- Volume leveler target level (vendor HAL tuning) ---

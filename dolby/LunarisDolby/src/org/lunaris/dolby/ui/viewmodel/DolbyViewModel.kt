@@ -105,6 +105,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     ieqAmount = repository.getIeqAmount(profile),
                     surroundBoostEnabled = repository.isSurroundBoostEnabled(profile),
                     surroundBoost = repository.getSurroundBoost(profile),
+                    surroundDecoderEnabled = repository.isSurroundDecoderEnabled(profile),
                     volumeLevelerAmount = repository.getVolumeLevelerAmount(profile),
                     levelerTargetEnabled = repository.isLevelerTargetEnabled(profile),
                     levelerTargetDb = repository.getLevelerTargetDb(profile),
@@ -461,6 +462,18 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 loadSettings()
             } catch (e: Exception) {
                 DolbyConstants.dlog(TAG, "Error setting dialogue ducking: ${e.message}")
+            }
+        }
+    }
+
+    fun setSurroundDecoder(enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setSurroundDecoderEnabled(profile, enabled)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting surround decoder: ${e.message}")
             }
         }
     }

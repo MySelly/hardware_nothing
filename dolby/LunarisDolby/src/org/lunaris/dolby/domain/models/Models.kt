@@ -52,6 +52,7 @@ data class ProfileSettings(
     val ieqAmount: Int = 6,
     val surroundBoostEnabled: Boolean = false,
     val surroundBoost: Int = 0,
+    val surroundDecoderEnabled: Boolean = true,
     val volumeLevelerAmount: Int = 0,
     val levelerTargetEnabled: Boolean = false,
     val levelerTargetDb: Int = -16,

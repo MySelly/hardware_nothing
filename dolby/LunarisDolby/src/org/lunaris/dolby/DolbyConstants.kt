@@ -50,6 +50,7 @@ object DolbyConstants {
     const val PREF_ADV_BASS_CUTOFF = "dolby_adv_bass_cutoff"
     const val PREF_LEVELER_TARGET_ENABLED = "dolby_leveler_target_enabled"
     const val PREF_LEVELER_TARGET_DB = "dolby_leveler_target_db"
+    const val PREF_SURROUND_DECODER_ENABLED = "dolby_surround_decoder_enabled"
     const val PREF_DSP_VOLUME_BOOST_ENABLED = "dsp_volume_boost_enabled"
     const val PREF_DSP_VOLUME_BOOST_STRENGTH = "dsp_volume_boost_strength"
     const val PREF_PRESETS_MIGRATED = "presets_migrated"

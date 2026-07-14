@@ -108,6 +108,16 @@ object DolbyHalBridge {
         DolbyConstants.dlog(TAG, "leveler_target enabled=$enabled db=$db raw=$raw")
     }
 
+    fun applySurroundDecoder(context: Context, enabled: Boolean) {
+        val flag = if (enabled) 1 else 0
+        setParameters(context, listOf(
+            "surround_decoder_enable=$flag",
+            "surround-decoder-enable=$flag",
+            "dolby_surround_decoder=$flag"
+        ))
+        DolbyConstants.dlog(TAG, "surround_decoder=$flag")
+    }
+
     fun applySpatialAudio(
         context: Context,
         balanceEnabled: Boolean,

@@ -650,6 +650,15 @@ private fun AudioTuningSettingsCard(
 
         Spacer(modifier = Modifier.height(12.dp))
         ModernSettingSwitch(
+            title = stringResource(R.string.surround_decoder_title),
+            subtitle = stringResource(R.string.surround_decoder_summary),
+            checked = profileSettings.surroundDecoderEnabled,
+            onCheckedChange = { viewModel.setSurroundDecoder(it) },
+            icon = Icons.Default.SurroundSound
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+        ModernSettingSwitch(
             title = stringResource(R.string.virtual_bass_speaker_title),
             subtitle = stringResource(R.string.virtual_bass_speaker_summary),
             checked = profileSettings.virtualBassSpeakerEnabled,
