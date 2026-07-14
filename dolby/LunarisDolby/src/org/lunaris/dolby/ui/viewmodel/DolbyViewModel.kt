@@ -105,6 +105,8 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     volumeLevelerAmount = repository.getVolumeLevelerAmount(profile),
                     virtualBassSpeakerEnabled = repository.isVirtualBassSpeakerEnabled(profile),
                     virtualBassBluetoothEnabled = repository.isVirtualBassBluetoothEnabled(profile),
+                    reverbSuppressionEnabled = repository.isReverbSuppressionEnabled(profile),
+                    reverbSuppressionAmount = repository.getReverbSuppressionAmount(profile),
                     hearingProtectionEnabled = repository.isHearingProtectionEnabled(profile),
                     dspVolumeBoostEnabled = repository.isDspVolumeBoostEnabled(),
                     dspVolumeBoostStrength = repository.getDspVolumeBoostStrength()
@@ -427,6 +429,18 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 loadSettings()
             } catch (e: Exception) {
                 DolbyConstants.dlog(TAG, "Error setting Bluetooth virtual bass: ${e.message}")
+            }
+        }
+    }
+
+    fun setReverbSuppression(enabled: Boolean, amount: Int) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setReverbSuppression(profile, enabled, amount)
+                loadSettings()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Error setting reverb suppression: ${e.message}")
             }
         }
     }

@@ -40,6 +40,8 @@ object DolbyConstants {
     const val PREF_VIRTUAL_BASS_SPEAKER = "dolby_virtual_bass_speaker"
     const val PREF_VIRTUAL_BASS_BLUETOOTH = "dolby_virtual_bass_bluetooth"
     const val PREF_HEARING_PROTECTION = "dolby_hearing_protection"
+    const val PREF_REVERB_SUPPRESSION_ENABLED = "dolby_reverb_suppression_enabled"
+    const val PREF_REVERB_SUPPRESSION_AMOUNT = "dolby_reverb_suppression_amount"
     const val PREF_DSP_VOLUME_BOOST_ENABLED = "dsp_volume_boost_enabled"
     const val PREF_DSP_VOLUME_BOOST_STRENGTH = "dsp_volume_boost_strength"
     const val PREF_PRESETS_MIGRATED = "presets_migrated"
@@ -132,6 +134,7 @@ object DolbyConstants {
         IEQ_AMOUNT(107),
         VOLUME_LEVELER_AMOUNT(109),
         VIRTUAL_BASS_ENABLE(112),
+        REVERB_SUPPRESSION_AMOUNT(115),
         HEARING_PROTECTION_ENABLE(118);
 
         override fun toString(): String = "${name}(${id})"
@@ -146,6 +149,7 @@ object DolbyConstants {
     const val EQ_GAIN_EXTREME = 300
     const val VOLMAX_BOOST_MAX = 96
     const val SURROUND_BOOST_MAX = 64
+    const val REVERB_SUPPRESSION_MAX = 16
     const val IEQ_AMOUNT_MAX = 10
     const val VOLUME_LEVELER_AMOUNT_MAX = 10
 

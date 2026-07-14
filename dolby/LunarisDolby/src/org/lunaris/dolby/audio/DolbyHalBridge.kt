@@ -60,6 +60,18 @@ object DolbyHalBridge {
         DolbyConstants.dlog(TAG, "virtual_bass=$flag")
     }
 
+    fun applyReverbSuppression(context: Context, enabled: Boolean, amount: Int) {
+        val flag = if (enabled) 1 else 0
+        val amt = if (enabled) amount.coerceIn(0, 16) else 0
+        setParameters(context, listOf(
+            "reverb_suppression_enable=$flag",
+            "reverb-suppression-enable=$flag",
+            "reverb_suppression_amount=$amt",
+            "reverb-suppression-amount=$amt"
+        ))
+        DolbyConstants.dlog(TAG, "reverb_suppression enable=$flag amount=$amt")
+    }
+
     fun applySpatialAudio(
         context: Context,
         balanceEnabled: Boolean,

@@ -607,6 +607,30 @@ private fun AudioTuningSettingsCard(
 
         Spacer(modifier = Modifier.height(12.dp))
         ModernSettingSwitch(
+            title = stringResource(R.string.reverb_suppression_title),
+            subtitle = stringResource(R.string.reverb_suppression_summary),
+            checked = profileSettings.reverbSuppressionEnabled,
+            onCheckedChange = { enabled ->
+                viewModel.setReverbSuppression(enabled, profileSettings.reverbSuppressionAmount)
+            },
+            icon = Icons.Default.Podcasts
+        )
+        AnimatedVisibility(visible = profileSettings.reverbSuppressionEnabled) {
+            Column {
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.reverb_suppression_amount_title),
+                    value = profileSettings.reverbSuppressionAmount,
+                    onValueChange = { viewModel.setReverbSuppression(true, it.toInt()) },
+                    valueRange = 0f..16f,
+                    steps = 15,
+                    valueLabel = { "$it" }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        ModernSettingSwitch(
             title = stringResource(R.string.hearing_protection_title),
             subtitle = stringResource(R.string.hearing_protection_summary),
             checked = profileSettings.hearingProtectionEnabled,

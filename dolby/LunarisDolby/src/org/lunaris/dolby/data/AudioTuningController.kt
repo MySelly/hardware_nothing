@@ -34,6 +34,7 @@ internal class AudioTuningController(
         applySurroundBoost(profile)
         applyVolumeLevelerAmount(profile)
         applyVirtualBass(profile)
+        applyReverbSuppression(profile)
         applyHearingProtection(profile)
         applyDspVolumeBoost()
         audioEngine.applySpatialProcessing()
@@ -254,6 +255,32 @@ internal class AudioTuningController(
             }
             else -> DolbyHalBridge.applyVirtualBassHal(context, false)
         }
+    }
+
+    // --- Reverb suppression ---
+
+    fun isReverbSuppressionEnabled(profile: Int): Boolean =
+        profilePrefs(profile).getBoolean(DolbyConstants.PREF_REVERB_SUPPRESSION_ENABLED, false)
+
+    fun getReverbSuppressionAmount(profile: Int): Int =
+        profilePrefs(profile).getInt(DolbyConstants.PREF_REVERB_SUPPRESSION_AMOUNT, 9)
+            .coerceIn(0, DolbyConstants.REVERB_SUPPRESSION_MAX)
+
+    fun setReverbSuppression(profile: Int, enabled: Boolean, amount: Int) {
+        if (isReleased()) return
+        val clamped = amount.coerceIn(0, DolbyConstants.REVERB_SUPPRESSION_MAX)
+        profilePrefs(profile).edit()
+            .putBoolean(DolbyConstants.PREF_REVERB_SUPPRESSION_ENABLED, enabled)
+            .putInt(DolbyConstants.PREF_REVERB_SUPPRESSION_AMOUNT, clamped)
+            .apply()
+        applyReverbSuppression(profile)
+    }
+
+    private fun applyReverbSuppression(profile: Int) {
+        val enabled = isReverbSuppressionEnabled(profile)
+        val amount = getReverbSuppressionAmount(profile)
+        setDapInt(DsParam.REVERB_SUPPRESSION_AMOUNT, profile, if (enabled) amount else 0)
+        DolbyHalBridge.applyReverbSuppression(context, enabled, amount)
     }
 
     // --- Hearing protection ---
