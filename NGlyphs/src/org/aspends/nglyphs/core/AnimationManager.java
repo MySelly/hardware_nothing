@@ -166,7 +166,10 @@ public class AnimationManager {
         if (activePriority == PRIORITY_HIGH)
             return;
         if (!isAnimationRunning) {
-            updateMeter(currentLevel, runningLoopPriority == PRIORITY_PROGRESS ? 8 : 9);
+            // No animation loop owns the LEDs here, so never redraw a stale meter
+            // level: an interrupted volume/battery loop can leave currentLevel > 0
+            // behind, which used to re-light the bar permanently.
+            updateMeter(0f, 9);
         }
     }
 
@@ -501,19 +504,29 @@ public class AnimationManager {
             } catch (Exception e) {
                 android.util.Log.e("AnimationManager", "Animation Loop Error", e);
             } finally {
-                updateMeter(0f, maxZones);
-                GlyphManagerV2.getInstance().setFrame(new int[15]);
+                // Tear down only if no newer loop has taken over the shared state,
+                // otherwise we would clobber the flags/frame of the loop that
+                // preempted us (executor is single-threaded, so its body runs next).
+                if (runningLoopPriority == priority) {
+                    // Reset the interpolated level so a later
+                    // refreshBackgroundState() cannot redraw a stale meter and
+                    // leave the glyphs stuck on.
+                    currentLevel = 0f;
 
-                if (activePriority == priority) {
-                    releaseLock(priority);
-                }
-                isAnimationRunning = false;
-                runningLoopPriority = PRIORITY_NONE;
+                    updateMeter(0f, maxZones);
+                    GlyphManagerV2.getInstance().setFrame(new int[15]);
 
-                if (appContext != null) {
-                    Intent intent = new Intent(ACTION_GLYPH_FREE);
-                    intent.setPackage(appContext.getPackageName());
-                    appContext.sendBroadcast(intent);
+                    if (activePriority == priority) {
+                        releaseLock(priority);
+                    }
+                    isAnimationRunning = false;
+                    runningLoopPriority = PRIORITY_NONE;
+
+                    if (appContext != null) {
+                        Intent intent = new Intent(ACTION_GLYPH_FREE);
+                        intent.setPackage(appContext.getPackageName());
+                        appContext.sendBroadcast(intent);
+                    }
                 }
             }
         });
@@ -527,6 +540,13 @@ public class AnimationManager {
         currentLevel = 0f;
         timeoutHandler.removeCallbacksAndMessages(null);
         executor.submit(() -> GlyphManagerV2.getInstance().setFrame(new int[15]));
+
+        // The interrupted loop skips its own teardown (flags were reset here),
+        // so emit the free signal ourselves to let pending bars restore.
+        if (appContext != null) {
+            appContext.sendBroadcast(new Intent(ACTION_GLYPH_FREE)
+                            .setPackage(appContext.getPackageName()));
+        }
     }
 
     public static void cancelPriority(int priority) {
