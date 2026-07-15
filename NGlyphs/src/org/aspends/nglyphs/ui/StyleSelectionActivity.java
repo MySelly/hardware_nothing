@@ -1,9 +1,12 @@
 package org.aspends.nglyphs.ui;
 
+import android.app.NotificationManager;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.RingtoneManager;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.provider.Settings;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,7 +19,9 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -89,6 +94,7 @@ public class StyleSelectionActivity extends AppCompatActivity {
 
         setupExpansionLogic();
         setupRecyclerViews();
+        setupFlipOptions();
 
         layerCamera = findViewById(R.id.layerCamera);
         layerDiagonal = findViewById(R.id.layerDiagonal);
@@ -191,6 +197,44 @@ public class StyleSelectionActivity extends AppCompatActivity {
                         .show();
             });
         }
+    }
+
+    private boolean hasDndPermission() {
+        NotificationManager nm = getSystemService(NotificationManager.class);
+        return nm != null && nm.isNotificationPolicyAccessGranted();
+    }
+
+    /**
+     * Shows the Flip to Glyph sub-options (vibrate / DND) inside this picker
+     * when it was opened from the Flip to Glyph card.
+     */
+    private void setupFlipOptions() {
+        MaterialCardView cardFlipOptions = findViewById(R.id.cardFlipOptions);
+        if (cardFlipOptions == null)
+            return;
+        if (!isFlipMode) {
+            cardFlipOptions.setVisibility(android.view.View.GONE);
+            return;
+        }
+        cardFlipOptions.setVisibility(android.view.View.VISIBLE);
+
+        MaterialSwitch switchFlipVibrate = findViewById(R.id.switchFlipVibrate);
+        MaterialSwitch switchFlipDnd = findViewById(R.id.switchFlipDnd);
+
+        switchFlipVibrate.setChecked(prefs.getBoolean("flip_mode_vibrate", true));
+        switchFlipVibrate.setOnCheckedChangeListener((v, isChecked)
+                -> prefs.edit().putBoolean("flip_mode_vibrate", isChecked).apply());
+
+        switchFlipDnd.setChecked(prefs.getBoolean("flip_mode_dnd", true));
+        switchFlipDnd.setOnCheckedChangeListener((v, isChecked) -> {
+            prefs.edit().putBoolean("flip_mode_dnd", isChecked).apply();
+            if (isChecked && !hasDndPermission()) {
+                Toast.makeText(this,
+                        "DND access is required for flip-to-glyph DND mode. Grant permission in settings.",
+                        Toast.LENGTH_LONG).show();
+                startActivity(new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS));
+            }
+        });
     }
 
     @Override

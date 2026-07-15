@@ -14,6 +14,11 @@
     <string name="master_off_subtitle">Glyphlar devre dışı</string>
     <string name="flip_to_glyph_label">Ters Çevirerek Glyph</string>
     <string name="flip_to_glyph_desc">Telefonu yüzü aşağı koyarak bildirimleri sessize al ve glyph ışıklarını kullan</string>
+    <string name="flip_options_header">Ters çevirme seçenekleri</string>
+    <string name="flip_mode_vibrate_title">Ters çevirince titreşim</string>
+    <string name="flip_mode_vibrate_desc">Ters çevirme modu etkinleşince telefonu titreşime al</string>
+    <string name="flip_mode_dnd_title">Ters çevirince Rahatsız Etmeyin</string>
+    <string name="flip_mode_dnd_desc">Telefon yüzü aşağıyken Rahatsız Etmeyin modunu aç</string>
     <string name="screen_off_only_title">Kilit ekranı veya ekran kapalıyken</string>
     <string name="screen_off_only_desc">Glyph sadece cihaz kilitliyken veya ekran kapalıyken çalışır</string>
     <string name="missed_calls">Cevapsız Aramalar</string>
