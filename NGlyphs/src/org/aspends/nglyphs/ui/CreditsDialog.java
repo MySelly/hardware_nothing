@@ -18,6 +18,8 @@ public final class CreditsDialog {
                 + activity.getString(R.string.credits_main_contributors)
                 + "\n• MySelly — "
                 + activity.getString(R.string.credits_contributor_myselly)
+                + "\n• Jis G Jacob — "
+                + activity.getString(R.string.credits_contributor_jis)
                 + "\n• Aspends — "
                 + activity.getString(R.string.credits_contributor_aspends)
                 + "\n\n"

@@ -163,6 +163,7 @@
     <string name="credits_github_repo">crdroidandroid/android_hardware_nothing</string>
     <string name="credits_main_contributors">Main contributors</string>
     <string name="credits_contributor_myselly">Turkish localization &amp; feature expansion</string>
+    <string name="credits_contributor_jis">ROM build integration &amp; feature fixes</string>
     <string name="credits_contributor_aspends">Original Glyph Manager rewrite</string>
     <string name="close">Close</string>
 

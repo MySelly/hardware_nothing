@@ -155,6 +155,7 @@
     <string name="credits_github_repo">crdroidandroid/android_hardware_nothing</string>
     <string name="credits_main_contributors">Ana katkıda bulunanlar</string>
     <string name="credits_contributor_myselly">Türkçe yerelleştirme ve özellik geliştirmeleri</string>
+    <string name="credits_contributor_jis">ROM derlemelerine entegrasyon ve özellik düzeltmeleri</string>
     <string name="credits_contributor_aspends">Orijinal Glyph Manager yeniden yazımı</string>
     <string name="close">Kapat</string>
     <string name="backup_title">Yedekleme ve geri yükleme</string>
