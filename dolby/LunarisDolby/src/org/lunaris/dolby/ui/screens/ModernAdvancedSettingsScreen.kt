@@ -100,6 +100,12 @@ fun ModernAdvancedSettingsScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error
                         )
+                        Button(
+                            onClick = { viewModel.loadSettings() },
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Text(stringResource(R.string.app_profiles_retry))
+                        }
                     }
                 }
             }
