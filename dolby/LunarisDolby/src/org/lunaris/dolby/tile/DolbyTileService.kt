@@ -48,6 +48,11 @@ class DolbyTileService : TileService() {
             }
 
             waitingForDisableConfirm = true
+            Toast.makeText(
+                applicationContext,
+                getString(R.string.qs_tile_tap_again_to_disable),
+                Toast.LENGTH_SHORT
+            ).show()
             val cycleRunnable = Runnable {
                 waitingForDisableConfirm = false
                 profileCycleRunnable = null

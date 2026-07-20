@@ -216,6 +216,7 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
             dolbyEffect.dsOn = enabled
             defaultPrefs.edit().putBoolean(DolbyConstants.PREF_ENABLE, enabled).apply()
             isBypassActive = false
+            DolbyStatusNotifier.notifyChanged(context)
         } catch (e: Exception) {
             DolbyConstants.dlog(TAG, "Error setting Dolby enabled: ${e.message}")
         }
@@ -268,6 +269,7 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
             applyProfileSettings(profile)
             _currentProfile.value = profile
             DolbyConstants.dlog(TAG, "Profile set to: $profile")
+            DolbyStatusNotifier.notifyChanged(context)
         } catch (e: Exception) {
             DolbyConstants.dlog(TAG, "Error setting current profile: ${e.message}")
         }

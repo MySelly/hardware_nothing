@@ -235,6 +235,7 @@
 
     <!-- QS tile -->
     <string name="qs_tile_tap_to_enable">Açmak için dokunun</string>
+    <string name="qs_tile_tap_again_to_disable">Kapatmak için tekrar dokunun, profil değiştirmek için bekleyin</string>
     <string name="qs_tile_profile_switched">Profil: %1$s</string>
     <string name="qs_tile_state_on">Dolby açık, %1$s profili. Dokunun: sonraki profil. Çift dokunun: kapat</string>
     <string name="qs_tile_state_off">Dolby kapalı. Açmak için dokunun</string>

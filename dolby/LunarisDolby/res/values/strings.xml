@@ -235,6 +235,7 @@
 
     <!-- QS tile -->
     <string name="qs_tile_tap_to_enable">Tap to enable</string>
+    <string name="qs_tile_tap_again_to_disable">Tap again to disable, or wait to cycle profile</string>
     <string name="qs_tile_profile_switched">Profile: %1$s</string>
     <string name="qs_tile_state_on">Dolby on, %1$s profile. Tap: next profile. Double tap: off</string>
     <string name="qs_tile_state_off">Dolby off. Tap to enable</string>
