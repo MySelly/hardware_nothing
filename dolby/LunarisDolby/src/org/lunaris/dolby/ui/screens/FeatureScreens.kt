@@ -24,16 +24,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.R
 import org.lunaris.dolby.data.BluetoothProfileManager
-import org.lunaris.dolby.data.DolbyRepository
+import org.lunaris.dolby.data.DolbyStatusHelper
 import org.lunaris.dolby.data.MediaContentRulesManager
 import org.lunaris.dolby.data.ProfileChangeHistoryManager
-import org.lunaris.dolby.data.SleepTimerManager
-import org.lunaris.dolby.domain.models.SleepTimerAction
-import org.lunaris.dolby.data.DolbyStatusHelper
-import org.lunaris.dolby.ui.theme.DolbyAppearanceState
+import org.lunaris.dolby.ui.viewmodel.AutomationSettingsViewModel
+import org.lunaris.dolby.ui.viewmodel.dolbyAndroidViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -41,35 +38,10 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AutomationSettingsScreen(navController: NavController) {
-    val context = LocalContext.current
-    val prefs = context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
-    val mediaRules = remember { MediaContentRulesManager(context) }
-    var batterySaver by remember { mutableStateOf(prefs.getBoolean(DolbyConstants.PREF_BATTERY_SAVER_MODE, false)) }
-    var autoCall by remember { mutableStateOf(prefs.getBoolean(DolbyConstants.PREF_AUTO_DISABLE_ON_CALL, true)) }
-    var mediaDetect by remember { mutableStateOf(prefs.getBoolean(DolbyConstants.PREF_MEDIA_CONTENT_DETECTION, false)) }
-    var gameLatency by remember { mutableStateOf(prefs.getBoolean(DolbyConstants.PREF_GAME_LATENCY_MODE, false)) }
-    var focusMode by remember { mutableStateOf(prefs.getBoolean(DolbyConstants.PREF_FOCUS_MODE_INTEGRATION, false)) }
-    var simpleUi by remember { mutableStateOf(prefs.getBoolean(DolbyConstants.PREF_SIMPLE_UI_MODE, false)) }
-    var amoled by remember { mutableStateOf(prefs.getBoolean(DolbyConstants.PREF_AMOLED_THEME, false)) }
-    var safeLimit by remember { mutableFloatStateOf(prefs.getInt(DolbyConstants.PREF_SAFE_LISTENING_LIMIT, 0).toFloat()) }
-    var sleepMinutes by remember { mutableIntStateOf(30) }
-    val timerManager = remember { SleepTimerManager(context) }
-    var activeTimer by remember { mutableStateOf(timerManager.getActiveTimer()) }
+    val viewModel: AutomationSettingsViewModel = dolbyAndroidViewModel()
+    val state by viewModel.uiState.collectAsState()
     val profiles = stringArrayResource(R.array.dolby_profile_entries)
     val profileValues = stringArrayResource(R.array.dolby_profile_values)
-    var musicProfile by remember {
-        mutableIntStateOf(mediaRules.getProfileForContentType("music"))
-    }
-    var videoProfile by remember {
-        mutableIntStateOf(mediaRules.getProfileForContentType("video"))
-    }
-    var gameProfile by remember {
-        mutableIntStateOf(mediaRules.getProfileForContentType("game"))
-    }
-    var speechProfile by remember {
-        mutableIntStateOf(mediaRules.getProfileForContentType("speech"))
-    }
-    var packageOverrides by remember { mutableStateOf(mediaRules.getPackageOverridesMap()) }
     var newPackageName by remember { mutableStateOf("") }
     var newContentType by remember { mutableStateOf(MediaContentRulesManager.CONTENT_TYPES.first()) }
     var contentTypeExpanded by remember { mutableStateOf(false) }
@@ -101,41 +73,39 @@ fun AutomationSettingsScreen(navController: NavController) {
             item {
                 Text(stringResource(R.string.sleep_timer_desc))
                 Slider(
-                    value = sleepMinutes.toFloat(),
-                    onValueChange = { sleepMinutes = it.toInt() },
+                    value = state.sleepMinutes.toFloat(),
+                    onValueChange = { viewModel.setSleepMinutes(it.toInt()) },
                     valueRange = 5f..120f,
                     steps = 22
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = {
-                        val repo = DolbyRepository(context)
-                        val current = repo.getCurrentProfile()
-                        repo.close()
-                        timerManager.startTimer(sleepMinutes, SleepTimerAction.RESTORE_PROFILE, 0, current)
-                        activeTimer = timerManager.getActiveTimer()
-                    }) { Text(stringResource(R.string.sleep_timer_start)) }
-                    if (activeTimer != null) {
-                        OutlinedButton(onClick = {
-                            timerManager.clearTimer()
-                            activeTimer = null
-                        }) { Text(stringResource(R.string.sleep_timer_cancel)) }
+                    Button(onClick = { viewModel.startSleepTimer() }) {
+                        Text(stringResource(R.string.sleep_timer_start))
+                    }
+                    if (state.activeTimer != null) {
+                        OutlinedButton(onClick = { viewModel.cancelSleepTimer() }) {
+                            Text(stringResource(R.string.sleep_timer_cancel))
+                        }
                     }
                 }
             }
             item { SectionTitle(stringResource(R.string.automation_features_title)) }
-            item { PrefSwitch(stringResource(R.string.battery_saver_mode), batterySaver) {
-                batterySaver = it
-                prefs.edit().putBoolean(DolbyConstants.PREF_BATTERY_SAVER_MODE, it).apply()
-            }}
-            item { PrefSwitch(stringResource(R.string.auto_disable_on_call), autoCall) {
-                autoCall = it
-                prefs.edit().putBoolean(DolbyConstants.PREF_AUTO_DISABLE_ON_CALL, it).apply()
-            }}
-            item { PrefSwitch(stringResource(R.string.media_content_detection), mediaDetect) {
-                mediaDetect = it
-                prefs.edit().putBoolean(DolbyConstants.PREF_MEDIA_CONTENT_DETECTION, it).apply()
-            }}
-            if (mediaDetect) {
+            item {
+                PrefSwitch(stringResource(R.string.battery_saver_mode), state.batterySaver) {
+                    viewModel.setBatterySaver(it)
+                }
+            }
+            item {
+                PrefSwitch(stringResource(R.string.auto_disable_on_call), state.autoCall) {
+                    viewModel.setAutoCall(it)
+                }
+            }
+            item {
+                PrefSwitch(stringResource(R.string.media_content_detection), state.mediaDetect) {
+                    viewModel.setMediaDetect(it)
+                }
+            }
+            if (state.mediaDetect) {
                 item {
                     Text(
                         stringResource(R.string.media_content_mapping_desc),
@@ -146,54 +116,42 @@ fun AutomationSettingsScreen(navController: NavController) {
                 item {
                     MediaProfilePicker(
                         label = stringResource(R.string.media_type_music),
-                        selectedProfile = musicProfile,
+                        selectedProfile = state.musicProfile,
                         profiles = profiles,
                         profileValues = profileValues,
-                        onSelected = {
-                            musicProfile = it
-                            mediaRules.setProfileForContentType("music", it)
-                        }
+                        onSelected = { viewModel.setMediaProfile("music", it) }
                     )
                 }
                 item {
                     MediaProfilePicker(
                         label = stringResource(R.string.media_type_video),
-                        selectedProfile = videoProfile,
+                        selectedProfile = state.videoProfile,
                         profiles = profiles,
                         profileValues = profileValues,
-                        onSelected = {
-                            videoProfile = it
-                            mediaRules.setProfileForContentType("video", it)
-                        }
+                        onSelected = { viewModel.setMediaProfile("video", it) }
                     )
                 }
                 item {
                     MediaProfilePicker(
                         label = stringResource(R.string.media_type_game),
-                        selectedProfile = gameProfile,
+                        selectedProfile = state.gameProfile,
                         profiles = profiles,
                         profileValues = profileValues,
-                        onSelected = {
-                            gameProfile = it
-                            mediaRules.setProfileForContentType("game", it)
-                        }
+                        onSelected = { viewModel.setMediaProfile("game", it) }
                     )
                 }
                 item {
                     MediaProfilePicker(
                         label = stringResource(R.string.media_type_speech),
-                        selectedProfile = speechProfile,
+                        selectedProfile = state.speechProfile,
                         profiles = profiles,
                         profileValues = profileValues,
-                        onSelected = {
-                            speechProfile = it
-                            mediaRules.setProfileForContentType("speech", it)
-                        }
+                        onSelected = { viewModel.setMediaProfile("speech", it) }
                     )
                 }
                 item { SectionTitle(stringResource(R.string.media_package_overrides_title)) }
                 items(
-                    packageOverrides.entries.toList(),
+                    state.packageOverrides.entries.toList(),
                     key = { it.key }
                 ) { (pkg, type) ->
                     Card(Modifier.fillMaxWidth()) {
@@ -212,10 +170,7 @@ fun AutomationSettingsScreen(navController: NavController) {
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            IconButton(onClick = {
-                                mediaRules.setPackageContentType(pkg, null)
-                                packageOverrides = mediaRules.getPackageOverridesMap()
-                            }) {
+                            IconButton(onClick = { viewModel.removePackageOverride(pkg) }) {
                                 Icon(Icons.Default.Delete, contentDescription = null)
                             }
                         }
@@ -260,12 +215,8 @@ fun AutomationSettingsScreen(navController: NavController) {
                         }
                         Button(
                             onClick = {
-                                val pkg = newPackageName.trim()
-                                if (pkg.isNotEmpty()) {
-                                    mediaRules.setPackageContentType(pkg, newContentType)
-                                    packageOverrides = mediaRules.getPackageOverridesMap()
-                                    newPackageName = ""
-                                }
+                                viewModel.addPackageOverride(newPackageName, newContentType)
+                                newPackageName = ""
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -274,33 +225,32 @@ fun AutomationSettingsScreen(navController: NavController) {
                     }
                 }
             }
-            item { PrefSwitch(stringResource(R.string.game_latency_mode), gameLatency) {
-                gameLatency = it
-                prefs.edit().putBoolean(DolbyConstants.PREF_GAME_LATENCY_MODE, it).apply()
-            }}
-            item { PrefSwitch(stringResource(R.string.focus_mode_integration), focusMode) {
-                focusMode = it
-                prefs.edit().putBoolean(DolbyConstants.PREF_FOCUS_MODE_INTEGRATION, it).apply()
-            }}
+            item {
+                PrefSwitch(stringResource(R.string.game_latency_mode), state.gameLatency) {
+                    viewModel.setGameLatency(it)
+                }
+            }
+            item {
+                PrefSwitch(stringResource(R.string.focus_mode_integration), state.focusMode) {
+                    viewModel.setFocusMode(it)
+                }
+            }
             item { SectionTitle(stringResource(R.string.ui_settings_title)) }
-            item { PrefSwitch(stringResource(R.string.simple_ui_mode), simpleUi) {
-                simpleUi = it
-                prefs.edit().putBoolean(DolbyConstants.PREF_SIMPLE_UI_MODE, it).apply()
-                DolbyAppearanceState.notifyChanged()
-            }}
-            item { PrefSwitch(stringResource(R.string.amoled_theme), amoled) {
-                amoled = it
-                prefs.edit().putBoolean(DolbyConstants.PREF_AMOLED_THEME, it).apply()
-                DolbyAppearanceState.notifyChanged()
-            }}
+            item {
+                PrefSwitch(stringResource(R.string.simple_ui_mode), state.simpleUi) {
+                    viewModel.setSimpleUi(it)
+                }
+            }
+            item {
+                PrefSwitch(stringResource(R.string.amoled_theme), state.amoled) {
+                    viewModel.setAmoled(it)
+                }
+            }
             item {
                 Text(stringResource(R.string.safe_listening_limit))
                 Slider(
-                    value = safeLimit,
-                    onValueChange = {
-                        safeLimit = it
-                        prefs.edit().putInt(DolbyConstants.PREF_SAFE_LISTENING_LIMIT, it.toInt()).apply()
-                    },
+                    value = state.safeLimit,
+                    onValueChange = { viewModel.setSafeLimit(it) },
                     valueRange = 0f..100f,
                     steps = 20
                 )
