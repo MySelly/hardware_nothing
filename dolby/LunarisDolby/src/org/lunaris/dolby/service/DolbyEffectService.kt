@@ -41,6 +41,9 @@ class DolbyEffectService : Service() {
     private val callCheckRunnable = object : Runnable {
         override fun run() {
             checkCallState()
+            DolbyAutomationCoordinator.applyGameLatencyMode(this@DolbyEffectService)
+            DolbyAutomationCoordinator.enforceSafeListeningLimit(this@DolbyEffectService)
+            applyAutoLoudnessIfNeeded()
             handler.postDelayed(this, 2000L)
         }
     }
@@ -174,6 +177,7 @@ class DolbyEffectService : Service() {
         }
         repository.updateSpeakerState()
         repository.reapplyVirtualBass()
+        repository.applyCalibrationBoost()
     }
 
     private fun getCurrentOutputDevice(): AudioDeviceInfo? {

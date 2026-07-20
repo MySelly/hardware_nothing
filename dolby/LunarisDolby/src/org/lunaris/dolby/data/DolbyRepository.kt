@@ -998,8 +998,14 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     fun isAdvancedBassEnabled(profile: Int) = audioTuning.isAdvancedBassEnabled(profile)
     fun getAdvancedBassBoost(profile: Int) = audioTuning.getAdvancedBassBoost(profile)
     fun getAdvancedBassCutoff(profile: Int) = audioTuning.getAdvancedBassCutoff(profile)
-    fun setAdvancedBass(profile: Int, enabled: Boolean, boostPercent: Int, cutoffHz: Int) =
-        audioTuning.setAdvancedBass(profile, enabled, boostPercent, cutoffHz)
+    fun getAdvancedBassWidth(profile: Int) = audioTuning.getAdvancedBassWidth(profile)
+    fun setAdvancedBass(
+        profile: Int,
+        enabled: Boolean,
+        boostPercent: Int,
+        cutoffHz: Int,
+        width: Int = getAdvancedBassWidth(profile)
+    ) = audioTuning.setAdvancedBass(profile, enabled, boostPercent, cutoffHz, width)
 
     fun isReverbSuppressionEnabled(profile: Int) = audioTuning.isReverbSuppressionEnabled(profile)
     fun getReverbSuppressionAmount(profile: Int) = audioTuning.getReverbSuppressionAmount(profile)
@@ -1008,12 +1014,57 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
 
     fun isRegulatorEnabled(profile: Int) = audioTuning.isRegulatorEnabled(profile)
     fun getRegulatorOverdriveDb(profile: Int) = audioTuning.getRegulatorOverdriveDb(profile)
+    fun isRegulatorTimbreEnabled(profile: Int) = audioTuning.isRegulatorTimbreEnabled(profile)
+    fun getRegulatorSibilance(profile: Int) = audioTuning.getRegulatorSibilance(profile)
+    fun getRegulatorStress(profile: Int) = audioTuning.getRegulatorStress(profile)
     fun setRegulator(profile: Int, enabled: Boolean, overdriveDb: Int) =
         audioTuning.setRegulator(profile, enabled, overdriveDb)
+    fun setRegulatorExtras(profile: Int, timbre: Boolean, sibilance: Int, stress: Int) =
+        audioTuning.setRegulatorExtras(profile, timbre, sibilance, stress)
 
     fun isHearingProtectionEnabled(profile: Int) = audioTuning.isHearingProtectionEnabled(profile)
     fun setHearingProtectionEnabled(profile: Int, enabled: Boolean) =
         audioTuning.setHearingProtectionEnabled(profile, enabled)
+    fun getHpRmsTargetRaw(profile: Int) = audioTuning.getHpRmsTargetRaw(profile)
+    fun getHpAttackMs(profile: Int) = audioTuning.getHpAttackMs(profile)
+    fun getHpReleaseMs(profile: Int) = audioTuning.getHpReleaseMs(profile)
+    fun setHearingProtectionDynamics(profile: Int, rmsTargetRaw: Int, attackMs: Int, releaseMs: Int) =
+        audioTuning.setHearingProtectionDynamics(profile, rmsTargetRaw, attackMs, releaseMs)
+
+    fun getHpVirtMode(profile: Int) = audioTuning.getHpVirtMode(profile)
+    fun getHpVirtLrAngle(profile: Int) = audioTuning.getHpVirtLrAngle(profile)
+    fun getHpVirtStartBand(profile: Int) = audioTuning.getHpVirtStartBand(profile)
+    fun setHeadphoneVirtualizerTuning(profile: Int, mode: Int, lrAngle: Int, startBand: Int) =
+        audioTuning.setHeadphoneVirtualizerTuning(profile, mode, lrAngle, startBand)
+
+    fun isVolumeModelerEnabled(profile: Int) = audioTuning.isVolumeModelerEnabled(profile)
+    fun setVolumeModelerEnabled(profile: Int, enabled: Boolean) =
+        audioTuning.setVolumeModelerEnabled(profile, enabled)
+
+    fun getVirtualBassMode(profile: Int) = audioTuning.getVirtualBassMode(profile)
+    fun getVirtualBassOverallGain(profile: Int) = audioTuning.getVirtualBassOverallGain(profile)
+    fun getVirtualBassSlopeGain(profile: Int) = audioTuning.getVirtualBassSlopeGain(profile)
+    fun setVirtualBassDetails(profile: Int, mode: Int, overallGain: Int, slopeGain: Int) =
+        audioTuning.setVirtualBassDetails(profile, mode, overallGain, slopeGain)
+
+    fun getSurroundDiffuseFront(profile: Int) = audioTuning.getSurroundDiffuseFront(profile)
+    fun setSurroundDiffuseFront(profile: Int, amount: Int) =
+        audioTuning.setSurroundDiffuseFront(profile, amount)
+
+    fun isMiSteeringEnabled(profile: Int) = audioTuning.isMiSteeringEnabled(profile)
+    fun setMiSteeringEnabled(profile: Int, enabled: Boolean) =
+        audioTuning.setMiSteeringEnabled(profile, enabled)
+
+    fun isSpatialAudioEnabled() = audioTuning.isSpatialAudioEnabled()
+    fun setSpatialAudioEnabled(enabled: Boolean) = audioTuning.setSpatialAudioEnabled(enabled)
+
+    fun getCalibrationBoostSpeaker() = audioTuning.getCalibrationBoostSpeaker()
+    fun getCalibrationBoostHeadphone() = audioTuning.getCalibrationBoostHeadphone()
+    fun getCalibrationBoostBluetooth() = audioTuning.getCalibrationBoostBluetooth()
+    fun setCalibrationBoostSpeaker(boost: Int) = audioTuning.setCalibrationBoostSpeaker(boost)
+    fun setCalibrationBoostHeadphone(boost: Int) = audioTuning.setCalibrationBoostHeadphone(boost)
+    fun setCalibrationBoostBluetooth(boost: Int) = audioTuning.setCalibrationBoostBluetooth(boost)
+    fun applyCalibrationBoost() = audioTuning.applyCalibrationBoost()
 
     fun isDspVolumeBoostEnabled() = audioTuning.isDspVolumeBoostEnabled()
     fun getDspVolumeBoostStrength() = audioTuning.getDspVolumeBoostStrength()

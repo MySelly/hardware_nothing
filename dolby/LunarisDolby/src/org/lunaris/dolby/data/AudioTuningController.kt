@@ -42,8 +42,12 @@ internal class AudioTuningController(
         applyReverbSuppression(profile)
         applyRegulator(profile)
         applyHearingProtection(profile)
+        applyHeadphoneVirtualizerTuning(profile)
+        applyVolumeModeler(profile)
+        applyMiSteering(profile)
+        applyCalibrationBoost()
         applyDspVolumeBoost()
-        audioEngine.applySpatialProcessing()
+        applySpatialMaster(profile)
     }
 
     fun pushGeqToHardware(profile: Int) {
@@ -242,24 +246,60 @@ internal class AudioTuningController(
         applyVirtualBass(profile)
     }
 
+    fun getVirtualBassMode(profile: Int): Int =
+        profilePrefs(profile).getInt(DolbyConstants.PREF_VB_MODE, DolbyConstants.VB_MODE_STOCK)
+            .coerceIn(0, DolbyConstants.VB_MODE_MAX)
+
+    fun getVirtualBassOverallGain(profile: Int): Int =
+        profilePrefs(profile).getInt(
+            DolbyConstants.PREF_VB_OVERALL_GAIN, DolbyConstants.VB_OVERALL_GAIN_STOCK
+        ).coerceIn(DolbyConstants.VB_OVERALL_GAIN_MIN, DolbyConstants.VB_OVERALL_GAIN_MAX)
+
+    fun getVirtualBassSlopeGain(profile: Int): Int =
+        profilePrefs(profile).getInt(
+            DolbyConstants.PREF_VB_SLOPE_GAIN, DolbyConstants.VB_SLOPE_GAIN_STOCK
+        ).coerceIn(DolbyConstants.VB_SLOPE_GAIN_MIN, DolbyConstants.VB_SLOPE_GAIN_MAX)
+
+    fun setVirtualBassDetails(profile: Int, mode: Int, overallGain: Int, slopeGain: Int) {
+        if (isReleased()) return
+        profilePrefs(profile).edit()
+            .putInt(DolbyConstants.PREF_VB_MODE, mode.coerceIn(0, DolbyConstants.VB_MODE_MAX))
+            .putInt(
+                DolbyConstants.PREF_VB_OVERALL_GAIN,
+                overallGain.coerceIn(DolbyConstants.VB_OVERALL_GAIN_MIN, DolbyConstants.VB_OVERALL_GAIN_MAX)
+            )
+            .putInt(
+                DolbyConstants.PREF_VB_SLOPE_GAIN,
+                slopeGain.coerceIn(DolbyConstants.VB_SLOPE_GAIN_MIN, DolbyConstants.VB_SLOPE_GAIN_MAX)
+            )
+            .apply()
+        applyVirtualBass(profile)
+    }
+
     fun reapplyVirtualBass(profile: Int) = applyVirtualBass(profile)
 
     private fun applyVirtualBass(profile: Int) {
+        val mode = getVirtualBassMode(profile)
+        val overall = getVirtualBassOverallGain(profile)
+        val slope = getVirtualBassSlopeGain(profile)
         when (activeDeviceCategory()) {
             AudioDeviceCategory.SPEAKER -> {
                 val enabled = isVirtualBassSpeakerEnabled(profile)
                 setDapInt(DsParam.VIRTUAL_BASS_ENABLE, profile, if (enabled) 1 else 0)
-                DolbyHalBridge.applyVirtualBassHal(context, enabled)
+                DolbyHalBridge.applyVirtualBassHal(context, enabled, mode, overall, slope)
             }
             AudioDeviceCategory.BLUETOOTH -> {
                 // DAX rejects VIRTUAL_BASS_ENABLE on non-speaker endpoints. Keep an
                 // experimental HAL-only path for vendors that expose a BT-capable handler.
                 DolbyHalBridge.applyVirtualBassHal(
                     context,
-                    isVirtualBassBluetoothEnabled(profile)
+                    isVirtualBassBluetoothEnabled(profile),
+                    mode,
+                    overall,
+                    slope
                 )
             }
-            else -> DolbyHalBridge.applyVirtualBassHal(context, false)
+            else -> DolbyHalBridge.applyVirtualBassHal(context, false, mode, overall, slope)
         }
     }
 
@@ -310,6 +350,10 @@ internal class AudioTuningController(
     fun isSurroundDecoderEnabled(profile: Int): Boolean =
         profilePrefs(profile).getBoolean(DolbyConstants.PREF_SURROUND_DECODER_ENABLED, true)
 
+    fun getSurroundDiffuseFront(profile: Int): Int =
+        profilePrefs(profile).getInt(DolbyConstants.PREF_SURROUND_DIFFUSE_FRONT, 0)
+            .coerceIn(0, DolbyConstants.SURROUND_DIFFUSE_MAX)
+
     fun setSurroundDecoderEnabled(profile: Int, enabled: Boolean) {
         if (isReleased()) return
         profilePrefs(profile).edit()
@@ -318,8 +362,23 @@ internal class AudioTuningController(
         applySurroundDecoder(profile)
     }
 
+    fun setSurroundDiffuseFront(profile: Int, amount: Int) {
+        if (isReleased()) return
+        profilePrefs(profile).edit()
+            .putInt(
+                DolbyConstants.PREF_SURROUND_DIFFUSE_FRONT,
+                amount.coerceIn(0, DolbyConstants.SURROUND_DIFFUSE_MAX)
+            )
+            .apply()
+        applySurroundDecoder(profile)
+    }
+
     private fun applySurroundDecoder(profile: Int) {
-        DolbyHalBridge.applySurroundDecoder(context, isSurroundDecoderEnabled(profile))
+        DolbyHalBridge.applySurroundDecoder(
+            context,
+            isSurroundDecoderEnabled(profile),
+            getSurroundDiffuseFront(profile)
+        )
     }
 
     // --- Volume leveler target level (vendor HAL tuning) ---
@@ -368,7 +427,18 @@ internal class AudioTuningController(
             DolbyConstants.PREF_ADV_BASS_CUTOFF, DolbyConstants.ADV_BASS_CUTOFF_STOCK_HZ
         ).coerceIn(DolbyConstants.ADV_BASS_CUTOFF_MIN_HZ, DolbyConstants.ADV_BASS_CUTOFF_MAX_HZ)
 
-    fun setAdvancedBass(profile: Int, enabled: Boolean, boostPercent: Int, cutoffHz: Int) {
+    fun getAdvancedBassWidth(profile: Int): Int =
+        profilePrefs(profile).getInt(
+            DolbyConstants.PREF_ADV_BASS_WIDTH, DolbyConstants.ADV_BASS_WIDTH_STOCK
+        ).coerceIn(DolbyConstants.ADV_BASS_WIDTH_MIN, DolbyConstants.ADV_BASS_WIDTH_MAX)
+
+    fun setAdvancedBass(
+        profile: Int,
+        enabled: Boolean,
+        boostPercent: Int,
+        cutoffHz: Int,
+        width: Int = getAdvancedBassWidth(profile)
+    ) {
         if (isReleased()) return
         profilePrefs(profile).edit()
             .putBoolean(DolbyConstants.PREF_ADV_BASS_ENABLED, enabled)
@@ -379,16 +449,25 @@ internal class AudioTuningController(
                     DolbyConstants.ADV_BASS_CUTOFF_MIN_HZ, DolbyConstants.ADV_BASS_CUTOFF_MAX_HZ
                 )
             )
+            .putInt(
+                DolbyConstants.PREF_ADV_BASS_WIDTH,
+                width.coerceIn(DolbyConstants.ADV_BASS_WIDTH_MIN, DolbyConstants.ADV_BASS_WIDTH_MAX)
+            )
             .apply()
         applyAdvancedBass(profile)
     }
 
     private fun applyAdvancedBass(profile: Int) {
+        val enabled = isAdvancedBassEnabled(profile)
+        if (enabled) {
+            setDapInt(DsParam.BASS_ENHANCER_ENABLE, profile, 1)
+        }
         DolbyHalBridge.applyAdvancedBass(
             context,
-            isAdvancedBassEnabled(profile),
+            enabled,
             getAdvancedBassBoost(profile),
-            getAdvancedBassCutoff(profile)
+            getAdvancedBassCutoff(profile),
+            getAdvancedBassWidth(profile)
         )
     }
 
@@ -427,6 +506,17 @@ internal class AudioTuningController(
         profilePrefs(profile).getInt(DolbyConstants.PREF_REGULATOR_OVERDRIVE_DB, 0)
             .coerceIn(0, DolbyConstants.REGULATOR_OVERDRIVE_MAX_DB)
 
+    fun isRegulatorTimbreEnabled(profile: Int): Boolean =
+        profilePrefs(profile).getBoolean(DolbyConstants.PREF_REGULATOR_TIMBRE, true)
+
+    fun getRegulatorSibilance(profile: Int): Int =
+        profilePrefs(profile).getInt(DolbyConstants.PREF_REGULATOR_SIBILANCE, 50)
+            .coerceIn(0, 100)
+
+    fun getRegulatorStress(profile: Int): Int =
+        profilePrefs(profile).getInt(DolbyConstants.PREF_REGULATOR_STRESS, 50)
+            .coerceIn(0, 100)
+
     fun setRegulator(profile: Int, enabled: Boolean, overdriveDb: Int) {
         if (isReleased()) return
         profilePrefs(profile).edit()
@@ -439,11 +529,24 @@ internal class AudioTuningController(
         applyRegulator(profile)
     }
 
+    fun setRegulatorExtras(profile: Int, timbre: Boolean, sibilance: Int, stress: Int) {
+        if (isReleased()) return
+        profilePrefs(profile).edit()
+            .putBoolean(DolbyConstants.PREF_REGULATOR_TIMBRE, timbre)
+            .putInt(DolbyConstants.PREF_REGULATOR_SIBILANCE, sibilance.coerceIn(0, 100))
+            .putInt(DolbyConstants.PREF_REGULATOR_STRESS, stress.coerceIn(0, 100))
+            .apply()
+        applyRegulator(profile)
+    }
+
     private fun applyRegulator(profile: Int) {
         DolbyHalBridge.applyRegulator(
             context,
             isRegulatorEnabled(profile),
-            getRegulatorOverdriveDb(profile)
+            getRegulatorOverdriveDb(profile),
+            isRegulatorTimbreEnabled(profile),
+            getRegulatorSibilance(profile),
+            getRegulatorStress(profile)
         )
     }
 
@@ -452,16 +555,200 @@ internal class AudioTuningController(
     fun isHearingProtectionEnabled(profile: Int): Boolean =
         profilePrefs(profile).getBoolean(DolbyConstants.PREF_HEARING_PROTECTION, false)
 
+    fun getHpRmsTargetRaw(profile: Int): Int =
+        profilePrefs(profile).getInt(
+            DolbyConstants.PREF_HP_RMS_TARGET, DolbyConstants.HP_RMS_TARGET_STOCK_RAW
+        ).coerceIn(DolbyConstants.HP_RMS_TARGET_MIN_RAW, DolbyConstants.HP_RMS_TARGET_MAX_RAW)
+
+    fun getHpAttackMs(profile: Int): Int =
+        profilePrefs(profile).getInt(
+            DolbyConstants.PREF_HP_ATTACK_MS, DolbyConstants.HP_ATTACK_STOCK_MS
+        ).coerceIn(DolbyConstants.HP_ATTACK_MIN_MS, DolbyConstants.HP_ATTACK_MAX_MS)
+
+    fun getHpReleaseMs(profile: Int): Int =
+        profilePrefs(profile).getInt(
+            DolbyConstants.PREF_HP_RELEASE_MS, DolbyConstants.HP_RELEASE_STOCK_MS
+        ).coerceIn(DolbyConstants.HP_RELEASE_MIN_MS, DolbyConstants.HP_RELEASE_MAX_MS)
+
     fun setHearingProtectionEnabled(profile: Int, enabled: Boolean) {
         if (isReleased()) return
         profilePrefs(profile).edit().putBoolean(DolbyConstants.PREF_HEARING_PROTECTION, enabled).apply()
         applyHearingProtection(profile)
     }
 
+    fun setHearingProtectionDynamics(profile: Int, rmsTargetRaw: Int, attackMs: Int, releaseMs: Int) {
+        if (isReleased()) return
+        profilePrefs(profile).edit()
+            .putInt(
+                DolbyConstants.PREF_HP_RMS_TARGET,
+                rmsTargetRaw.coerceIn(
+                    DolbyConstants.HP_RMS_TARGET_MIN_RAW, DolbyConstants.HP_RMS_TARGET_MAX_RAW
+                )
+            )
+            .putInt(
+                DolbyConstants.PREF_HP_ATTACK_MS,
+                attackMs.coerceIn(DolbyConstants.HP_ATTACK_MIN_MS, DolbyConstants.HP_ATTACK_MAX_MS)
+            )
+            .putInt(
+                DolbyConstants.PREF_HP_RELEASE_MS,
+                releaseMs.coerceIn(DolbyConstants.HP_RELEASE_MIN_MS, DolbyConstants.HP_RELEASE_MAX_MS)
+            )
+            .apply()
+        applyHearingProtection(profile)
+    }
+
     private fun applyHearingProtection(profile: Int) {
         val enabled = isHearingProtectionEnabled(profile)
         setDapInt(DsParam.HEARING_PROTECTION_ENABLE, profile, if (enabled) 1 else 0)
-        DolbyHalBridge.applyHearingProtection(context, enabled)
+        DolbyHalBridge.applyHearingProtection(
+            context,
+            enabled,
+            getHpRmsTargetRaw(profile),
+            getHpAttackMs(profile),
+            getHpReleaseMs(profile)
+        )
+    }
+
+    // --- Headphone virtualizer tuning ---
+
+    fun getHpVirtMode(profile: Int): Int =
+        profilePrefs(profile).getInt(DolbyConstants.PREF_HP_VIRT_MODE, 0).coerceIn(0, 1)
+
+    fun getHpVirtLrAngle(profile: Int): Int =
+        profilePrefs(profile).getInt(DolbyConstants.PREF_HP_VIRT_LR_ANGLE, 45)
+            .coerceIn(0, DolbyConstants.HP_VIRT_LR_ANGLE_MAX)
+
+    fun getHpVirtStartBand(profile: Int): Int =
+        profilePrefs(profile).getInt(DolbyConstants.PREF_HP_VIRT_START_BAND, 0)
+            .coerceIn(0, DolbyConstants.HP_VIRT_START_BAND_MAX)
+
+    fun setHeadphoneVirtualizerTuning(profile: Int, mode: Int, lrAngle: Int, startBand: Int) {
+        if (isReleased()) return
+        profilePrefs(profile).edit()
+            .putInt(DolbyConstants.PREF_HP_VIRT_MODE, mode.coerceIn(0, 1))
+            .putInt(
+                DolbyConstants.PREF_HP_VIRT_LR_ANGLE,
+                lrAngle.coerceIn(0, DolbyConstants.HP_VIRT_LR_ANGLE_MAX)
+            )
+            .putInt(
+                DolbyConstants.PREF_HP_VIRT_START_BAND,
+                startBand.coerceIn(0, DolbyConstants.HP_VIRT_START_BAND_MAX)
+            )
+            .apply()
+        applyHeadphoneVirtualizerTuning(profile)
+    }
+
+    private fun applyHeadphoneVirtualizerTuning(profile: Int) {
+        DolbyHalBridge.applyHeadphoneVirtualizerTuning(
+            context,
+            getHpVirtMode(profile),
+            getHpVirtLrAngle(profile),
+            getHpVirtStartBand(profile)
+        )
+    }
+
+    // --- Volume modeler ---
+
+    fun isVolumeModelerEnabled(profile: Int): Boolean =
+        profilePrefs(profile).getBoolean(DolbyConstants.PREF_VOLUME_MODELER_ENABLED, false)
+
+    fun setVolumeModelerEnabled(profile: Int, enabled: Boolean) {
+        if (isReleased()) return
+        profilePrefs(profile).edit()
+            .putBoolean(DolbyConstants.PREF_VOLUME_MODELER_ENABLED, enabled)
+            .apply()
+        applyVolumeModeler(profile)
+    }
+
+    private fun applyVolumeModeler(profile: Int) {
+        DolbyHalBridge.applyVolumeModeler(context, isVolumeModelerEnabled(profile))
+    }
+
+    // --- MI steering ---
+
+    fun isMiSteeringEnabled(profile: Int): Boolean =
+        profilePrefs(profile).getBoolean(DolbyConstants.PREF_MI_STEERING_ENABLED, false)
+
+    fun setMiSteeringEnabled(profile: Int, enabled: Boolean) {
+        if (isReleased()) return
+        profilePrefs(profile).edit()
+            .putBoolean(DolbyConstants.PREF_MI_STEERING_ENABLED, enabled)
+            .apply()
+        applyMiSteering(profile)
+    }
+
+    private fun applyMiSteering(profile: Int) {
+        DolbyHalBridge.applyMiSteering(context, isMiSteeringEnabled(profile))
+    }
+
+    // --- Endpoint calibration boost (global per endpoint category) ---
+
+    fun getCalibrationBoostSpeaker(): Int =
+        defaultPrefs.getInt(DolbyConstants.PREF_CALIBRATION_BOOST_SPEAKER, 0)
+            .coerceIn(0, DolbyConstants.CALIBRATION_BOOST_MAX)
+
+    fun getCalibrationBoostHeadphone(): Int =
+        defaultPrefs.getInt(DolbyConstants.PREF_CALIBRATION_BOOST_HEADPHONE, 0)
+            .coerceIn(0, DolbyConstants.CALIBRATION_BOOST_MAX)
+
+    fun getCalibrationBoostBluetooth(): Int =
+        defaultPrefs.getInt(DolbyConstants.PREF_CALIBRATION_BOOST_BT, 0)
+            .coerceIn(0, DolbyConstants.CALIBRATION_BOOST_MAX)
+
+    fun setCalibrationBoostSpeaker(boost: Int) {
+        defaultPrefs.edit()
+            .putInt(
+                DolbyConstants.PREF_CALIBRATION_BOOST_SPEAKER,
+                boost.coerceIn(0, DolbyConstants.CALIBRATION_BOOST_MAX)
+            )
+            .apply()
+        applyCalibrationBoost()
+    }
+
+    fun setCalibrationBoostHeadphone(boost: Int) {
+        defaultPrefs.edit()
+            .putInt(
+                DolbyConstants.PREF_CALIBRATION_BOOST_HEADPHONE,
+                boost.coerceIn(0, DolbyConstants.CALIBRATION_BOOST_MAX)
+            )
+            .apply()
+        applyCalibrationBoost()
+    }
+
+    fun setCalibrationBoostBluetooth(boost: Int) {
+        defaultPrefs.edit()
+            .putInt(
+                DolbyConstants.PREF_CALIBRATION_BOOST_BT,
+                boost.coerceIn(0, DolbyConstants.CALIBRATION_BOOST_MAX)
+            )
+            .apply()
+        applyCalibrationBoost()
+    }
+
+    fun applyCalibrationBoost() {
+        val boost = when (activeDeviceCategory()) {
+            AudioDeviceCategory.SPEAKER -> getCalibrationBoostSpeaker()
+            AudioDeviceCategory.WIRED, AudioDeviceCategory.USB -> getCalibrationBoostHeadphone()
+            AudioDeviceCategory.BLUETOOTH -> getCalibrationBoostBluetooth()
+            else -> 0
+        }
+        DolbyHalBridge.applyCalibrationBoost(context, boost)
+    }
+
+    // --- Spatial master (PREF_SPATIAL_AUDIO_ENABLED) ---
+
+    fun isSpatialAudioEnabled(): Boolean =
+        defaultPrefs.getBoolean(DolbyConstants.PREF_SPATIAL_AUDIO_ENABLED, false)
+
+    fun setSpatialAudioEnabled(enabled: Boolean) {
+        defaultPrefs.edit()
+            .putBoolean(DolbyConstants.PREF_SPATIAL_AUDIO_ENABLED, enabled)
+            .apply()
+        applySpatialMaster()
+    }
+
+    private fun applySpatialMaster(@Suppress("UNUSED_PARAMETER") profile: Int = -1) {
+        audioEngine.applySpatialProcessing(forceCrossfeed = isSpatialAudioEnabled())
     }
 
     // --- DSP volume boost (global) ---

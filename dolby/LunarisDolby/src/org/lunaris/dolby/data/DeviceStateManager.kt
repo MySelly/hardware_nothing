@@ -121,6 +121,47 @@ class DeviceStateManager(private val context: Context) {
             }
             editor.putBoolean(KEY_HEARING, repository.isHearingProtectionEnabled(profile))
 
+            editor.putBoolean(KEY_ADV_BASS, repository.isAdvancedBassEnabled(profile))
+            editor.putInt(KEY_ADV_BASS_BOOST, repository.getAdvancedBassBoost(profile))
+            editor.putInt(KEY_ADV_BASS_CUTOFF, repository.getAdvancedBassCutoff(profile))
+            editor.putInt(KEY_ADV_BASS_WIDTH, repository.getAdvancedBassWidth(profile))
+            editor.putBoolean(KEY_REGULATOR, repository.isRegulatorEnabled(profile))
+            editor.putInt(KEY_REGULATOR_OVERDRIVE, repository.getRegulatorOverdriveDb(profile))
+            editor.putBoolean(KEY_REGULATOR_TIMBRE, repository.isRegulatorTimbreEnabled(profile))
+            editor.putInt(KEY_REGULATOR_SIBILANCE, repository.getRegulatorSibilance(profile))
+            editor.putInt(KEY_REGULATOR_STRESS, repository.getRegulatorStress(profile))
+            editor.putBoolean(KEY_SURROUND_DECODER, repository.isSurroundDecoderEnabled(profile))
+            editor.putInt(KEY_SURROUND_DIFFUSE, repository.getSurroundDiffuseFront(profile))
+            editor.putBoolean(KEY_DIALOGUE_DUCKING, repository.isDialogueDuckingEnabled(profile))
+            editor.putInt(KEY_DIALOGUE_DUCKING_AMT, repository.getDialogueDuckingAmount(profile))
+            editor.putBoolean(KEY_REVERB, repository.isReverbSuppressionEnabled(profile))
+            editor.putInt(KEY_REVERB_AMT, repository.getReverbSuppressionAmount(profile))
+            editor.putBoolean(KEY_LEVELER_TARGET, repository.isLevelerTargetEnabled(profile))
+            editor.putInt(KEY_LEVELER_TARGET_DB, repository.getLevelerTargetDb(profile))
+            editor.putBoolean(KEY_GRAPHIC_EQ, repository.isGraphicEqEnabled(profile))
+            editor.putBoolean(KEY_DSP_VOLUME, repository.isDspVolumeBoostEnabled())
+            editor.putInt(KEY_DSP_VOLUME_STRENGTH, repository.getDspVolumeBoostStrength())
+            editor.putBoolean(KEY_VOLUME_MODELER, repository.isVolumeModelerEnabled(profile))
+            editor.putInt(KEY_VB_MODE, repository.getVirtualBassMode(profile))
+            editor.putInt(KEY_VB_OVERALL, repository.getVirtualBassOverallGain(profile))
+            editor.putInt(KEY_VB_SLOPE, repository.getVirtualBassSlopeGain(profile))
+            editor.putInt(KEY_HP_VIRT_MODE, repository.getHpVirtMode(profile))
+            editor.putInt(KEY_HP_VIRT_ANGLE, repository.getHpVirtLrAngle(profile))
+            editor.putInt(KEY_HP_VIRT_BAND, repository.getHpVirtStartBand(profile))
+            editor.putInt(KEY_HP_RMS, repository.getHpRmsTargetRaw(profile))
+            editor.putInt(KEY_HP_ATTACK, repository.getHpAttackMs(profile))
+            editor.putInt(KEY_HP_RELEASE, repository.getHpReleaseMs(profile))
+            editor.putBoolean(KEY_MI_STEERING, repository.isMiSteeringEnabled(profile))
+            editor.putBoolean(KEY_SPATIAL, repository.isSpatialAudioEnabled())
+            editor.putInt(KEY_CAL_SPEAKER, repository.getCalibrationBoostSpeaker())
+            editor.putInt(KEY_CAL_HEADPHONE, repository.getCalibrationBoostHeadphone())
+            editor.putInt(KEY_CAL_BT, repository.getCalibrationBoostBluetooth())
+            val engine = repository.getAudioEnginePreferences()
+            editor.putBoolean(KEY_CROSSFEED, engine.isCrossfeedEnabled())
+            editor.putInt(KEY_CROSSFEED_STRENGTH, engine.getCrossfeedStrength())
+            editor.putBoolean(KEY_STEREO_BALANCE, engine.isStereoBalanceEnabled())
+            editor.putInt(KEY_STEREO_BALANCE_VAL, engine.getStereoBalance())
+
             val gains = repository.getEqualizerGains(profile, BandMode.TWENTY_BAND)
         editor.putInt(KEY_EQ_BAND_COUNT, gains.size)
         editor.putString(KEY_EQ_GAINS, gains.joinToString(",") { it.gain.toString() })
@@ -238,6 +279,126 @@ class DeviceStateManager(private val context: Context) {
             if (prefs.contains(KEY_HEARING)) {
                 repository.setHearingProtectionEnabled(profile, prefs.getBoolean(KEY_HEARING, false))
             }
+            if (prefs.contains(KEY_ADV_BASS)) {
+                repository.setAdvancedBass(
+                    profile,
+                    prefs.getBoolean(KEY_ADV_BASS, false),
+                    prefs.getInt(KEY_ADV_BASS_BOOST, 40),
+                    prefs.getInt(KEY_ADV_BASS_CUTOFF, DolbyConstants.ADV_BASS_CUTOFF_STOCK_HZ),
+                    prefs.getInt(KEY_ADV_BASS_WIDTH, DolbyConstants.ADV_BASS_WIDTH_STOCK)
+                )
+            }
+            if (prefs.contains(KEY_REGULATOR)) {
+                repository.setRegulator(
+                    profile,
+                    prefs.getBoolean(KEY_REGULATOR, true),
+                    prefs.getInt(KEY_REGULATOR_OVERDRIVE, 0)
+                )
+            }
+            if (prefs.contains(KEY_REGULATOR_TIMBRE)) {
+                repository.setRegulatorExtras(
+                    profile,
+                    prefs.getBoolean(KEY_REGULATOR_TIMBRE, true),
+                    prefs.getInt(KEY_REGULATOR_SIBILANCE, 50),
+                    prefs.getInt(KEY_REGULATOR_STRESS, 50)
+                )
+            }
+            if (prefs.contains(KEY_SURROUND_DECODER)) {
+                repository.setSurroundDecoderEnabled(profile, prefs.getBoolean(KEY_SURROUND_DECODER, true))
+            }
+            if (prefs.contains(KEY_SURROUND_DIFFUSE)) {
+                repository.setSurroundDiffuseFront(profile, prefs.getInt(KEY_SURROUND_DIFFUSE, 0))
+            }
+            if (prefs.contains(KEY_DIALOGUE_DUCKING)) {
+                repository.setDialogueDucking(
+                    profile,
+                    prefs.getBoolean(KEY_DIALOGUE_DUCKING, false),
+                    prefs.getInt(KEY_DIALOGUE_DUCKING_AMT, 8)
+                )
+            }
+            if (prefs.contains(KEY_REVERB)) {
+                repository.setReverbSuppression(
+                    profile,
+                    prefs.getBoolean(KEY_REVERB, false),
+                    prefs.getInt(KEY_REVERB_AMT, 9)
+                )
+            }
+            if (prefs.contains(KEY_LEVELER_TARGET)) {
+                repository.setLevelerTarget(
+                    profile,
+                    prefs.getBoolean(KEY_LEVELER_TARGET, false),
+                    prefs.getInt(KEY_LEVELER_TARGET_DB, DolbyConstants.LEVELER_TARGET_STOCK_DB)
+                )
+            }
+            if (prefs.contains(KEY_GRAPHIC_EQ)) {
+                repository.setGraphicEqEnabled(profile, prefs.getBoolean(KEY_GRAPHIC_EQ, true))
+            }
+            if (prefs.contains(KEY_DSP_VOLUME)) {
+                repository.setDspVolumeBoost(
+                    prefs.getBoolean(KEY_DSP_VOLUME, false),
+                    prefs.getInt(KEY_DSP_VOLUME_STRENGTH, 0)
+                )
+            }
+            if (prefs.contains(KEY_VOLUME_MODELER)) {
+                repository.setVolumeModelerEnabled(profile, prefs.getBoolean(KEY_VOLUME_MODELER, false))
+            }
+            if (prefs.contains(KEY_VB_MODE)) {
+                repository.setVirtualBassDetails(
+                    profile,
+                    prefs.getInt(KEY_VB_MODE, DolbyConstants.VB_MODE_STOCK),
+                    prefs.getInt(KEY_VB_OVERALL, DolbyConstants.VB_OVERALL_GAIN_STOCK),
+                    prefs.getInt(KEY_VB_SLOPE, DolbyConstants.VB_SLOPE_GAIN_STOCK)
+                )
+            }
+            if (prefs.contains(KEY_HP_VIRT_MODE)) {
+                repository.setHeadphoneVirtualizerTuning(
+                    profile,
+                    prefs.getInt(KEY_HP_VIRT_MODE, 0),
+                    prefs.getInt(KEY_HP_VIRT_ANGLE, 45),
+                    prefs.getInt(KEY_HP_VIRT_BAND, 0)
+                )
+            }
+            if (prefs.contains(KEY_HP_RMS)) {
+                repository.setHearingProtectionDynamics(
+                    profile,
+                    prefs.getInt(KEY_HP_RMS, DolbyConstants.HP_RMS_TARGET_STOCK_RAW),
+                    prefs.getInt(KEY_HP_ATTACK, DolbyConstants.HP_ATTACK_STOCK_MS),
+                    prefs.getInt(KEY_HP_RELEASE, DolbyConstants.HP_RELEASE_STOCK_MS)
+                )
+            }
+            if (prefs.contains(KEY_MI_STEERING)) {
+                repository.setMiSteeringEnabled(profile, prefs.getBoolean(KEY_MI_STEERING, false))
+            }
+            if (prefs.contains(KEY_SPATIAL)) {
+                repository.setSpatialAudioEnabled(prefs.getBoolean(KEY_SPATIAL, false))
+            }
+            if (prefs.contains(KEY_CAL_SPEAKER)) {
+                repository.setCalibrationBoostSpeaker(prefs.getInt(KEY_CAL_SPEAKER, 0))
+            }
+            if (prefs.contains(KEY_CAL_HEADPHONE)) {
+                repository.setCalibrationBoostHeadphone(prefs.getInt(KEY_CAL_HEADPHONE, 0))
+            }
+            if (prefs.contains(KEY_CAL_BT)) {
+                repository.setCalibrationBoostBluetooth(prefs.getInt(KEY_CAL_BT, 0))
+            }
+            if (prefs.contains(KEY_CROSSFEED)) {
+                val engine = repository.getAudioEnginePreferences()
+                engine.setBoolean(DolbyConstants.PREF_CROSSFEED_ENABLED, prefs.getBoolean(KEY_CROSSFEED, false))
+                if (prefs.contains(KEY_CROSSFEED_STRENGTH)) {
+                    context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE).edit()
+                        .putInt(DolbyConstants.PREF_CROSSFEED_STRENGTH, prefs.getInt(KEY_CROSSFEED_STRENGTH, 40))
+                        .apply()
+                }
+            }
+            if (prefs.contains(KEY_STEREO_BALANCE)) {
+                val engine = repository.getAudioEnginePreferences()
+                engine.setBoolean(DolbyConstants.PREF_STEREO_BALANCE_ENABLED, prefs.getBoolean(KEY_STEREO_BALANCE, false))
+                if (prefs.contains(KEY_STEREO_BALANCE_VAL)) {
+                    context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE).edit()
+                        .putInt(DolbyConstants.PREF_STEREO_BALANCE_VALUE, prefs.getInt(KEY_STEREO_BALANCE_VAL, 0))
+                        .apply()
+                }
+            }
 
             DolbyConstants.dlog(TAG,
                 "Snapshot restored for device=$deviceKey profile=$profile v=$storedVersion")
@@ -325,7 +486,7 @@ class DeviceStateManager(private val context: Context) {
     companion object {
         private const val TAG = "DeviceStateManager"
 
-        const val SNAPSHOT_VERSION = 3
+        const val SNAPSHOT_VERSION = 4
 
         val OUTPUT_DEVICE_PRIORITY = listOf(
             AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
@@ -368,6 +529,45 @@ class DeviceStateManager(private val context: Context) {
         private const val KEY_VIRTUAL_BASS_SPEAKER = "virtual_bass_speaker"
         private const val KEY_VIRTUAL_BASS_BLUETOOTH = "virtual_bass_bluetooth"
         private const val KEY_HEARING = "hearing_protection"
+        private const val KEY_ADV_BASS = "adv_bass"
+        private const val KEY_ADV_BASS_BOOST = "adv_bass_boost"
+        private const val KEY_ADV_BASS_CUTOFF = "adv_bass_cutoff"
+        private const val KEY_ADV_BASS_WIDTH = "adv_bass_width"
+        private const val KEY_REGULATOR = "regulator"
+        private const val KEY_REGULATOR_OVERDRIVE = "regulator_overdrive"
+        private const val KEY_REGULATOR_TIMBRE = "regulator_timbre"
+        private const val KEY_REGULATOR_SIBILANCE = "regulator_sibilance"
+        private const val KEY_REGULATOR_STRESS = "regulator_stress"
+        private const val KEY_SURROUND_DECODER = "surround_decoder"
+        private const val KEY_SURROUND_DIFFUSE = "surround_diffuse"
+        private const val KEY_DIALOGUE_DUCKING = "dialogue_ducking"
+        private const val KEY_DIALOGUE_DUCKING_AMT = "dialogue_ducking_amt"
+        private const val KEY_REVERB = "reverb"
+        private const val KEY_REVERB_AMT = "reverb_amt"
+        private const val KEY_LEVELER_TARGET = "leveler_target"
+        private const val KEY_LEVELER_TARGET_DB = "leveler_target_db"
+        private const val KEY_GRAPHIC_EQ = "graphic_eq"
+        private const val KEY_DSP_VOLUME = "dsp_volume"
+        private const val KEY_DSP_VOLUME_STRENGTH = "dsp_volume_strength"
+        private const val KEY_VOLUME_MODELER = "volume_modeler"
+        private const val KEY_VB_MODE = "vb_mode"
+        private const val KEY_VB_OVERALL = "vb_overall"
+        private const val KEY_VB_SLOPE = "vb_slope"
+        private const val KEY_HP_VIRT_MODE = "hp_virt_mode"
+        private const val KEY_HP_VIRT_ANGLE = "hp_virt_angle"
+        private const val KEY_HP_VIRT_BAND = "hp_virt_band"
+        private const val KEY_HP_RMS = "hp_rms"
+        private const val KEY_HP_ATTACK = "hp_attack"
+        private const val KEY_HP_RELEASE = "hp_release"
+        private const val KEY_MI_STEERING = "mi_steering"
+        private const val KEY_SPATIAL = "spatial"
+        private const val KEY_CAL_SPEAKER = "cal_speaker"
+        private const val KEY_CAL_HEADPHONE = "cal_headphone"
+        private const val KEY_CAL_BT = "cal_bt"
+        private const val KEY_CROSSFEED = "crossfeed"
+        private const val KEY_CROSSFEED_STRENGTH = "crossfeed_strength"
+        private const val KEY_STEREO_BALANCE = "stereo_balance"
+        private const val KEY_STEREO_BALANCE_VAL = "stereo_balance_val"
         private const val KEY_EQ_BAND_COUNT = "eq_band_count"
         private const val KEY_EQ_GAINS = "eq_gains"
     }

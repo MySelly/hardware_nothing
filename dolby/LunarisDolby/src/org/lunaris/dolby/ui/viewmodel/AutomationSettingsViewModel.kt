@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import org.lunaris.dolby.DolbyConstants
+import org.lunaris.dolby.data.DolbyAutomationCoordinator
 import org.lunaris.dolby.data.DolbyRepository
 import org.lunaris.dolby.data.MediaContentRulesManager
 import org.lunaris.dolby.data.SleepTimerManager
@@ -95,6 +96,7 @@ class AutomationSettingsViewModel(application: Application) : AndroidViewModel(a
     fun setGameLatency(enabled: Boolean) {
         prefs.edit().putBoolean(DolbyConstants.PREF_GAME_LATENCY_MODE, enabled).apply()
         _uiState.update { it.copy(gameLatency = enabled) }
+        DolbyAutomationCoordinator.applyGameLatencyMode(getApplication())
     }
 
     fun setFocusMode(enabled: Boolean) {
@@ -117,6 +119,7 @@ class AutomationSettingsViewModel(application: Application) : AndroidViewModel(a
     fun setSafeLimit(limit: Float) {
         prefs.edit().putInt(DolbyConstants.PREF_SAFE_LISTENING_LIMIT, limit.toInt()).apply()
         _uiState.update { it.copy(safeLimit = limit) }
+        DolbyAutomationCoordinator.enforceSafeListeningLimit(getApplication())
     }
 
     fun setSleepMinutes(minutes: Int) {

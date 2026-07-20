@@ -258,6 +258,16 @@ fun PowerUserAudioScreen(
 
             item { AudioSectionTitle(stringResource(R.string.spatial_section)) }
             item {
+                var spatialMaster by remember {
+                    mutableStateOf(repository.isSpatialAudioEnabled())
+                }
+                EngineSwitch(stringResource(R.string.spatial_audio_master), spatialMaster) {
+                    spatialMaster = it
+                    repository.setSpatialAudioEnabled(it)
+                    repository.refreshSpatialAndGeq(profile)
+                }
+            }
+            item {
                 EngineSwitch(stringResource(R.string.stereo_balance_enabled), stereoBalanceOn) {
                     stereoBalanceOn = it
                     prefs.setBoolean(DolbyConstants.PREF_STEREO_BALANCE_ENABLED, it)
@@ -331,6 +341,49 @@ fun PowerUserAudioScreen(
                         valueRange = -60f..60f
                     )
                 }
+            }
+
+            item { AudioSectionTitle(stringResource(R.string.calibration_boost_section)) }
+            item {
+                var calSpeaker by remember {
+                    mutableFloatStateOf(repository.getCalibrationBoostSpeaker().toFloat())
+                }
+                var calHp by remember {
+                    mutableFloatStateOf(repository.getCalibrationBoostHeadphone().toFloat())
+                }
+                var calBt by remember {
+                    mutableFloatStateOf(repository.getCalibrationBoostBluetooth().toFloat())
+                }
+                Text(stringResource(R.string.calibration_boost_speaker, calSpeaker.toInt()))
+                Slider(
+                    value = calSpeaker,
+                    onValueChange = {
+                        calSpeaker = it
+                        repository.setCalibrationBoostSpeaker(it.toInt())
+                    },
+                    valueRange = 0f..192f,
+                    steps = 23
+                )
+                Text(stringResource(R.string.calibration_boost_headphone, calHp.toInt()))
+                Slider(
+                    value = calHp,
+                    onValueChange = {
+                        calHp = it
+                        repository.setCalibrationBoostHeadphone(it.toInt())
+                    },
+                    valueRange = 0f..192f,
+                    steps = 23
+                )
+                Text(stringResource(R.string.calibration_boost_bt, calBt.toInt()))
+                Slider(
+                    value = calBt,
+                    onValueChange = {
+                        calBt = it
+                        repository.setCalibrationBoostBluetooth(it.toInt())
+                    },
+                    valueRange = 0f..192f,
+                    steps = 23
+                )
             }
 
             item { AudioSectionTitle(stringResource(R.string.eq_ui_section)) }

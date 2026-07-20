@@ -39,25 +39,55 @@ object DolbyHalBridge {
         DolbyConstants.dlog(TAG, "surround_boost=$boost enabled=$enabled")
     }
 
-    fun applyHearingProtection(context: Context, enabled: Boolean) {
+    fun applyHearingProtection(
+        context: Context,
+        enabled: Boolean,
+        rmsTargetRaw: Int = DolbyConstants.HP_RMS_TARGET_STOCK_RAW,
+        attackMs: Int = DolbyConstants.HP_ATTACK_STOCK_MS,
+        releaseMs: Int = DolbyConstants.HP_RELEASE_STOCK_MS
+    ) {
         val flag = if (enabled) 1 else 0
+        val target = rmsTargetRaw.coerceIn(DolbyConstants.HP_RMS_TARGET_MIN_RAW, DolbyConstants.HP_RMS_TARGET_MAX_RAW)
+        val attack = attackMs.coerceIn(DolbyConstants.HP_ATTACK_MIN_MS, DolbyConstants.HP_ATTACK_MAX_MS)
+        val release = releaseMs.coerceIn(DolbyConstants.HP_RELEASE_MIN_MS, DolbyConstants.HP_RELEASE_MAX_MS)
         setParameters(context, listOf(
             "dolby_hearing_protection=$flag",
             "hearing_protection_enable=$flag",
-            "hearing-protection-enable=$flag"
+            "hearing-protection-enable=$flag",
+            "hearing_protection_rms_attenuation_target=$target",
+            "hearing-protection-rms-attenuation-target=$target",
+            "hearing_protection_attenuation_attack_time=$attack",
+            "hearing-protection-attenuation-attack-time=$attack",
+            "hearing_protection_attenuation_release_time=$release",
+            "hearing-protection-attenuation-release-time=$release"
         ))
-        DolbyConstants.dlog(TAG, "hearing_protection=$flag")
+        DolbyConstants.dlog(TAG, "hearing_protection=$flag target=$target attack=$attack release=$release")
     }
 
-    fun applyVirtualBassHal(context: Context, enabled: Boolean) {
+    fun applyVirtualBassHal(
+        context: Context,
+        enabled: Boolean,
+        mode: Int = DolbyConstants.VB_MODE_STOCK,
+        overallGain: Int = DolbyConstants.VB_OVERALL_GAIN_STOCK,
+        slopeGain: Int = DolbyConstants.VB_SLOPE_GAIN_STOCK
+    ) {
         val flag = if (enabled) 1 else 0
+        val vbMode = mode.coerceIn(0, DolbyConstants.VB_MODE_MAX)
+        val overall = overallGain.coerceIn(DolbyConstants.VB_OVERALL_GAIN_MIN, DolbyConstants.VB_OVERALL_GAIN_MAX)
+        val slope = slopeGain.coerceIn(DolbyConstants.VB_SLOPE_GAIN_MIN, DolbyConstants.VB_SLOPE_GAIN_MAX)
         setParameters(context, listOf(
             "dolby_virtual_bass=$flag",
             "virtual_bass_process_enable=$flag",
             "virtual-bass-process-enable=$flag",
-            "virtual_bass_process=$flag"
+            "virtual_bass_process=$flag",
+            "virtual_bass_mode=$vbMode",
+            "virtual-bass-mode=$vbMode",
+            "virtual_bass_overall_gain=$overall",
+            "virtual-bass-overall-gain=$overall",
+            "virtual_bass_slope_gain=$slope",
+            "virtual-bass-slope-gain=$slope"
         ))
-        DolbyConstants.dlog(TAG, "virtual_bass=$flag")
+        DolbyConstants.dlog(TAG, "virtual_bass=$flag mode=$vbMode overall=$overall slope=$slope")
     }
 
     fun applyReverbSuppression(context: Context, enabled: Boolean, amount: Int) {
@@ -72,7 +102,14 @@ object DolbyHalBridge {
         DolbyConstants.dlog(TAG, "reverb_suppression enable=$flag amount=$amt")
     }
 
-    fun applyAdvancedBass(context: Context, enabled: Boolean, boostPercent: Int, cutoffHz: Int) {
+    fun applyAdvancedBass(
+        context: Context,
+        enabled: Boolean,
+        boostPercent: Int,
+        cutoffHz: Int,
+        width: Int = DolbyConstants.ADV_BASS_WIDTH_STOCK
+    ) {
+        val flag = if (enabled) 1 else 0
         val rawBoost = if (enabled) {
             boostPercent.coerceIn(0, 100) * DolbyConstants.ADV_BASS_BOOST_RAW_MAX / 100
         } else {
@@ -83,13 +120,22 @@ object DolbyHalBridge {
         } else {
             DolbyConstants.ADV_BASS_CUTOFF_STOCK_HZ
         }
+        val widthVal = if (enabled) {
+            width.coerceIn(DolbyConstants.ADV_BASS_WIDTH_MIN, DolbyConstants.ADV_BASS_WIDTH_MAX)
+        } else {
+            DolbyConstants.ADV_BASS_WIDTH_STOCK
+        }
         setParameters(context, listOf(
+            "bass_enhancer_enable=$flag",
+            "bass-enhancer-enable=$flag",
             "bass_enhancer_boost=$rawBoost",
             "bass-enhancer-boost=$rawBoost",
             "bass_enhancer_cutoff_frequency=$cutoff",
-            "bass-enhancer-cutoff-frequency=$cutoff"
+            "bass-enhancer-cutoff-frequency=$cutoff",
+            "bass_enhancer_width=$widthVal",
+            "bass-enhancer-width=$widthVal"
         ))
-        DolbyConstants.dlog(TAG, "adv_bass enabled=$enabled boost=$rawBoost cutoff=$cutoff")
+        DolbyConstants.dlog(TAG, "adv_bass enabled=$enabled boost=$rawBoost cutoff=$cutoff width=$widthVal")
     }
 
     fun applyLevelerTarget(context: Context, enabled: Boolean, targetDb: Int) {
@@ -108,20 +154,47 @@ object DolbyHalBridge {
         DolbyConstants.dlog(TAG, "leveler_target enabled=$enabled db=$db raw=$raw")
     }
 
-    fun applySurroundDecoder(context: Context, enabled: Boolean) {
+    fun applySurroundDecoder(context: Context, enabled: Boolean, diffuseAmount: Int = 0) {
         val flag = if (enabled) 1 else 0
+        val diffuse = if (enabled) {
+            diffuseAmount.coerceIn(0, DolbyConstants.SURROUND_DIFFUSE_MAX)
+        } else {
+            0
+        }
         setParameters(context, listOf(
             "surround_decoder_enable=$flag",
             "surround-decoder-enable=$flag",
-            "dolby_surround_decoder=$flag"
+            "dolby_surround_decoder=$flag",
+            "surround_decoder_diffuse_relocating_to_front_amount=$diffuse",
+            "surround-decoder-diffuse-relocating-to-front-amount=$diffuse"
         ))
-        DolbyConstants.dlog(TAG, "surround_decoder=$flag")
+        DolbyConstants.dlog(TAG, "surround_decoder=$flag diffuse=$diffuse")
     }
 
-    fun applyRegulator(context: Context, enabled: Boolean, overdriveDb: Int) {
+    fun applyRegulator(
+        context: Context,
+        enabled: Boolean,
+        overdriveDb: Int,
+        timbrePreservation: Boolean = true,
+        sibilancePercent: Int = 50,
+        stressPercent: Int = 50
+    ) {
         val flag = if (enabled) 1 else 0
         val rawOverdrive = if (enabled) {
             overdriveDb.coerceIn(0, DolbyConstants.REGULATOR_OVERDRIVE_MAX_DB) * 16
+        } else {
+            0
+        }
+        val timbre = if (enabled && timbrePreservation) DolbyConstants.REGULATOR_TIMBRE_STOCK else 0
+        val sibilanceEnable = if (enabled && sibilancePercent > 0) 1 else 0
+        // Map 0-100 UI percent onto a representative raw band amount (stock ~ -400)
+        val sibilanceRaw = if (sibilanceEnable == 1) {
+            -(sibilancePercent.coerceIn(0, 100) * 432 / 100)
+        } else {
+            0
+        }
+        val stressRaw = if (enabled) {
+            (stressPercent.coerceIn(0, 100) * 240 / 100)
         } else {
             0
         }
@@ -129,9 +202,84 @@ object DolbyHalBridge {
             "regulator_enable=$flag",
             "regulator-enable=$flag",
             "regulator_overdrive=$rawOverdrive",
-            "regulator-overdrive=$rawOverdrive"
+            "regulator-overdrive=$rawOverdrive",
+            "regulator_timbre_preservation=$timbre",
+            "regulator-timbre-preservation=$timbre",
+            "regulator_sibilance_suppress_enable=$sibilanceEnable",
+            "regulator-sibilance-suppress-enable=$sibilanceEnable",
+            "regulator_sibilance_suppress_amount=$sibilanceRaw",
+            "regulator-sibilance-suppress-amount=$sibilanceRaw",
+            "regulator_stress_amount=$stressRaw",
+            "regulator-stress-amount=$stressRaw"
         ))
-        DolbyConstants.dlog(TAG, "regulator enable=$flag overdrive=$rawOverdrive")
+        DolbyConstants.dlog(
+            TAG,
+            "regulator enable=$flag overdrive=$rawOverdrive timbre=$timbre sibilance=$sibilanceRaw stress=$stressRaw"
+        )
+    }
+
+    fun applyVolumeModeler(context: Context, enabled: Boolean) {
+        val flag = if (enabled) 1 else 0
+        setParameters(context, listOf(
+            "volume_modeler_enable=$flag",
+            "volume-modeler-enable=$flag",
+            "dolby_volume_modeler=$flag"
+        ))
+        DolbyConstants.dlog(TAG, "volume_modeler=$flag")
+    }
+
+    fun applyHeadphoneVirtualizerTuning(
+        context: Context,
+        mode: Int,
+        lrAngle: Int,
+        startBand: Int
+    ) {
+        val virtMode = mode.coerceIn(0, 1)
+        val angle = lrAngle.coerceIn(0, DolbyConstants.HP_VIRT_LR_ANGLE_MAX)
+        val band = startBand.coerceIn(0, DolbyConstants.HP_VIRT_START_BAND_MAX)
+        setParameters(context, listOf(
+            "headphone_virtualizer_mode=$virtMode",
+            "headphone-virtualizer-mode=$virtMode",
+            "advanced_headphone_virtualizer_lr_angle=$angle",
+            "advanced-headphone-virtualizer-lr-angle=$angle",
+            "virtualizer_start_band=$band",
+            "virtualizer-start-band=$band"
+        ))
+        DolbyConstants.dlog(TAG, "hp_virt_tuning mode=$virtMode angle=$angle startBand=$band")
+    }
+
+    fun applyCalibrationBoost(context: Context, boost: Int) {
+        val value = boost.coerceIn(0, DolbyConstants.CALIBRATION_BOOST_MAX)
+        setParameters(context, listOf(
+            "calibration_boost=$value",
+            "calibration-boost=$value",
+            "dolby_calibration_boost=$value"
+        ))
+        DolbyConstants.dlog(TAG, "calibration_boost=$value")
+    }
+
+    fun applyGameLatencyHal(context: Context, enabled: Boolean) {
+        val flag = if (enabled) 1 else 0
+        setParameters(context, listOf(
+            "game_latency_mode=$flag",
+            "game-latency-mode=$flag",
+            "dolby_low_latency=$flag",
+            "dolby-low-latency=$flag"
+        ))
+        DolbyConstants.dlog(TAG, "game_latency=$flag")
+    }
+
+    fun applyMiSteering(context: Context, enabled: Boolean) {
+        val flag = if (enabled) 1 else 0
+        setParameters(context, listOf(
+            "mi_dv_leveler_steering_enable=$flag",
+            "mi-dv-leveler-steering-enable=$flag",
+            "mi_dv_dialog_steering_enable=$flag",
+            "mi-dv-dialog-steering-enable=$flag",
+            "mi_ieq_steering_enable=$flag",
+            "mi-ieq-steering-enable=$flag"
+        ))
+        DolbyConstants.dlog(TAG, "mi_steering=$flag")
     }
 
     fun applySpatialAudio(

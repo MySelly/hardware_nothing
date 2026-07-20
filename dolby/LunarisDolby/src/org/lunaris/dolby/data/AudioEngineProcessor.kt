@@ -6,6 +6,7 @@
 package org.lunaris.dolby.data
 
 import android.content.Context
+import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.audio.DolbyHalBridge
 
 internal class AudioEngineProcessor(private val context: Context) {
@@ -29,14 +30,26 @@ internal class AudioEngineProcessor(private val context: Context) {
         }
     }
 
-    fun applySpatialProcessing() {
+    fun applySpatialProcessing(forceCrossfeed: Boolean = false) {
+        val spatialMaster = context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
+            .getBoolean(DolbyConstants.PREF_SPATIAL_AUDIO_ENABLED, false)
+        var crossfeedOn = engine.isCrossfeedEnabled()
+        var crossfeedStrength = engine.getCrossfeedStrength()
+        if ((forceCrossfeed || spatialMaster) && !crossfeedOn &&
+            !engine.isStereoBalanceEnabled() && !engine.isMonoMixEnabled()
+        ) {
+            crossfeedOn = true
+            if (crossfeedStrength <= 0) crossfeedStrength = 40
+        } else if ((forceCrossfeed || spatialMaster) && engine.isCrossfeedEnabled()) {
+            crossfeedOn = true
+        }
         DolbyHalBridge.applySpatialAudio(
             context,
             engine.isStereoBalanceEnabled(),
             engine.getStereoBalance(),
             engine.isMonoMixEnabled(),
-            engine.isCrossfeedEnabled(),
-            engine.getCrossfeedStrength()
+            crossfeedOn,
+            crossfeedStrength
         )
     }
 
@@ -50,6 +63,9 @@ internal class AudioEngineProcessor(private val context: Context) {
         }
         if (tenths > 0) {
             repository.setOutputBoost(profile, true, tenths.coerceAtMost(engine.getOutputBoostMaxTenths()))
+        } else {
+            // High volume, mid range, or zero tenths after a prior boost — clear leftover boost.
+            repository.setOutputBoost(profile, false, 0)
         }
     }
 

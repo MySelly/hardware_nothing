@@ -149,16 +149,70 @@ object DolbyAutomationCoordinator {
 
     fun applyGameLatencyMode(context: Context) {
         val prefs = context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
-        if (!prefs.getBoolean(DolbyConstants.PREF_GAME_LATENCY_MODE, false)) return
+        val enabled = prefs.getBoolean(DolbyConstants.PREF_GAME_LATENCY_MODE, false)
+        val wasActive = prefs.getBoolean(PREF_GAME_LATENCY_ACTIVE, false)
+
+        if (!enabled) {
+            if (wasActive) {
+                org.lunaris.dolby.audio.DolbyHalBridge.applyGameLatencyHal(context, false)
+                val repository = DolbyRepository(context)
+                try {
+                    val profile = repository.getCurrentProfile()
+                    // Restore values snapshotted before latency mode mutated prefs
+                    if (prefs.contains(PREF_GL_PREV_HP_VIRT)) {
+                        repository.setHeadphoneVirtualizerEnabled(
+                            profile, prefs.getBoolean(PREF_GL_PREV_HP_VIRT, false)
+                        )
+                        repository.setSpeakerVirtualizerEnabled(
+                            profile, prefs.getBoolean(PREF_GL_PREV_SPK_VIRT, false)
+                        )
+                        repository.setVolumeLevelerEnabled(
+                            profile, prefs.getBoolean(PREF_GL_PREV_LEVELER, false)
+                        )
+                        repository.setSurroundDecoderEnabled(
+                            profile, prefs.getBoolean(PREF_GL_PREV_SURROUND_DEC, true)
+                        )
+                    }
+                    prefs.edit()
+                        .putBoolean(PREF_GAME_LATENCY_ACTIVE, false)
+                        .remove(PREF_GL_PREV_HP_VIRT)
+                        .remove(PREF_GL_PREV_SPK_VIRT)
+                        .remove(PREF_GL_PREV_LEVELER)
+                        .remove(PREF_GL_PREV_SURROUND_DEC)
+                        .apply()
+                    repository.applySavedState()
+                } finally {
+                    repository.close()
+                }
+            }
+            return
+        }
 
         val repository = DolbyRepository(context)
         try {
             val profile = repository.getCurrentProfile()
-            if (profile != 3) return
+            if (!wasActive) {
+                prefs.edit()
+                    .putBoolean(PREF_GL_PREV_HP_VIRT, repository.getHeadphoneVirtualizerEnabled(profile))
+                    .putBoolean(PREF_GL_PREV_SPK_VIRT, repository.getSpeakerVirtualizerEnabled(profile))
+                    .putBoolean(PREF_GL_PREV_LEVELER, repository.getVolumeLevelerEnabled(profile))
+                    .putBoolean(PREF_GL_PREV_SURROUND_DEC, repository.isSurroundDecoderEnabled(profile))
+                    .apply()
+            }
             repository.setHeadphoneVirtualizerEnabled(profile, false)
             repository.setSpeakerVirtualizerEnabled(profile, false)
             repository.setVolumeLevelerEnabled(profile, false)
-            repository.setSurroundBoost(profile, false, 0)
+            repository.setSurroundDecoderEnabled(profile, false)
+            org.lunaris.dolby.audio.DolbyHalBridge.applySpatialAudio(
+                context,
+                balanceEnabled = false,
+                balance = 0,
+                monoEnabled = false,
+                crossfeedEnabled = false,
+                crossfeedStrength = 0
+            )
+            org.lunaris.dolby.audio.DolbyHalBridge.applyGameLatencyHal(context, true)
+            prefs.edit().putBoolean(PREF_GAME_LATENCY_ACTIVE, true).apply()
         } finally {
             repository.close()
         }
@@ -237,6 +291,28 @@ object DolbyAutomationCoordinator {
         if (current > cap) {
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, cap, 0)
         }
+
+        // Auto-enable hearing protection near/over the cap. Do not force HP off when
+        // limit is inactive (early return above) — user may have enabled HP manually.
+        val nearCap = current >= (cap * 0.9f).toInt().coerceAtLeast(1)
+        if (!nearCap) return
+
+        val repository = DolbyRepository(context)
+        try {
+            val profile = repository.getCurrentProfile()
+            if (!repository.isHearingProtectionEnabled(profile)) {
+                val severity = (100 - limit).coerceIn(0, 100)
+                val rmsTarget = DolbyConstants.HP_RMS_TARGET_STOCK_RAW - (severity * 2)
+                val attack = (DolbyConstants.HP_ATTACK_STOCK_MS - severity * 4)
+                    .coerceIn(DolbyConstants.HP_ATTACK_MIN_MS, DolbyConstants.HP_ATTACK_MAX_MS)
+                val release = (DolbyConstants.HP_RELEASE_STOCK_MS - severity * 2)
+                    .coerceIn(DolbyConstants.HP_RELEASE_MIN_MS, DolbyConstants.HP_RELEASE_MAX_MS)
+                repository.setHearingProtectionDynamics(profile, rmsTarget, attack, release)
+                repository.setHearingProtectionEnabled(profile, true)
+            }
+        } finally {
+            repository.close()
+        }
     }
 
     fun handleSleepTimerFire(context: Context) {
@@ -273,4 +349,10 @@ object DolbyAutomationCoordinator {
             }
         }
     }
+
+    private const val PREF_GAME_LATENCY_ACTIVE = "game_latency_mode_active"
+    private const val PREF_GL_PREV_HP_VIRT = "game_latency_prev_hp_virt"
+    private const val PREF_GL_PREV_SPK_VIRT = "game_latency_prev_spk_virt"
+    private const val PREF_GL_PREV_LEVELER = "game_latency_prev_leveler"
+    private const val PREF_GL_PREV_SURROUND_DEC = "game_latency_prev_surround_dec"
 }

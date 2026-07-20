@@ -461,6 +461,51 @@ private fun ModernAdvancedSettingsContent(
                                         valueRange = 4f..64f,
                                         steps = 59
                                     )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    ModernSettingSlider(
+                                        title = stringResource(R.string.hp_virt_mode_title),
+                                        value = state.profileSettings.hpVirtMode,
+                                        onValueChange = {
+                                            viewModel.setHeadphoneVirtualizerTuning(
+                                                it.toInt(),
+                                                state.profileSettings.hpVirtLrAngle,
+                                                state.profileSettings.hpVirtStartBand
+                                            )
+                                        },
+                                        valueRange = 0f..1f,
+                                        steps = 0,
+                                        valueLabel = { if (it == 0) "0" else "1" }
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    ModernSettingSlider(
+                                        title = stringResource(R.string.hp_virt_angle_title),
+                                        value = state.profileSettings.hpVirtLrAngle,
+                                        onValueChange = {
+                                            viewModel.setHeadphoneVirtualizerTuning(
+                                                state.profileSettings.hpVirtMode,
+                                                it.toInt(),
+                                                state.profileSettings.hpVirtStartBand
+                                            )
+                                        },
+                                        valueRange = 0f..90f,
+                                        steps = 17,
+                                        valueLabel = { "$it°" }
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    ModernSettingSlider(
+                                        title = stringResource(R.string.hp_virt_start_band_title),
+                                        value = state.profileSettings.hpVirtStartBand,
+                                        onValueChange = {
+                                            viewModel.setHeadphoneVirtualizerTuning(
+                                                state.profileSettings.hpVirtMode,
+                                                state.profileSettings.hpVirtLrAngle,
+                                                it.toInt()
+                                            )
+                                        },
+                                        valueRange = 0f..19f,
+                                        steps = 18,
+                                        valueLabel = { "$it" }
+                                    )
                                 }
                             }
                         }
@@ -727,6 +772,19 @@ private fun AudioTuningSettingsCard(
             onCheckedChange = { viewModel.setSurroundDecoder(it) },
             icon = Icons.Default.SurroundSound
         )
+        AnimatedVisibility(visible = profileSettings.surroundDecoderEnabled) {
+            Column {
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.surround_diffuse_title),
+                    value = profileSettings.surroundDiffuseFront,
+                    onValueChange = { viewModel.setSurroundDiffuseFront(it.toInt()) },
+                    valueRange = 0f..100f,
+                    steps = 19,
+                    valueLabel = { "$it" }
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
         ModernSettingSwitch(
@@ -745,6 +803,57 @@ private fun AudioTuningSettingsCard(
             onCheckedChange = { viewModel.setVirtualBassBluetooth(it) },
             icon = Icons.Default.GraphicEq
         )
+        AnimatedVisibility(
+            visible = profileSettings.virtualBassSpeakerEnabled || profileSettings.virtualBassBluetoothEnabled
+        ) {
+            Column {
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.vb_mode_title),
+                    value = profileSettings.virtualBassMode,
+                    onValueChange = {
+                        viewModel.setVirtualBassDetails(
+                            it.toInt(),
+                            profileSettings.virtualBassOverallGain,
+                            profileSettings.virtualBassSlopeGain
+                        )
+                    },
+                    valueRange = 0f..2f,
+                    steps = 1,
+                    valueLabel = { "$it" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.vb_overall_gain_title),
+                    value = profileSettings.virtualBassOverallGain,
+                    onValueChange = {
+                        viewModel.setVirtualBassDetails(
+                            profileSettings.virtualBassMode,
+                            it.toInt(),
+                            profileSettings.virtualBassSlopeGain
+                        )
+                    },
+                    valueRange = -320f..0f,
+                    steps = 31,
+                    valueLabel = { "$it" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.vb_slope_gain_title),
+                    value = profileSettings.virtualBassSlopeGain,
+                    onValueChange = {
+                        viewModel.setVirtualBassDetails(
+                            profileSettings.virtualBassMode,
+                            profileSettings.virtualBassOverallGain,
+                            it.toInt()
+                        )
+                    },
+                    valueRange = -32f..32f,
+                    steps = 31,
+                    valueLabel = { "$it" }
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
         ModernSettingSwitch(
@@ -755,7 +864,8 @@ private fun AudioTuningSettingsCard(
                 viewModel.setAdvancedBass(
                     enabled,
                     profileSettings.advancedBassBoost,
-                    profileSettings.advancedBassCutoff
+                    profileSettings.advancedBassCutoff,
+                    profileSettings.advancedBassWidth
                 )
             },
             icon = Icons.Default.Speaker
@@ -767,7 +877,12 @@ private fun AudioTuningSettingsCard(
                     title = stringResource(R.string.adv_bass_boost_title),
                     value = profileSettings.advancedBassBoost,
                     onValueChange = {
-                        viewModel.setAdvancedBass(true, it.toInt(), profileSettings.advancedBassCutoff)
+                        viewModel.setAdvancedBass(
+                            true,
+                            it.toInt(),
+                            profileSettings.advancedBassCutoff,
+                            profileSettings.advancedBassWidth
+                        )
                     },
                     valueRange = 0f..100f,
                     steps = 19,
@@ -778,11 +893,32 @@ private fun AudioTuningSettingsCard(
                     title = stringResource(R.string.adv_bass_cutoff_title),
                     value = profileSettings.advancedBassCutoff,
                     onValueChange = {
-                        viewModel.setAdvancedBass(true, profileSettings.advancedBassBoost, it.toInt())
+                        viewModel.setAdvancedBass(
+                            true,
+                            profileSettings.advancedBassBoost,
+                            it.toInt(),
+                            profileSettings.advancedBassWidth
+                        )
                     },
                     valueRange = 50f..1000f,
                     steps = 18,
                     valueLabel = { "$it Hz" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.adv_bass_width_title),
+                    value = profileSettings.advancedBassWidth,
+                    onValueChange = {
+                        viewModel.setAdvancedBass(
+                            true,
+                            profileSettings.advancedBassBoost,
+                            profileSettings.advancedBassCutoff,
+                            it.toInt()
+                        )
+                    },
+                    valueRange = 1f..16f,
+                    steps = 14,
+                    valueLabel = { "$it" }
                 )
             }
         }
@@ -832,6 +968,50 @@ private fun AudioTuningSettingsCard(
                     steps = 11,
                     valueLabel = { "+$it dB" }
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSwitch(
+                    title = stringResource(R.string.regulator_timbre_title),
+                    subtitle = stringResource(R.string.regulator_timbre_summary),
+                    checked = profileSettings.regulatorTimbre,
+                    onCheckedChange = {
+                        viewModel.setRegulatorExtras(
+                            it,
+                            profileSettings.regulatorSibilance,
+                            profileSettings.regulatorStress
+                        )
+                    },
+                    icon = Icons.Default.Shield
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.regulator_sibilance_title),
+                    value = profileSettings.regulatorSibilance,
+                    onValueChange = {
+                        viewModel.setRegulatorExtras(
+                            profileSettings.regulatorTimbre,
+                            it.toInt(),
+                            profileSettings.regulatorStress
+                        )
+                    },
+                    valueRange = 0f..100f,
+                    steps = 19,
+                    valueLabel = { "$it%" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.regulator_stress_title),
+                    value = profileSettings.regulatorStress,
+                    onValueChange = {
+                        viewModel.setRegulatorExtras(
+                            profileSettings.regulatorTimbre,
+                            profileSettings.regulatorSibilance,
+                            it.toInt()
+                        )
+                    },
+                    valueRange = 0f..100f,
+                    steps = 19,
+                    valueLabel = { "$it%" }
+                )
             }
         }
 
@@ -842,6 +1022,73 @@ private fun AudioTuningSettingsCard(
             checked = profileSettings.hearingProtectionEnabled,
             onCheckedChange = { viewModel.setHearingProtection(it) },
             icon = Icons.Default.HealthAndSafety
+        )
+        AnimatedVisibility(visible = profileSettings.hearingProtectionEnabled) {
+            Column {
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.hp_rms_target_title),
+                    value = profileSettings.hpRmsTargetRaw,
+                    onValueChange = {
+                        viewModel.setHearingProtectionDynamics(
+                            it.toInt(),
+                            profileSettings.hpAttackMs,
+                            profileSettings.hpReleaseMs
+                        )
+                    },
+                    valueRange = -640f..0f,
+                    steps = 39,
+                    valueLabel = { "${it / 16f} dB" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.hp_attack_title),
+                    value = profileSettings.hpAttackMs,
+                    onValueChange = {
+                        viewModel.setHearingProtectionDynamics(
+                            profileSettings.hpRmsTargetRaw,
+                            it.toInt(),
+                            profileSettings.hpReleaseMs
+                        )
+                    },
+                    valueRange = 50f..4000f,
+                    steps = 39,
+                    valueLabel = { "${it} ms" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ModernSettingSlider(
+                    title = stringResource(R.string.hp_release_title),
+                    value = profileSettings.hpReleaseMs,
+                    onValueChange = {
+                        viewModel.setHearingProtectionDynamics(
+                            profileSettings.hpRmsTargetRaw,
+                            profileSettings.hpAttackMs,
+                            it.toInt()
+                        )
+                    },
+                    valueRange = 100f..8000f,
+                    steps = 39,
+                    valueLabel = { "${it} ms" }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        ModernSettingSwitch(
+            title = stringResource(R.string.volume_modeler_title),
+            subtitle = stringResource(R.string.volume_modeler_summary),
+            checked = profileSettings.volumeModelerEnabled,
+            onCheckedChange = { viewModel.setVolumeModeler(it) },
+            icon = Icons.Default.VolumeUp
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+        ModernSettingSwitch(
+            title = stringResource(R.string.mi_steering_title),
+            subtitle = stringResource(R.string.mi_steering_summary),
+            checked = profileSettings.miSteeringEnabled,
+            onCheckedChange = { viewModel.setMiSteering(it) },
+            icon = Icons.Default.Tune
         )
 
         Spacer(modifier = Modifier.height(12.dp))
