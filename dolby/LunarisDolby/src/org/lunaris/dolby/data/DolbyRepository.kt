@@ -18,8 +18,6 @@ import org.lunaris.dolby.domain.models.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.json.JSONArray
-import org.json.JSONObject
 
 class DolbyRepository(private val context: Context) : AutoCloseable {
 
@@ -29,14 +27,31 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     
     private val defaultPrefs = context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
     private val presetsPrefs = context.getSharedPreferences(DolbyConstants.PREF_FILE_PRESETS, Context.MODE_PRIVATE)
-    private val customPresetsPrefs = context.getSharedPreferences(
-        DolbyConstants.PREF_FILE_CUSTOM_PRESETS,
-        Context.MODE_PRIVATE
-    )
     
     private val deviceStateManager = DeviceStateManager(context)
     private val audioEnginePrefs = AudioEnginePreferences(context)
     private val equalizerPresetStore = EqualizerPresetStore(context)
+    private val customDolbyPresetStore = CustomDolbyPresetStore(
+        context = context,
+        host = object : CustomDolbyPresetStore.Host {
+            override fun getCurrentProfile(): Int = this@DolbyRepository.getCurrentProfile()
+            override fun getBandMode(): BandMode = this@DolbyRepository.getBandMode()
+            override fun setBandMode(mode: BandMode) = this@DolbyRepository.setBandMode(mode)
+            override fun getDolbyEnabled(): Boolean = this@DolbyRepository.getDolbyEnabled()
+            override fun setDolbyEnabled(enabled: Boolean) = this@DolbyRepository.setDolbyEnabled(enabled)
+            override fun setCurrentProfile(profile: Int) = this@DolbyRepository.setCurrentProfile(profile)
+            override fun getProfilePrefs(profile: Int): SharedPreferences =
+                this@DolbyRepository.getProfilePrefs(profile)
+            override fun applyRestoredProfile(profile: Int) {
+                restoreProfilePreset(profile)
+                applyProfileSettings(profile)
+            }
+            override fun getUserPresets(): List<EqualizerPreset> = this@DolbyRepository.getUserPresets()
+            override fun clearAllUserPresets() = this@DolbyRepository.clearAllUserPresets()
+            override fun addUserPreset(name: String, bandGains: List<BandGain>, bandMode: BandMode) =
+                this@DolbyRepository.addUserPreset(name, bandGains, bandMode)
+        }
+    )
 
     private fun clampGeqGain(gain: Int): Int = audioEnginePrefs.clampEqGain(gain)
 
@@ -766,188 +781,23 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
         equalizerPresetStore.clearAllUserPresets()
     }
 
-    fun getCustomDolbyPresets(): List<CustomDolbyPresetSummary> {
-        return customPresetsPrefs.all.mapNotNull { (name, value) ->
-            try {
-                val json = JSONObject(value as String)
-                CustomDolbyPresetSummary(
-                    name = name,
-                    savedFromProfile = json.optInt("savedFromProfile", 0),
-                    bandMode = BandMode.fromValue(json.optString("bandMode", "10")),
-                    savedAt = json.optLong("savedAt", 0L)
-                )
-            } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error parsing custom preset $name: ${e.message}")
-                null
-            }
-        }.sortedByDescending { it.savedAt }
-    }
+    fun getCustomDolbyPresets(): List<CustomDolbyPresetSummary> =
+        customDolbyPresetStore.getCustomDolbyPresets()
 
-    fun saveCustomDolbyPreset(name: String) {
-        val trimmed = name.trim()
-        if (trimmed.isEmpty()) {
-            throw IllegalArgumentException("Preset name cannot be empty")
-        }
-        if (trimmed.length > 50) {
-            throw IllegalArgumentException("Preset name too long")
-        }
-        if (customPresetsPrefs.contains(trimmed)) {
-            throw IllegalArgumentException("Preset name already exists")
-        }
+    fun saveCustomDolbyPreset(name: String) =
+        customDolbyPresetStore.saveCustomDolbyPreset(name)
 
-        val profile = getCurrentProfile()
-        val snapshot = JSONObject().apply {
-            put("savedFromProfile", profile)
-            put("bandMode", getBandMode().value)
-            put("savedAt", System.currentTimeMillis())
-            put("settings", exportProfilePrefsJson(profile))
-        }
-        customPresetsPrefs.edit().putString(trimmed, snapshot.toString()).apply()
-        DolbyConstants.dlog(TAG, "Saved custom Dolby preset: $trimmed")
-    }
+    fun applyCustomDolbyPreset(name: String) =
+        customDolbyPresetStore.applyCustomDolbyPreset(name)
 
-    fun applyCustomDolbyPreset(name: String) {
-        val jsonString = customPresetsPrefs.getString(name, null)
-            ?: throw IllegalArgumentException("Preset not found")
-        val json = JSONObject(jsonString)
-        val profile = getCurrentProfile()
-        val settings = json.getJSONObject("settings")
-        restoreProfilePrefs(profile, settings)
-        setBandMode(BandMode.fromValue(json.getString("bandMode")))
-        restoreProfilePreset(profile)
-        applyProfileSettings(profile)
-        DolbyConstants.dlog(TAG, "Applied custom Dolby preset: $name to profile $profile")
-    }
+    fun deleteCustomDolbyPreset(name: String) =
+        customDolbyPresetStore.deleteCustomDolbyPreset(name)
 
-    fun deleteCustomDolbyPreset(name: String) {
-        customPresetsPrefs.edit().remove(name).apply()
-        DolbyConstants.dlog(TAG, "Deleted custom Dolby preset: $name")
-    }
+    fun exportFullBackupJson(): String =
+        customDolbyPresetStore.exportFullBackupJson()
 
-    fun exportFullBackupJson(): String {
-        val profileIds = context.resources.getStringArray(R.array.dolby_profile_values)
-            .map { it.toInt() }
-
-        val global = JSONObject().apply {
-            put(DolbyConstants.PREF_ENABLE, getDolbyEnabled())
-            put(DolbyConstants.PREF_PROFILE, getCurrentProfile())
-            put(DolbyConstants.PREF_BAND_MODE, getBandMode().value)
-        }
-
-        val profiles = JSONArray()
-        profileIds.forEach { profileId ->
-            profiles.put(exportProfilePrefsJson(profileId))
-        }
-
-        val userPresets = JSONArray()
-        getUserPresets().forEach { preset ->
-            userPresets.put(JSONObject().apply {
-                put("name", preset.name)
-                put("bandMode", preset.bandMode.value)
-                val gainsArray = JSONArray()
-                preset.bandGains.forEach { bandGain ->
-                    gainsArray.put(JSONObject().apply {
-                        put("frequency", bandGain.frequency)
-                        put("gain", bandGain.gain)
-                    })
-                }
-                put("bandGains", gainsArray)
-            })
-        }
-
-        return JSONObject().apply {
-            put("type", BACKUP_TYPE)
-            put("version", BACKUP_VERSION)
-            put("timestamp", System.currentTimeMillis())
-            put("createdBy", "Lunaris Dolby Manager")
-            put("global", global)
-            put("profiles", profiles)
-            put("user_presets", userPresets)
-        }.toString(2)
-    }
-
-    fun importFullBackup(jsonString: String) {
-        val json = JSONObject(jsonString)
-        if (json.optString("type") != BACKUP_TYPE) {
-            throw IllegalArgumentException("Not a Dolby full backup file")
-        }
-        val version = json.optInt("version", 0)
-        if (version > BACKUP_VERSION) {
-            throw IllegalArgumentException("Backup version not supported")
-        }
-
-        val global = json.getJSONObject("global")
-        val bandMode = BandMode.fromValue(global.getString(DolbyConstants.PREF_BAND_MODE))
-        setBandMode(bandMode)
-
-        val profiles = json.getJSONArray("profiles")
-        for (i in 0 until profiles.length()) {
-            val profileJson = profiles.getJSONObject(i)
-            val profileId = profileJson.getInt("id")
-            restoreProfilePrefs(profileId, profileJson)
-            applyProfileSettings(profileId)
-        }
-
-        if (json.has("user_presets")) {
-            clearAllUserPresets()
-            val presets = json.getJSONArray("user_presets")
-            for (i in 0 until presets.length()) {
-                val presetJson = presets.getJSONObject(i)
-                val name = presetJson.getString("name")
-                val presetBandMode = BandMode.fromValue(presetJson.getString("bandMode"))
-                val gainsArray = presetJson.getJSONArray("bandGains")
-                val bandGains = buildList {
-                    for (j in 0 until gainsArray.length()) {
-                        val gainObj = gainsArray.getJSONObject(j)
-                        add(
-                            BandGain(
-                                frequency = gainObj.getInt("frequency"),
-                                gain = gainObj.getInt("gain")
-                            )
-                        )
-                    }
-                }
-                addUserPreset(name, bandGains, presetBandMode)
-            }
-        }
-
-        val targetProfile = global.getInt(DolbyConstants.PREF_PROFILE)
-        setCurrentProfile(targetProfile)
-        setDolbyEnabled(global.getBoolean(DolbyConstants.PREF_ENABLE))
-    }
-
-    private fun exportProfilePrefsJson(profile: Int): JSONObject {
-        val prefs = getProfilePrefs(profile)
-        return JSONObject().apply {
-            put("id", profile)
-            prefs.all.forEach { (key, value) ->
-                when (value) {
-                    is Boolean -> put(key, value)
-                    is Int -> put(key, value)
-                    is Long -> put(key, value)
-                    is Float -> put(key, value.toDouble())
-                    is String -> put(key, value)
-                }
-            }
-        }
-    }
-
-    private fun restoreProfilePrefs(profile: Int, json: JSONObject) {
-        val editor = getProfilePrefs(profile).edit()
-        val keys = json.keys()
-        while (keys.hasNext()) {
-            val key = keys.next()
-            if (key == "id") continue
-            when (val value = json.get(key)) {
-                is Boolean -> editor.putBoolean(key, value)
-                is Int -> editor.putInt(key, value)
-                is Long -> editor.putLong(key, value)
-                is String -> editor.putString(key, value)
-                is Number -> editor.putInt(key, value.toInt())
-            }
-        }
-        editor.apply()
-    }
+    fun importFullBackup(jsonString: String) =
+        customDolbyPresetStore.importFullBackup(jsonString)
 
     fun resetProfile(profile: Int) {
         if (isReleased) return
@@ -1192,9 +1042,6 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
             }
         }
 
-        private const val BACKUP_TYPE = "dolby_full_backup"
-        private const val BACKUP_VERSION = 1
-        
         private const val BASS_GAIN_MULTIPLIER = 1.4f
         private const val MID_GAIN_MULTIPLIER = 1.3f
         private const val TREBLE_GAIN_MULTIPLIER = 1.5f
