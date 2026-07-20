@@ -404,7 +404,11 @@
     <string name="bt_rules_title">Bluetooth device profiles</string>
     <string name="bt_rules_desc">Auto-switch profile when a paired device connects</string>
     <string name="bt_rules_add_current">Add connected device</string>
-    <string name="bt_rules_empty">No Bluetooth rules yet. Connect a device and tap +.</string>
+    <string name="bt_rules_add_paired">Add paired device</string>
+    <string name="bt_rules_pick_device">Choose Bluetooth device</string>
+    <string name="bt_rules_device_label">Device</string>
+    <string name="bt_rules_connected_device">Connected Bluetooth device</string>
+    <string name="bt_rules_empty">No Bluetooth rules yet. Pair a device and tap + to add a rule.</string>
     <string name="profile_history_title">Profile history</string>
     <string name="profile_history_desc">Recent automatic and manual profile changes</string>
     <string name="profile_history_empty">No history yet</string>
@@ -422,9 +426,15 @@
     <string name="widget_desc">Quick Dolby toggle, profile cycle, and sleep timer</string>
     <string name="widget_cycle_profile">Next profile</string>
     <string name="widget_sleep_timer">Sleep 30m</string>
+    <string name="widget_sleep_timer_mins">Sleep %1$dm</string>
     <string name="widget_sleep_cancel">Cancel sleep</string>
     <string name="widget_sleep_remaining">Sleep %1$dm</string>
+    <string name="widget_sleep_duration_setting">Widget sleep duration</string>
+    <string name="widget_sleep_duration_desc">How long the home-screen widget sleep timer runs when started</string>
     <string name="shortcut_toggle">Toggle Dolby</string>
+    <string name="shortcut_equalizer">Equalizer</string>
+    <string name="shortcut_automation">Automation</string>
+    <string name="shortcut_import">Import / export</string>
 
     <!-- Audio engine / power user -->
     <string name="power_user_audio_title">Audio engine</string>
@@ -482,4 +492,12 @@
     <string name="eq_share_copied">Share code copied</string>
     <string name="search_features">Search features</string>
     <string name="search_hint">Search settings…</string>
+    <string name="notification_channel_automation">Dolby automation</string>
+    <string name="notification_monitor_active">Automation active</string>
+    <string name="notification_effect_active">Audio effect active</string>
+    <string name="a11y_switch_on">On</string>
+    <string name="a11y_switch_off">Off</string>
+    <string name="a11y_delete">Delete</string>
+    <string name="a11y_add">Add</string>
+    <string name="a11y_clear_history">Clear history</string>
 </resources>

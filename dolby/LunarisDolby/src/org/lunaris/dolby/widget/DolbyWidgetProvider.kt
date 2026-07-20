@@ -13,6 +13,7 @@ import android.content.Context
 import android.content.Intent
 import android.view.View
 import android.widget.RemoteViews
+import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.R
 import org.lunaris.dolby.data.AutomationStatusResolver
 import org.lunaris.dolby.data.DolbyRepository
@@ -72,10 +73,11 @@ class DolbyWidgetProvider : AppWidgetProvider() {
                 if (active != null) {
                     timerManager.clearTimer()
                 } else {
+                    val minutes = widgetSleepMinutes(context)
                     val repository = DolbyRepository(context)
                     try {
                         val current = repository.getCurrentProfile()
-                        timerManager.startTimer(30, SleepTimerAction.RESTORE_PROFILE, 0, current)
+                        timerManager.startTimer(minutes, SleepTimerAction.RESTORE_PROFILE, 0, current)
                     } finally {
                         repository.close()
                     }
@@ -133,10 +135,11 @@ class DolbyWidgetProvider : AppWidgetProvider() {
                     R.id.widget_toggle,
                     if (enabled) context.getString(R.string.dolby_off) else context.getString(R.string.dolby_enable)
                 )
+                val sleepMins = widgetSleepMinutes(context)
                 views.setTextViewText(
                     R.id.widget_sleep,
                     if (timer != null) context.getString(R.string.widget_sleep_cancel)
-                    else context.getString(R.string.widget_sleep_timer)
+                    else context.getString(R.string.widget_sleep_timer_mins, sleepMins)
                 )
 
                 val openIntent = PendingIntent.getActivity(
@@ -171,6 +174,19 @@ class DolbyWidgetProvider : AppWidgetProvider() {
                 Intent(context, DolbyWidgetProvider::class.java).setAction(action),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
+        }
+
+        fun widgetSleepMinutes(context: Context): Int {
+            val prefs = context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
+            val minutes = prefs.getInt(
+                DolbyConstants.PREF_WIDGET_SLEEP_MINUTES,
+                DolbyConstants.DEFAULT_WIDGET_SLEEP_MINUTES
+            )
+            return if (minutes in DolbyConstants.WIDGET_SLEEP_MINUTE_OPTIONS) {
+                minutes
+            } else {
+                DolbyConstants.DEFAULT_WIDGET_SLEEP_MINUTES
+            }
         }
     }
 }

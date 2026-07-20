@@ -404,7 +404,11 @@
     <string name="bt_rules_title">Bluetooth cihaz profilleri</string>
     <string name="bt_rules_desc">Eşleşen cihaz bağlandığında profili otomatik değiştir</string>
     <string name="bt_rules_add_current">Bağlı cihazı ekle</string>
-    <string name="bt_rules_empty">Henüz Bluetooth kuralı yok. Cihaz bağlayıp + tuşuna basın.</string>
+    <string name="bt_rules_add_paired">Eşleşmiş cihaz ekle</string>
+    <string name="bt_rules_pick_device">Bluetooth cihazı seçin</string>
+    <string name="bt_rules_device_label">Cihaz</string>
+    <string name="bt_rules_connected_device">Bağlı Bluetooth cihazı</string>
+    <string name="bt_rules_empty">Henüz Bluetooth kuralı yok. Bir cihaz eşleştirip + ile kural ekleyin.</string>
     <string name="profile_history_title">Profil geçmişi</string>
     <string name="profile_history_desc">Son otomatik ve manuel profil değişiklikleri</string>
     <string name="profile_history_empty">Henüz geçmiş yok</string>
@@ -422,9 +426,15 @@
     <string name="widget_desc">Hızlı Dolby aç/kapa, profil değiştirme ve uyku zamanlayıcı</string>
     <string name="widget_cycle_profile">Sonraki profil</string>
     <string name="widget_sleep_timer">Uyku 30dk</string>
+    <string name="widget_sleep_timer_mins">Uyku %1$ddk</string>
     <string name="widget_sleep_cancel">Uykuyu iptal</string>
     <string name="widget_sleep_remaining">Uyku %1$ddk</string>
+    <string name="widget_sleep_duration_setting">Widget uyku süresi</string>
+    <string name="widget_sleep_duration_desc">Ana ekran widget uyku zamanlayıcısının başlatıldığında ne kadar süreceği</string>
     <string name="shortcut_toggle">Dolby\'yi aç/kapat</string>
+    <string name="shortcut_equalizer">Ekolayzer</string>
+    <string name="shortcut_automation">Otomasyon</string>
+    <string name="shortcut_import">İçe / dışa aktar</string>
 
     <!-- Audio engine / power user -->
     <string name="power_user_audio_title">Ses motoru</string>
@@ -482,5 +492,13 @@
     <string name="eq_share_copied">Paylaşım kodu kopyalandı</string>
     <string name="search_features">Özellik ara</string>
     <string name="search_hint">Ayarlarda ara…</string>
+    <string name="notification_channel_automation">Dolby otomasyonu</string>
+    <string name="notification_monitor_active">Otomasyon aktif</string>
+    <string name="notification_effect_active">Ses efekti aktif</string>
+    <string name="a11y_switch_on">Açık</string>
+    <string name="a11y_switch_off">Kapalı</string>
+    <string name="a11y_delete">Sil</string>
+    <string name="a11y_add">Ekle</string>
+    <string name="a11y_clear_history">Geçmişi temizle</string>
 
 </resources>

@@ -19,6 +19,7 @@ import org.lunaris.dolby.data.SleepTimerManager
 import org.lunaris.dolby.domain.models.SleepTimerAction
 import org.lunaris.dolby.domain.models.SleepTimerConfig
 import org.lunaris.dolby.ui.theme.DolbyAppearanceState
+import org.lunaris.dolby.widget.DolbyWidgetProvider
 
 data class AutomationSettingsUiState(
     val batterySaver: Boolean = false,
@@ -30,6 +31,7 @@ data class AutomationSettingsUiState(
     val amoled: Boolean = false,
     val safeLimit: Float = 0f,
     val sleepMinutes: Int = 30,
+    val widgetSleepMinutes: Int = DolbyConstants.DEFAULT_WIDGET_SLEEP_MINUTES,
     val activeTimer: SleepTimerConfig? = null,
     val musicProfile: Int = MediaContentRulesManager.defaultProfileFor("music"),
     val videoProfile: Int = MediaContentRulesManager.defaultProfileFor("video"),
@@ -48,6 +50,13 @@ class AutomationSettingsViewModel(application: Application) : AndroidViewModel(a
     val uiState: StateFlow<AutomationSettingsUiState> = _uiState.asStateFlow()
 
     private fun loadState(): AutomationSettingsUiState {
+        val widgetSleep = prefs.getInt(
+            DolbyConstants.PREF_WIDGET_SLEEP_MINUTES,
+            DolbyConstants.DEFAULT_WIDGET_SLEEP_MINUTES
+        ).let { mins ->
+            if (mins in DolbyConstants.WIDGET_SLEEP_MINUTE_OPTIONS) mins
+            else DolbyConstants.DEFAULT_WIDGET_SLEEP_MINUTES
+        }
         return AutomationSettingsUiState(
             batterySaver = prefs.getBoolean(DolbyConstants.PREF_BATTERY_SAVER_MODE, false),
             autoCall = prefs.getBoolean(DolbyConstants.PREF_AUTO_DISABLE_ON_CALL, true),
@@ -58,6 +67,7 @@ class AutomationSettingsViewModel(application: Application) : AndroidViewModel(a
             amoled = prefs.getBoolean(DolbyConstants.PREF_AMOLED_THEME, false),
             safeLimit = prefs.getInt(DolbyConstants.PREF_SAFE_LISTENING_LIMIT, 0).toFloat(),
             sleepMinutes = 30,
+            widgetSleepMinutes = widgetSleep,
             activeTimer = timerManager.getActiveTimer(),
             musicProfile = mediaRules.getProfileForContentType("music"),
             videoProfile = mediaRules.getProfileForContentType("video"),
@@ -111,6 +121,17 @@ class AutomationSettingsViewModel(application: Application) : AndroidViewModel(a
 
     fun setSleepMinutes(minutes: Int) {
         _uiState.update { it.copy(sleepMinutes = minutes) }
+    }
+
+    fun setWidgetSleepMinutes(minutes: Int) {
+        val sanitized = if (minutes in DolbyConstants.WIDGET_SLEEP_MINUTE_OPTIONS) {
+            minutes
+        } else {
+            DolbyConstants.DEFAULT_WIDGET_SLEEP_MINUTES
+        }
+        prefs.edit().putInt(DolbyConstants.PREF_WIDGET_SLEEP_MINUTES, sanitized).apply()
+        _uiState.update { it.copy(widgetSleepMinutes = sanitized) }
+        DolbyWidgetProvider.refreshAll(getApplication())
     }
 
     fun startSleepTimer() {

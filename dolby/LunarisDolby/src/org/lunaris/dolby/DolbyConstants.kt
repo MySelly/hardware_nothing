@@ -81,6 +81,7 @@ object DolbyConstants {
     const val PREF_SLEEP_TIMER_END_MS = "sleep_timer_end_ms"
     const val PREF_SLEEP_TIMER_ACTION = "sleep_timer_action"
     const val PREF_SLEEP_TIMER_PROFILE = "sleep_timer_profile"
+    const val PREF_WIDGET_SLEEP_MINUTES = "widget_sleep_minutes"
     const val PREF_BT_PROFILE_RULES = "bt_profile_rules"
     const val PREF_LAST_AUTOMATION_SOURCE = "last_automation_source"
     const val PREF_LAST_AUTOMATION_DETAIL = "last_automation_detail"
@@ -123,6 +124,10 @@ object DolbyConstants {
     const val EXTRA_PROFILE = "profile"
     const val EXTRA_PRESET = "preset"
     const val EXTRA_ENABLED = "enabled"
+    const val EXTRA_ROUTE = "route"
+
+    val WIDGET_SLEEP_MINUTE_OPTIONS = intArrayOf(15, 30, 45, 60, 90)
+    const val DEFAULT_WIDGET_SLEEP_MINUTES = 30
 
     const val SLEEP_ACTION_DISABLE = "disable"
     const val SLEEP_ACTION_PROFILE = "profile"
