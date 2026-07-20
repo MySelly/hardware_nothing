@@ -474,5 +474,13 @@
     <string name="exact_alarm_open_settings">Kesin alarmlara izin ver</string>
     <string name="hub_tools_title">Araçlar</string>
     <string name="hub_tools_desc">Presetler, zamanlama, otomasyon ve geçmiş</string>
+    <string name="media_package_overrides_title">Uygulama paketi geçersiz kılmaları</string>
+    <string name="media_package_add">Geçersiz kılma ekle</string>
+    <string name="media_package_hint">Paket adı (örn. com.spotify.music)</string>
+    <string name="bt_rules_pick_profile">Bu cihaz için profil seçin</string>
+    <string name="eq_share_code">Paylaşım kodu</string>
+    <string name="eq_share_copied">Paylaşım kodu kopyalandı</string>
+    <string name="search_features">Özellik ara</string>
+    <string name="search_hint">Ayarlarda ara…</string>
 
 </resources>

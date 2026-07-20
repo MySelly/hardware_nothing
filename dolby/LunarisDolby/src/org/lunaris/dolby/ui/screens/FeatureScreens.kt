@@ -69,6 +69,16 @@ fun AutomationSettingsScreen(navController: NavController) {
     var speechProfile by remember {
         mutableIntStateOf(mediaRules.getProfileForContentType("speech"))
     }
+    var packageOverrides by remember { mutableStateOf(mediaRules.getPackageOverridesMap()) }
+    var newPackageName by remember { mutableStateOf("") }
+    var newContentType by remember { mutableStateOf(MediaContentRulesManager.CONTENT_TYPES.first()) }
+    var contentTypeExpanded by remember { mutableStateOf(false) }
+    val contentTypeLabels = mapOf(
+        "music" to stringResource(R.string.media_type_music),
+        "video" to stringResource(R.string.media_type_video),
+        "game" to stringResource(R.string.media_type_game),
+        "speech" to stringResource(R.string.media_type_speech)
+    )
 
     Scaffold(
         topBar = {
@@ -181,6 +191,88 @@ fun AutomationSettingsScreen(navController: NavController) {
                         }
                     )
                 }
+                item { SectionTitle(stringResource(R.string.media_package_overrides_title)) }
+                items(
+                    packageOverrides.entries.toList(),
+                    key = { it.key }
+                ) { (pkg, type) ->
+                    Card(Modifier.fillMaxWidth()) {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(pkg, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    contentTypeLabels[type] ?: type,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            IconButton(onClick = {
+                                mediaRules.setPackageContentType(pkg, null)
+                                packageOverrides = mediaRules.getPackageOverridesMap()
+                            }) {
+                                Icon(Icons.Default.Delete, contentDescription = null)
+                            }
+                        }
+                    }
+                }
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = newPackageName,
+                            onValueChange = { newPackageName = it },
+                            label = { Text(stringResource(R.string.media_package_hint)) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        ExposedDropdownMenuBox(
+                            expanded = contentTypeExpanded,
+                            onExpandedChange = { contentTypeExpanded = it }
+                        ) {
+                            OutlinedTextField(
+                                value = contentTypeLabels[newContentType] ?: newContentType,
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(contentTypeExpanded) },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = contentTypeExpanded,
+                                onDismissRequest = { contentTypeExpanded = false }
+                            ) {
+                                MediaContentRulesManager.CONTENT_TYPES.forEach { type ->
+                                    DropdownMenuItem(
+                                        text = { Text(contentTypeLabels[type] ?: type) },
+                                        onClick = {
+                                            newContentType = type
+                                            contentTypeExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        Button(
+                            onClick = {
+                                val pkg = newPackageName.trim()
+                                if (pkg.isNotEmpty()) {
+                                    mediaRules.setPackageContentType(pkg, newContentType)
+                                    packageOverrides = mediaRules.getPackageOverridesMap()
+                                    newPackageName = ""
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(R.string.media_package_add))
+                        }
+                    }
+                }
             }
             item { PrefSwitch(stringResource(R.string.game_latency_mode), gameLatency) {
                 gameLatency = it
@@ -275,6 +367,11 @@ fun BluetoothRulesScreen(navController: NavController) {
     val audioManager = context.getSystemService(AudioManager::class.java)
     val btDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
         .firstOrNull { it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP }
+    val profiles = stringArrayResource(R.array.dolby_profile_entries)
+    val profileValues = stringArrayResource(R.array.dolby_profile_values)
+    var showProfilePicker by remember { mutableStateOf(false) }
+    var selectedProfileIndex by remember { mutableIntStateOf(0) }
+    var profileMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -291,8 +388,8 @@ fun BluetoothRulesScreen(navController: NavController) {
             if (btDevice != null) {
                 ExtendedFloatingActionButton(
                     onClick = {
-                        btManager.addRule(btDevice, 2)
-                        rules = btManager.getRules()
+                        selectedProfileIndex = 0
+                        showProfilePicker = true
                     },
                     icon = { Icon(Icons.Default.Add, contentDescription = null) },
                     text = { Text(stringResource(R.string.bt_rules_add_current)) }
@@ -309,7 +406,11 @@ fun BluetoothRulesScreen(navController: NavController) {
                         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                             Column {
                                 Text(rule.displayName, fontWeight = FontWeight.SemiBold)
-                                Text("Profile ${rule.profileId}", style = MaterialTheme.typography.bodySmall)
+                                val idx = profileValues.indexOf(rule.profileId.toString())
+                                Text(
+                                    profiles.getOrElse(idx.coerceAtLeast(0)) { "Profile ${rule.profileId}" },
+                                    style = MaterialTheme.typography.bodySmall
+                                )
                             }
                             IconButton(onClick = {
                                 btManager.deleteRule(rule.deviceKey)
@@ -320,6 +421,58 @@ fun BluetoothRulesScreen(navController: NavController) {
                 }
             }
         }
+    }
+
+    if (showProfilePicker && btDevice != null) {
+        AlertDialog(
+            onDismissRequest = { showProfilePicker = false },
+            title = { Text(stringResource(R.string.bt_rules_pick_profile)) },
+            text = {
+                ExposedDropdownMenuBox(
+                    expanded = profileMenuExpanded,
+                    onExpandedChange = { profileMenuExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = profiles.getOrElse(selectedProfileIndex) { "?" },
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(profileMenuExpanded) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = profileMenuExpanded,
+                        onDismissRequest = { profileMenuExpanded = false }
+                    ) {
+                        profiles.forEachIndexed { index, name ->
+                            DropdownMenuItem(
+                                text = { Text(name) },
+                                onClick = {
+                                    selectedProfileIndex = index
+                                    profileMenuExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val profileId = profileValues.getOrNull(selectedProfileIndex)?.toIntOrNull() ?: 2
+                    btManager.addRule(btDevice, profileId)
+                    rules = btManager.getRules()
+                    showProfilePicker = false
+                }) {
+                    Text(stringResource(R.string.bt_rules_add_current))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showProfilePicker = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
+        )
     }
 }
 

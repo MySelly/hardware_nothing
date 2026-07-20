@@ -474,4 +474,12 @@
     <string name="exact_alarm_open_settings">Allow exact alarms</string>
     <string name="hub_tools_title">Tools</string>
     <string name="hub_tools_desc">Presets, schedules, automation, and history</string>
+    <string name="media_package_overrides_title">App package overrides</string>
+    <string name="media_package_add">Add override</string>
+    <string name="media_package_hint">Package name (e.g. com.spotify.music)</string>
+    <string name="bt_rules_pick_profile">Choose profile for this device</string>
+    <string name="eq_share_code">Share code</string>
+    <string name="eq_share_copied">Share code copied</string>
+    <string name="search_features">Search features</string>
+    <string name="search_hint">Search settings…</string>
 </resources>
