@@ -95,4 +95,8 @@ class SummaryProvider : ContentProvider() {
             source.key
         }
     }
+
+    companion object {
+        val CONTENT_URI: Uri = Uri.parse("content://org.lunaris.dolby.summary/dolby")
+    }
 }

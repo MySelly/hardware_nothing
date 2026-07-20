@@ -10,6 +10,7 @@ import android.content.Context
 import android.appwidget.AppWidgetManager
 import android.service.quicksettings.TileService
 import org.lunaris.dolby.DolbyConstants
+import org.lunaris.dolby.provider.SummaryProvider
 import org.lunaris.dolby.tile.DolbyTileService
 import org.lunaris.dolby.widget.DolbyWidgetProvider
 
@@ -18,6 +19,7 @@ object DolbyStatusNotifier {
     fun notifyChanged(context: Context) {
         refreshWidgets(context)
         refreshTile(context)
+        notifySummaryChanged(context)
     }
 
     private fun refreshWidgets(context: Context) {
@@ -39,6 +41,14 @@ object DolbyStatusNotifier {
             )
         } catch (e: Exception) {
             DolbyConstants.dlog(TAG, "Failed to refresh QS tile: ${e.message}")
+        }
+    }
+
+    private fun notifySummaryChanged(context: Context) {
+        try {
+            context.contentResolver.notifyChange(SummaryProvider.CONTENT_URI, null)
+        } catch (e: Exception) {
+            DolbyConstants.dlog(TAG, "Failed to notify summary change: ${e.message}")
         }
     }
 
