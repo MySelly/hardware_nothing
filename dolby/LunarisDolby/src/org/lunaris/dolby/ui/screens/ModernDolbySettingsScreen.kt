@@ -42,6 +42,7 @@ fun ModernDolbySettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
     var showCreditsDialog by remember { mutableStateOf(false) }
+    var showSearchDialog by remember { mutableStateOf(false) }
     val currentRoute by navController.currentBackStackEntryFlow.collectAsState(null)
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
@@ -84,6 +85,13 @@ fun ModernDolbySettingsScreen(
                     ) 
                 },
                 actions = {
+                    IconButton(onClick = { showSearchDialog = true }) {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = stringResource(R.string.search_features),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                     IconButton(onClick = { showCreditsDialog = true }) {
                         Icon(
                             Icons.Default.Info, 
@@ -230,6 +238,79 @@ fun ModernDolbySettingsScreen(
             onDismiss = { showCreditsDialog = false }
         )
     }
+
+    if (showSearchDialog) {
+        FeatureSearchDialog(
+            onDismiss = { showSearchDialog = false },
+            onNavigate = { route ->
+                showSearchDialog = false
+                navController.navigate(route)
+            }
+        )
+    }
+}
+
+@Composable
+private fun FeatureSearchDialog(
+    onDismiss: () -> Unit,
+    onNavigate: (String) -> Unit
+) {
+    var query by remember { mutableStateOf("") }
+    val destinations = listOf(
+        stringResource(R.string.dolby_preset) to Screen.Equalizer.route,
+        stringResource(R.string.dolby_category_adv_settings) to Screen.Advanced.route,
+        stringResource(R.string.app_profiles_title) to Screen.AppProfiles.route,
+        stringResource(R.string.device_memory_manage_title) to Screen.DeviceMemory.route,
+        stringResource(R.string.custom_presets_title) to Screen.CustomPresets.route,
+        stringResource(R.string.scheduled_profiles_title) to Screen.ScheduledProfiles.route,
+        stringResource(R.string.bt_rules_title) to Screen.BluetoothRules.route,
+        stringResource(R.string.automation_settings_title) to Screen.AutomationSettings.route,
+        stringResource(R.string.profile_history_title) to Screen.ProfileHistory.route,
+        stringResource(R.string.diagnostics_title) to Screen.Diagnostics.route,
+        stringResource(R.string.power_user_audio_title) to Screen.PowerUserAudio.route,
+        stringResource(R.string.preset_import_export) to Screen.ImportExport.route
+    )
+    val filtered = remember(query, destinations) {
+        val q = query.trim()
+        if (q.isEmpty()) destinations
+        else destinations.filter { it.first.contains(q, ignoreCase = true) }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.search_features)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    label = { Text(stringResource(R.string.search_hint)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = null)
+                    }
+                )
+                filtered.forEach { (title, route) ->
+                    TextButton(
+                        onClick = { onNavigate(route) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = title,
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.cancel))
+            }
+        }
+    )
 }
 
 @Composable
