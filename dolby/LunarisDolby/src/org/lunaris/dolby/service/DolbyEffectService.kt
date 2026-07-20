@@ -8,15 +8,18 @@ package org.lunaris.dolby.service
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.media.AudioPlaybackConfiguration
+import android.os.Build
 import android.os.Handler
 import android.content.SharedPreferences
 import android.os.IBinder
 import android.util.Log
 import org.lunaris.dolby.DolbyConstants
+import org.lunaris.dolby.R
 import org.lunaris.dolby.data.DeviceStateManager
 import org.lunaris.dolby.data.DolbyRepository
 import org.lunaris.dolby.data.DolbyAutomationCoordinator
@@ -77,10 +80,27 @@ class DolbyEffectService : Service() {
         AudioEngineProcessor(this).applyAutoLoudness(step, maxSteps, repository.getCurrentProfile(), repository)
     }
 
+    private fun promoteForeground() {
+        val notification = DolbyForegroundNotifications.build(
+            this,
+            R.string.notification_effect_active
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                DolbyForegroundNotifications.NOTIFICATION_ID_EFFECT,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+            )
+        } else {
+            startForeground(DolbyForegroundNotifications.NOTIFICATION_ID_EFFECT, notification)
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         repository = DolbyRepository(this)
         deviceStateManager = DeviceStateManager(this)
+        promoteForeground()
         DolbyAutomationCoordinator.applyBatterySaverIfNeeded(this)
         DolbyAutomationCoordinator.applyGameLatencyMode(this)
         DolbyAutomationCoordinator.enforceSafeListeningLimit(this)
@@ -161,6 +181,7 @@ class DolbyEffectService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        promoteForeground()
         repository.applySavedState()
         return START_STICKY
     }
@@ -176,7 +197,7 @@ class DolbyEffectService : Service() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        stopForeground(STOP_FOREGROUND_REMOVE)
         handler.removeCallbacks(callCheckRunnable)
         if (isDeviceStateMemoryEnabled) {
             previousActiveDevice?.let { device ->
@@ -189,6 +210,7 @@ class DolbyEffectService : Service() {
         handler.removeCallbacksAndMessages(null)
         repository.close()
         Log.d(TAG, "Dolby effect service destroyed")
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -198,7 +220,7 @@ class DolbyEffectService : Service() {
 
         fun start(context: Context) {
             val intent = Intent(context, DolbyEffectService::class.java)
-            context.startService(intent)
+            context.startForegroundService(intent)
         }
 
         fun stop(context: Context) {

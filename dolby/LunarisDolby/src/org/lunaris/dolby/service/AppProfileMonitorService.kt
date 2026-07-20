@@ -12,9 +12,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ServiceInfo
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.media.AudioPlaybackConfiguration
+import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -117,15 +119,37 @@ class AppProfileMonitorService : Service() {
             ACTION_STOP_MONITORING -> stopMonitoring()
             ACTION_CHECK_NOW -> {
                 if (!isMonitoring) startMonitoring()
+                else promoteForeground()
                 handler.post { checkForegroundApp() }
+            }
+            else -> {
+                // Sticky restart / unknown action: keep foreground if we were monitoring.
+                if (isMonitoring) promoteForeground()
             }
         }
         return START_STICKY
     }
 
+    private fun promoteForeground() {
+        val notification = DolbyForegroundNotifications.build(
+            this,
+            R.string.notification_monitor_active
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                DolbyForegroundNotifications.NOTIFICATION_ID_MONITOR,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        } else {
+            startForeground(DolbyForegroundNotifications.NOTIFICATION_ID_MONITOR, notification)
+        }
+    }
+
     private fun startMonitoring() {
         if (!isMonitoring) {
             isMonitoring = true
+            promoteForeground()
             
             if (!hasOriginalProfile) {
                 val prefs = getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
@@ -139,6 +163,8 @@ class AppProfileMonitorService : Service() {
             DolbyConstants.dlog(TAG, "Started event-driven foreground monitoring (original profile: $originalProfile)")
             handler.post { checkForegroundApp() }
             scheduleNextPoll()
+        } else {
+            promoteForeground()
         }
     }
 
@@ -147,6 +173,7 @@ class AppProfileMonitorService : Service() {
             isMonitoring = false
             handler.removeCallbacks(checkForegroundAppRunnable)
             unregisterEventListeners()
+            stopForeground(STOP_FOREGROUND_REMOVE)
             
             synchronized(this) {
                 pendingSwitchRunnable?.let { switchHandler.removeCallbacks(it) }
@@ -404,12 +431,13 @@ class AppProfileMonitorService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
-        super.onDestroy()
         DolbyConstants.dlog(TAG, "Service destroyed")
         stopMonitoring()
         unregisterEventListeners()
+        stopForeground(STOP_FOREGROUND_REMOVE)
         dolbyRepository.close()
         hasOriginalProfile = false
+        super.onDestroy()
     }
 
     companion object {
@@ -426,7 +454,7 @@ class AppProfileMonitorService : Service() {
             val intent = Intent(context, AppProfileMonitorService::class.java).apply {
                 action = ACTION_START_MONITORING
             }
-            context.startService(intent)
+            context.startForegroundService(intent)
         }
 
         fun stopMonitoring(context: Context) {
@@ -440,7 +468,7 @@ class AppProfileMonitorService : Service() {
             val intent = Intent(context, AppProfileMonitorService::class.java).apply {
                 action = ACTION_CHECK_NOW
             }
-            context.startService(intent)
+            context.startForegroundService(intent)
         }
     }
 }
