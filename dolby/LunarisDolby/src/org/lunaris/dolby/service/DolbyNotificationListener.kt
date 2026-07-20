@@ -5,12 +5,12 @@
 
 package org.lunaris.dolby.service
 
-import android.content.Intent
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.data.AppProfileManager
+import org.lunaris.dolby.data.DolbyBootInitializer
 import org.lunaris.dolby.data.DolbyRepository
 
 class DolbyNotificationListener : NotificationListenerService() {
@@ -25,14 +25,17 @@ class DolbyNotificationListener : NotificationListenerService() {
         appProfileManager = AppProfileManager(this)
         dolbyRepository = DolbyRepository(this)
         initializeDolbySettings()
-        startAppProfileMonitoringIfEnabled()
+        // Do NOT call DolbyBootInitializer.initialize() here — boot already runs the
+        // full ordered path (effect → monitor → NL rebind → schedules). Only ensure
+        // app-profile monitoring if this listener comes up without a boot event.
+        DolbyBootInitializer.startAppProfileMonitoringIfEnabled(this)
     }
 
     override fun onListenerConnected() {
         super.onListenerConnected()
         DolbyConstants.dlog(TAG, "NotificationListener connected")
         initializeDolbySettings()
-        startAppProfileMonitoringIfEnabled()
+        DolbyBootInitializer.startAppProfileMonitoringIfEnabled(this)
     }
 
     override fun onListenerDisconnected() {
@@ -67,15 +70,6 @@ class DolbyNotificationListener : NotificationListenerService() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize Dolby settings", e)
-        }
-    }
-
-    private fun startAppProfileMonitoringIfEnabled() {
-        val prefs = getSharedPreferences("dolby_prefs", MODE_PRIVATE)
-        val isEnabled = prefs.getBoolean("app_profile_monitoring_enabled", false)
-        if (isEnabled) {
-            DolbyConstants.dlog(TAG, "Starting app profile monitoring")
-            AppProfileMonitorService.startMonitoring(this)
         }
     }
 
