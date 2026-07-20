@@ -94,7 +94,24 @@ class ScheduledProfileManager(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val triggerAt = System.currentTimeMillis() + CHECK_INTERVAL_MS
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+        try {
+            val canExact = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                alarmManager.canScheduleExactAlarms()
+            } else {
+                true
+            }
+            if (canExact) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            } else {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+                DolbyConstants.dlog(TAG, "Exact alarms unavailable; using inexact schedule")
+            }
+        } catch (e: SecurityException) {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+            DolbyConstants.dlog(TAG, "Exact alarm denied, fell back to inexact: ${e.message}")
+        } catch (e: Exception) {
+            DolbyConstants.dlog(TAG, "Failed to schedule next check: ${e.message}")
+        }
     }
 
     fun cancelScheduledCheck() {

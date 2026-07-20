@@ -8,6 +8,7 @@ package org.lunaris.dolby.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.data.DolbyRepository
 import org.lunaris.dolby.data.ScheduledProfileManager
 
@@ -21,12 +22,19 @@ class ScheduledProfileReceiver : BroadcastReceiver() {
             DolbyRepository(context).use { repository ->
                 manager.applyActiveRuleIfNeeded(repository)
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            DolbyConstants.dlog(TAG, "Failed to apply scheduled profile: ${e.message}")
+        } finally {
+            try {
+                manager.scheduleNextCheck()
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Failed to reschedule profile check: ${e.message}")
+            }
         }
-        manager.scheduleNextCheck()
     }
 
     companion object {
+        private const val TAG = "ScheduledProfileRx"
         const val ACTION_CHECK = "org.lunaris.dolby.action.CHECK_SCHEDULED_PROFILE"
     }
 }
