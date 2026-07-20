@@ -406,14 +406,6 @@
     <string name="calibration_title">Audio calibration</string>
     <string name="calibration_desc">Live spectrum view while tuning your listening environment</string>
     <string name="calibration_hint">Play reference audio and watch the spectrum. Adjust EQ on the Equalizer tab.</string>
-    <string name="onboarding_title">Welcome to Dolby Atmos</string>
-    <string name="onboarding_welcome">Enhance your audio with profiles, EQ, and smart automation.</string>
-    <string name="onboarding_permissions">Grant permissions for background profile switching.</string>
-    <string name="onboarding_qs_tile">Add the Dolby tile from Quick Settings for fast access.</string>
-    <string name="onboarding_qs_tile_desc">Pull down Quick Settings, edit tiles, and add Dolby Atmos.</string>
-    <string name="onboarding_done">You are ready. Explore Automation for advanced features.</string>
-    <string name="next">Next</string>
-    <string name="get_started">Get started</string>
     <string name="scheduled_profiles_days_label">Days (empty = every day)</string>
     <string name="scheduled_profiles_days">Days: %1$s</string>
     <string name="scheduled_profiles_priority">Priority: %1$d</string>

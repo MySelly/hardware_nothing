@@ -406,14 +406,6 @@
     <string name="calibration_title">Ses kalibrasyonu</string>
     <string name="calibration_desc">Ortamınızı ayarlarken canlı spektrum görünümü</string>
     <string name="calibration_hint">Referans ses çalın ve spektrumu izleyin. EQ için Ekolayzer sekmesini kullanın.</string>
-    <string name="onboarding_title">Dolby Atmos\'a hoş geldiniz</string>
-    <string name="onboarding_welcome">Profiller, EQ ve akıllı otomasyon ile sesinizi geliştirin.</string>
-    <string name="onboarding_permissions">Arka planda profil değişimi için izinleri verin.</string>
-    <string name="onboarding_qs_tile">Hızlı erişim için Hızlı Ayarlar\'a Dolby kutucuğu ekleyin.</string>
-    <string name="onboarding_qs_tile_desc">Hızlı Ayarlar\'ı açın, kutucukları düzenleyin ve Dolby Atmos\'u ekleyin.</string>
-    <string name="onboarding_done">Hazırsınız. Gelişmiş özellikler için Otomasyon\'u keşfedin.</string>
-    <string name="next">İleri</string>
-    <string name="get_started">Başla</string>
     <string name="scheduled_profiles_days_label">Günler (boş = her gün)</string>
     <string name="scheduled_profiles_days">Günler: %1$s</string>
     <string name="scheduled_profiles_priority">Öncelik: %1$d</string>

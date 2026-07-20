@@ -65,7 +65,6 @@ object DolbyConstants {
     const val PREF_SIMPLE_UI_MODE = "simple_ui_mode"
     const val PREF_AMOLED_THEME = "amoled_theme"
     const val PREF_DYNAMIC_COLOR = "dynamic_color"
-    const val PREF_ONBOARDING_COMPLETE = "onboarding_complete"
     const val PREF_BATTERY_SAVER_MODE = "battery_saver_mode"
     const val PREF_AUTO_DISABLE_ON_CALL = "auto_disable_on_call"
     const val PREF_MEDIA_CONTENT_DETECTION = "media_content_detection"

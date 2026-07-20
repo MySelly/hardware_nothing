@@ -16,13 +16,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.ui.screens.DolbyNavHost
-import org.lunaris.dolby.ui.screens.OnboardingScreen
 import org.lunaris.dolby.ui.theme.DolbyTheme
 import org.lunaris.dolby.ui.viewmodel.DolbyViewModel
 import org.lunaris.dolby.ui.viewmodel.EqualizerViewModel
@@ -106,23 +104,15 @@ class DolbyActivity : ComponentActivity() {
         lifecycle.addObserver(lifecycleObserver)
         
         setContent {
-            val prefs = getSharedPreferences("dolby_prefs", MODE_PRIVATE)
-            var onboardingDone by remember {
-                mutableStateOf(prefs.getBoolean(DolbyConstants.PREF_ONBOARDING_COMPLETE, false))
-            }
             DolbyTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.surface
                 ) {
-                    if (!onboardingDone) {
-                        OnboardingScreen(onComplete = { onboardingDone = true })
-                    } else {
-                        DolbyNavHost(
-                            dolbyViewModel = dolbyViewModel,
-                            equalizerViewModel = equalizerViewModel
-                        )
-                    }
+                    DolbyNavHost(
+                        dolbyViewModel = dolbyViewModel,
+                        equalizerViewModel = equalizerViewModel
+                    )
                 }
             }
         }
