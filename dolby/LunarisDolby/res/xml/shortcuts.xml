@@ -23,4 +23,43 @@
             <extra android:name="profile" android:value="2" />
         </intent>
     </shortcut>
+    <shortcut
+        android:shortcutId="equalizer"
+        android:enabled="true"
+        android:icon="@drawable/ic_dolby_qs"
+        android:shortcutShortLabel="@string/shortcut_equalizer"
+        android:shortcutLongLabel="@string/shortcut_equalizer">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="org.lunaris.dolby"
+            android:targetClass="org.lunaris.dolby.ui.DolbyActivity">
+            <extra android:name="route" android:value="equalizer" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="automation"
+        android:enabled="true"
+        android:icon="@drawable/ic_dolby_qs"
+        android:shortcutShortLabel="@string/shortcut_automation"
+        android:shortcutLongLabel="@string/shortcut_automation">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="org.lunaris.dolby"
+            android:targetClass="org.lunaris.dolby.ui.DolbyActivity">
+            <extra android:name="route" android:value="automation_settings" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="import_export"
+        android:enabled="true"
+        android:icon="@drawable/ic_dolby_qs"
+        android:shortcutShortLabel="@string/shortcut_import"
+        android:shortcutLongLabel="@string/shortcut_import">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="org.lunaris.dolby"
+            android:targetClass="org.lunaris.dolby.ui.DolbyActivity">
+            <extra android:name="route" android:value="import_export" />
+        </intent>
+    </shortcut>
 </shortcuts>
