@@ -67,16 +67,17 @@ class MediaContentRulesManager(context: Context) {
         else -> null
     }
 
-    private fun defaultProfileFor(contentType: String): Int = when (contentType.lowercase()) {
-        "music" -> 2
-        "video", "movie" -> 1
-        "game" -> 3
-        "speech", "podcast" -> 4
-        else -> -1
-    }
-
     companion object {
         val CONTENT_TYPES = listOf("music", "video", "game", "speech")
+
+        /** Default Dolby profile id for a media content type (no Context required). */
+        fun defaultProfileFor(contentType: String): Int = when (contentType.lowercase()) {
+            "music" -> 2
+            "video", "movie" -> 1
+            "game" -> 3
+            "speech", "podcast" -> 4
+            else -> -1
+        }
 
         val DEFAULT_PACKAGE_TYPES = mapOf(
             "com.spotify.music" to "music",

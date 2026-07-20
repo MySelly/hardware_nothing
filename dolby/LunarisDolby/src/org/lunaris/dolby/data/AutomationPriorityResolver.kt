@@ -46,14 +46,7 @@ class AutomationPriorityResolver(context: Context) {
      * Higher value = higher priority. Null means the source is unranked
      * and should never be blocked by this engine.
      */
-    fun rankOf(source: ProfileChangeSource): Int? {
-        val order = rankedOrder(getPriorityMode())
-        val normalized = normalize(source)
-        val index = order.indexOf(normalized)
-        if (index < 0) return null
-        // First in list = highest priority
-        return order.size - index
-    }
+    fun rankOf(source: ProfileChangeSource): Int? = rank(source, getPriorityMode())
 
     /**
      * @return true if the incoming change should be applied.
@@ -98,20 +91,6 @@ class AutomationPriorityResolver(context: Context) {
         return rankOf(last)
     }
 
-    private fun normalize(source: ProfileChangeSource): ProfileChangeSource {
-        return when (source) {
-            ProfileChangeSource.BLUETOOTH -> ProfileChangeSource.DEVICE
-            else -> source
-        }
-    }
-
-    private fun rankedOrder(mode: String): List<ProfileChangeSource> {
-        return when (mode) {
-            DolbyConstants.PROFILE_PRIORITY_APP -> ORDER_APP_FIRST
-            else -> ORDER_DEVICE_FIRST
-        }
-    }
-
     companion object {
         private const val TAG = "AutoPriority"
 
@@ -132,5 +111,31 @@ class AutomationPriorityResolver(context: Context) {
             ProfileChangeSource.MEDIA,
             ProfileChangeSource.FOCUS
         )
+
+        /**
+         * Pure ranking for unit tests and callers that already know the priority mode.
+         * Higher value = higher priority. Null = unranked (never blocked by this engine).
+         */
+        fun rank(source: ProfileChangeSource, priorityMode: String): Int? {
+            val order = rankedOrder(priorityMode)
+            val normalized = normalize(source)
+            val index = order.indexOf(normalized)
+            if (index < 0) return null
+            return order.size - index
+        }
+
+        fun normalize(source: ProfileChangeSource): ProfileChangeSource {
+            return when (source) {
+                ProfileChangeSource.BLUETOOTH -> ProfileChangeSource.DEVICE
+                else -> source
+            }
+        }
+
+        fun rankedOrder(mode: String): List<ProfileChangeSource> {
+            return when (mode) {
+                DolbyConstants.PROFILE_PRIORITY_APP -> ORDER_APP_FIRST
+                else -> ORDER_DEVICE_FIRST
+            }
+        }
     }
 }

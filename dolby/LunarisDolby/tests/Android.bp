@@ -1,0 +1,23 @@
+//
+// Copyright (C) 2024-2025 Lunaris AOSP
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// Pure-logic unit tests against LunarisDolby app classes.
+// Uses android_test + instrumentation_for so production Kotlin is on the classpath;
+// tests themselves do not require a running Activity or Robolectric.
+android_test {
+    name: "LunarisDolbyUnitTests",
+    srcs: ["src/**/*.kt"],
+    certificate: "platform",
+    platform_apis: true,
+    system_ext_specific: true,
+    instrumentation_for: "LunarisDolby",
+    static_libs: [
+        "junit",
+        "androidx.test.ext.junit",
+        "androidx.test.rules",
+    ],
+    test_suites: ["general-tests"],
+}
