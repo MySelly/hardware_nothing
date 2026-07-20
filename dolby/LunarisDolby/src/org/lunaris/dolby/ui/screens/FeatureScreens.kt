@@ -8,9 +8,11 @@ package org.lunaris.dolby.ui.screens
 import android.content.Context
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -21,11 +23,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.R
 import org.lunaris.dolby.data.BluetoothProfileManager
+import org.lunaris.dolby.data.DeviceStateManager
 import org.lunaris.dolby.data.DolbyStatusHelper
 import org.lunaris.dolby.data.MediaContentRulesManager
 import org.lunaris.dolby.data.ProfileChangeHistoryManager
@@ -58,7 +65,10 @@ fun AutomationSettingsScreen(navController: NavController) {
                 title = { Text(stringResource(R.string.automation_settings_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back)
+                        )
                     }
                 }
             )
@@ -86,6 +96,29 @@ fun AutomationSettingsScreen(navController: NavController) {
                         OutlinedButton(onClick = { viewModel.cancelSleepTimer() }) {
                             Text(stringResource(R.string.sleep_timer_cancel))
                         }
+                    }
+                }
+            }
+            item { SectionTitle(stringResource(R.string.widget_sleep_duration_setting)) }
+            item {
+                Text(
+                    stringResource(R.string.widget_sleep_duration_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    DolbyConstants.WIDGET_SLEEP_MINUTE_OPTIONS.forEach { mins ->
+                        FilterChip(
+                            selected = state.widgetSleepMinutes == mins,
+                            onClick = { viewModel.setWidgetSleepMinutes(mins) },
+                            label = { Text("${mins}m") }
+                        )
                     }
                 }
             }
@@ -171,7 +204,7 @@ fun AutomationSettingsScreen(navController: NavController) {
                                 )
                             }
                             IconButton(onClick = { viewModel.removePackageOverride(pkg) }) {
-                                Icon(Icons.Default.Delete, contentDescription = null)
+                                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.a11y_delete))
                             }
                         }
                     }
@@ -266,9 +299,18 @@ private fun SectionTitle(text: String) {
 
 @Composable
 private fun PrefSwitch(title: String, checked: Boolean, onChecked: (Boolean) -> Unit) {
+    val onLabel = stringResource(R.string.a11y_switch_on)
+    val offLabel = stringResource(R.string.a11y_switch_off)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(title, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onChecked)
+        Switch(
+            checked = checked,
+            onCheckedChange = onChecked,
+            modifier = Modifier.semantics {
+                contentDescription = title
+                stateDescription = if (checked) onLabel else offLabel
+            }
+        )
     }
 }
 
@@ -314,14 +356,32 @@ fun BluetoothRulesScreen(navController: NavController) {
     val context = LocalContext.current
     val btManager = remember { BluetoothProfileManager(context) }
     var rules by remember { mutableStateOf(btManager.getRules()) }
+    val bondedDevices = remember { btManager.getBondedDevices() }
     val audioManager = context.getSystemService(AudioManager::class.java)
-    val btDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+    val connectedBtDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
         .firstOrNull { it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP }
     val profiles = stringArrayResource(R.array.dolby_profile_entries)
     val profileValues = stringArrayResource(R.array.dolby_profile_values)
-    var showProfilePicker by remember { mutableStateOf(false) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var selectedDeviceKey by remember { mutableStateOf<String?>(null) }
+    var selectedDeviceName by remember { mutableStateOf("") }
     var selectedProfileIndex by remember { mutableIntStateOf(0) }
+    var deviceMenuExpanded by remember { mutableStateOf(false) }
     var profileMenuExpanded by remember { mutableStateOf(false) }
+
+    val deviceChoices = remember(bondedDevices, connectedBtDevice) {
+        val deviceStateManager = DeviceStateManager(context)
+        buildList {
+            bondedDevices.forEach { add(it.deviceKey to it.displayName) }
+            connectedBtDevice?.let { device ->
+                val key = deviceStateManager.deviceKey(device)
+                val name = deviceStateManager.deviceDisplayName(device)
+                if (none { it.first == key }) {
+                    add(0, key to name)
+                }
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -329,25 +389,36 @@ fun BluetoothRulesScreen(navController: NavController) {
                 title = { Text(stringResource(R.string.bt_rules_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 }
             )
         },
         floatingActionButton = {
-            if (btDevice != null) {
+            if (deviceChoices.isNotEmpty()) {
                 ExtendedFloatingActionButton(
                     onClick = {
+                        val first = deviceChoices.first()
+                        selectedDeviceKey = first.first
+                        selectedDeviceName = first.second
                         selectedProfileIndex = 0
-                        showProfilePicker = true
+                        showAddDialog = true
                     },
-                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    text = { Text(stringResource(R.string.bt_rules_add_current)) }
+                    icon = { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.a11y_add)) },
+                    text = { Text(stringResource(R.string.bt_rules_add_paired)) }
                 )
             }
         }
     ) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(16.dp)) {
+            item {
+                Text(
+                    stringResource(R.string.bt_rules_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+            }
             if (rules.isEmpty()) {
                 item { Text(stringResource(R.string.bt_rules_empty), color = MaterialTheme.colorScheme.onSurfaceVariant) }
             } else {
@@ -365,7 +436,7 @@ fun BluetoothRulesScreen(navController: NavController) {
                             IconButton(onClick = {
                                 btManager.deleteRule(rule.deviceKey)
                                 rules = btManager.getRules()
-                            }) { Icon(Icons.Default.Delete, contentDescription = null) }
+                            }) { Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.a11y_delete)) }
                         }
                     }
                 }
@@ -373,52 +444,86 @@ fun BluetoothRulesScreen(navController: NavController) {
         }
     }
 
-    if (showProfilePicker && btDevice != null) {
+    if (showAddDialog && deviceChoices.isNotEmpty()) {
         AlertDialog(
-            onDismissRequest = { showProfilePicker = false },
-            title = { Text(stringResource(R.string.bt_rules_pick_profile)) },
+            onDismissRequest = { showAddDialog = false },
+            title = { Text(stringResource(R.string.bt_rules_pick_device)) },
             text = {
-                ExposedDropdownMenuBox(
-                    expanded = profileMenuExpanded,
-                    onExpandedChange = { profileMenuExpanded = it }
-                ) {
-                    OutlinedTextField(
-                        value = profiles.getOrElse(selectedProfileIndex) { "?" },
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(profileMenuExpanded) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = profileMenuExpanded,
-                        onDismissRequest = { profileMenuExpanded = false }
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    ExposedDropdownMenuBox(
+                        expanded = deviceMenuExpanded,
+                        onExpandedChange = { deviceMenuExpanded = it }
                     ) {
-                        profiles.forEachIndexed { index, name ->
-                            DropdownMenuItem(
-                                text = { Text(name) },
-                                onClick = {
-                                    selectedProfileIndex = index
-                                    profileMenuExpanded = false
-                                }
-                            )
+                        OutlinedTextField(
+                            value = selectedDeviceName,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(stringResource(R.string.bt_rules_device_label)) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(deviceMenuExpanded) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = deviceMenuExpanded,
+                            onDismissRequest = { deviceMenuExpanded = false }
+                        ) {
+                            deviceChoices.forEach { (key, name) ->
+                                DropdownMenuItem(
+                                    text = { Text(name) },
+                                    onClick = {
+                                        selectedDeviceKey = key
+                                        selectedDeviceName = name
+                                        deviceMenuExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    ExposedDropdownMenuBox(
+                        expanded = profileMenuExpanded,
+                        onExpandedChange = { profileMenuExpanded = it }
+                    ) {
+                        OutlinedTextField(
+                            value = profiles.getOrElse(selectedProfileIndex) { "?" },
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(stringResource(R.string.bt_rules_pick_profile)) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(profileMenuExpanded) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = profileMenuExpanded,
+                            onDismissRequest = { profileMenuExpanded = false }
+                        ) {
+                            profiles.forEachIndexed { index, name ->
+                                DropdownMenuItem(
+                                    text = { Text(name) },
+                                    onClick = {
+                                        selectedProfileIndex = index
+                                        profileMenuExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             },
             confirmButton = {
                 Button(onClick = {
+                    val key = selectedDeviceKey ?: return@Button
                     val profileId = profileValues.getOrNull(selectedProfileIndex)?.toIntOrNull() ?: 2
-                    btManager.addRule(btDevice, profileId)
+                    btManager.addRule(key, selectedDeviceName, profileId)
                     rules = btManager.getRules()
-                    showProfilePicker = false
+                    showAddDialog = false
                 }) {
-                    Text(stringResource(R.string.bt_rules_add_current))
+                    Text(stringResource(R.string.bt_rules_add_paired))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showProfilePicker = false }) {
+                TextButton(onClick = { showAddDialog = false }) {
                     Text(stringResource(android.R.string.cancel))
                 }
             }
@@ -442,14 +547,14 @@ fun ProfileHistoryScreen(navController: NavController) {
                 title = { Text(stringResource(R.string.profile_history_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     IconButton(onClick = {
                         historyManager.clearHistory()
                         history = emptyList()
-                    }) { Icon(Icons.Default.DeleteSweep, contentDescription = null) }
+                    }) { Icon(Icons.Default.DeleteSweep, contentDescription = stringResource(R.string.a11y_clear_history)) }
                 }
             )
         }
@@ -512,7 +617,7 @@ fun DiagnosticsScreen(navController: NavController) {
                 title = { Text(stringResource(R.string.diagnostics_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
