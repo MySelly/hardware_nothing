@@ -15,6 +15,13 @@
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.READ_SEARCH_INDEXABLES" />
 
     <permission
         android:name="org.lunaris.dolby.permission.AUTOMATION"
@@ -96,6 +103,7 @@
         <activity
             android:name=".ui.DolbyActivity"
             android:label="@string/dolby_title"
+            android:launchMode="singleTop"
             android:exported="true">
             <meta-data
                 android:name="android.app.shortcuts"
@@ -117,6 +125,18 @@
                        android:value="com.android.settings.category.ia.sound" />
             <meta-data android:name="com.android.settings.summary_uri"
                        android:value="content://org.lunaris.dolby.summary/dolby" />
+            <meta-data
+                android:name="com.android.settings.KEYHINT"
+                android:value="dolby" />
+            <meta-data
+                android:name="com.android.settings.keyhint"
+                android:value="dolby_atmos" />
+            <meta-data
+                android:name="com.android.settings.title"
+                android:resource="@string/dolby_title" />
+            <meta-data
+                android:name="com.android.settings.icon"
+                android:resource="@mipmap/ic_launcher" />
         </activity>
 
         <provider
@@ -145,10 +165,27 @@
             android:authorities="org.lunaris.dolby.summary">
         </provider>
 
+        <provider
+            android:name=".provider.DolbySearchIndexablesProvider"
+            android:authorities="org.lunaris.dolby"
+            android:multiprocess="false"
+            android:grantUriPermissions="true"
+            android:permission="android.permission.READ_SEARCH_INDEXABLES"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.action.SEARCH_INDEXABLES_PROVIDER" />
+            </intent-filter>
+        </provider>
+
         <service
             android:name=".service.AppProfileMonitorService"
             android:exported="false"
-            android:enabled="true" />
+            android:enabled="true"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Dolby automation monitors foreground apps to switch audio profiles" />
+        </service>
 
         <service
             android:name=".service.DolbyNotificationListener"
@@ -165,7 +202,8 @@
             android:name=".service.DolbyEffectService"
             android:exported="false"
             android:enabled="true"
-            android:stopWithTask="false" />
+            android:stopWithTask="false"
+            android:foregroundServiceType="mediaPlayback" />
 
     </application>
 </manifest>

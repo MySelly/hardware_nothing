@@ -100,4 +100,16 @@
         <item>2</item>
     </string-array>
 
+    <string-array name="dolby_settings_search_keywords" translatable="false">
+        <item>equalizer</item>
+        <item>atmos</item>
+        <item>spatial</item>
+        <item>bass</item>
+        <item>automation</item>
+        <item>dolby</item>
+        <item>ieq</item>
+        <item>sleep timer</item>
+        <item>audio</item>
+    </string-array>
+
 </resources>
