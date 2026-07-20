@@ -95,14 +95,14 @@ fun ModernDolbySettingsScreen(
                     IconButton(onClick = { showCreditsDialog = true }) {
                         Icon(
                             Icons.Default.Info, 
-                            contentDescription = "Credits",
+                            contentDescription = stringResource(R.string.credits_title),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     IconButton(onClick = { showResetDialog = true }) {
                         Icon(
                             Icons.Default.RestartAlt, 
-                            contentDescription = "Reset",
+                            contentDescription = stringResource(R.string.dolby_reset_all),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -250,6 +250,12 @@ fun ModernDolbySettingsScreen(
     }
 }
 
+private data class FeatureDestination(
+    val title: String,
+    val route: String,
+    val keywords: List<String> = emptyList()
+)
+
 @Composable
 private fun FeatureSearchDialog(
     onDismiss: () -> Unit,
@@ -257,23 +263,83 @@ private fun FeatureSearchDialog(
 ) {
     var query by remember { mutableStateOf("") }
     val destinations = listOf(
-        stringResource(R.string.dolby_preset) to Screen.Equalizer.route,
-        stringResource(R.string.dolby_category_adv_settings) to Screen.Advanced.route,
-        stringResource(R.string.app_profiles_title) to Screen.AppProfiles.route,
-        stringResource(R.string.device_memory_manage_title) to Screen.DeviceMemory.route,
-        stringResource(R.string.custom_presets_title) to Screen.CustomPresets.route,
-        stringResource(R.string.scheduled_profiles_title) to Screen.ScheduledProfiles.route,
-        stringResource(R.string.bt_rules_title) to Screen.BluetoothRules.route,
-        stringResource(R.string.automation_settings_title) to Screen.AutomationSettings.route,
-        stringResource(R.string.profile_history_title) to Screen.ProfileHistory.route,
-        stringResource(R.string.diagnostics_title) to Screen.Diagnostics.route,
-        stringResource(R.string.power_user_audio_title) to Screen.PowerUserAudio.route,
-        stringResource(R.string.preset_import_export) to Screen.ImportExport.route
+        FeatureDestination(
+            title = stringResource(R.string.dolby_preset),
+            route = Screen.Equalizer.route,
+            keywords = listOf("eq", "equalizer", "bass", "ieq", "bands", "geq", "graphic")
+        ),
+        FeatureDestination(
+            title = stringResource(R.string.dolby_category_adv_settings),
+            route = Screen.Advanced.route,
+            keywords = listOf(
+                "volume leveler", "dialogue", "atmos", "spatial", "virtualizer",
+                "bass", "ieq", "surround", "stereo"
+            )
+        ),
+        FeatureDestination(
+            title = stringResource(R.string.app_profiles_title),
+            route = Screen.AppProfiles.route,
+            keywords = listOf("app", "per-app", "package")
+        ),
+        FeatureDestination(
+            title = stringResource(R.string.device_memory_manage_title),
+            route = Screen.DeviceMemory.route,
+            keywords = listOf("device", "memory", "snapshot", "headphones")
+        ),
+        FeatureDestination(
+            title = stringResource(R.string.custom_presets_title),
+            route = Screen.CustomPresets.route,
+            keywords = listOf("preset", "custom")
+        ),
+        FeatureDestination(
+            title = stringResource(R.string.scheduled_profiles_title),
+            route = Screen.ScheduledProfiles.route,
+            keywords = listOf("schedule", "timer", "alarm", "time")
+        ),
+        FeatureDestination(
+            title = stringResource(R.string.bt_rules_title),
+            route = Screen.BluetoothRules.route,
+            keywords = listOf("bluetooth", "bt", "a2dp", "paired", "bonded")
+        ),
+        FeatureDestination(
+            title = stringResource(R.string.automation_settings_title),
+            route = Screen.AutomationSettings.route,
+            keywords = listOf("sleep", "sleep timer", "widget", "automation", "battery", "call", "focus")
+        ),
+        FeatureDestination(
+            title = stringResource(R.string.profile_history_title),
+            route = Screen.ProfileHistory.route,
+            keywords = listOf("history", "undo", "log")
+        ),
+        FeatureDestination(
+            title = stringResource(R.string.diagnostics_title),
+            route = Screen.Diagnostics.route,
+            keywords = listOf("diagnostics", "status", "debug", "effect")
+        ),
+        FeatureDestination(
+            title = stringResource(R.string.power_user_audio_title),
+            route = Screen.PowerUserAudio.route,
+            keywords = listOf("power user", "audio engine", "loudness", "spatial", "headroom")
+        ),
+        FeatureDestination(
+            title = stringResource(R.string.preset_import_export),
+            route = Screen.ImportExport.route,
+            keywords = listOf("import", "export", "share", "backup")
+        )
     )
     val filtered = remember(query, destinations) {
         val q = query.trim()
-        if (q.isEmpty()) destinations
-        else destinations.filter { it.first.contains(q, ignoreCase = true) }
+        if (q.isEmpty()) {
+            destinations
+        } else {
+            destinations.filter { dest ->
+                dest.title.contains(q, ignoreCase = true) ||
+                    dest.keywords.any { keyword ->
+                        keyword.contains(q, ignoreCase = true) ||
+                            (q.length >= 3 && q.contains(keyword, ignoreCase = true))
+                    }
+            }
+        }
     }
 
     AlertDialog(
@@ -288,16 +354,16 @@ private fun FeatureSearchDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null)
+                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search_features))
                     }
                 )
-                filtered.forEach { (title, route) ->
+                filtered.forEach { dest ->
                     TextButton(
-                        onClick = { onNavigate(route) },
+                        onClick = { onNavigate(dest.route) },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = title,
+                            text = dest.title,
                             modifier = Modifier.fillMaxWidth(),
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -479,7 +545,7 @@ private fun HubDestinationRow(
         ) {
             Icon(
                 imageVector = icon,
-                contentDescription = null,
+                contentDescription = title,
                 tint = MaterialTheme.colorScheme.primary
             )
             Text(
