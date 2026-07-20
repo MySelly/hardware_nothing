@@ -21,6 +21,7 @@ import org.lunaris.dolby.R
 import org.lunaris.dolby.data.AppProfileManager
 import org.lunaris.dolby.data.DolbyRepository
 import org.lunaris.dolby.data.DolbyAutomationCoordinator
+import org.lunaris.dolby.data.MediaContentRulesManager
 import org.lunaris.dolby.data.ProfileChangeHistoryManager
 import org.lunaris.dolby.domain.models.ProfileChangeSource
 import org.lunaris.dolby.utils.ToastHelper
@@ -169,8 +170,11 @@ class AppProfileMonitorService : Service() {
                 .apply()
 
             if (prefs.getBoolean(DolbyConstants.PREF_MEDIA_CONTENT_DETECTION, false)) {
-                detectMediaContent(packageName)?.let { contentType ->
-                    DolbyAutomationCoordinator.applyMediaContentProfile(this, contentType)
+                val assignedProfile = appProfileManager.getAppProfile(packageName)
+                if (assignedProfile < 0) {
+                    detectMediaContent(packageName)?.let { contentType ->
+                        DolbyAutomationCoordinator.applyMediaContentProfile(this, contentType)
+                    }
                 }
             }
             
@@ -292,16 +296,7 @@ class AppProfileMonitorService : Service() {
     }
 
     private fun detectMediaContent(packageName: String): String? {
-        return when (packageName) {
-            "com.spotify.music", "com.google.android.apps.youtube.music",
-            "com.apple.android.music", "com.amazon.mp3" -> "music"
-            "com.google.android.youtube", "com.netflix.mediaclient",
-            "com.disney.disneyplus", "tv.twitch.android.app" -> "video"
-            "com.mojang.minecraftpe", "com.epicgames.fortnite",
-            "com.activision.callofduty.shooter" -> "game"
-            "com.google.android.apps.podcasts", "com.audible.application" -> "speech"
-            else -> null
-        }
+        return MediaContentRulesManager(this).detectContentType(packageName)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

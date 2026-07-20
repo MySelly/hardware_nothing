@@ -388,6 +388,11 @@
     <string name="battery_saver_mode">Battery saver optimization</string>
     <string name="auto_disable_on_call">Bypass during calls</string>
     <string name="media_content_detection">Media content detection</string>
+    <string name="media_content_mapping_desc">Choose which Dolby profile to use for each detected media type. App-specific profiles still win when set.</string>
+    <string name="media_type_music">Music</string>
+    <string name="media_type_video">Video</string>
+    <string name="media_type_game">Game</string>
+    <string name="media_type_speech">Speech / podcast</string>
     <string name="game_latency_mode">Game latency mode</string>
     <string name="focus_mode_integration">Focus / DND integration</string>
     <string name="simple_ui_mode">Simple UI mode</string>

@@ -28,6 +28,7 @@ import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.R
 import org.lunaris.dolby.data.BluetoothProfileManager
 import org.lunaris.dolby.data.DolbyRepository
+import org.lunaris.dolby.data.MediaContentRulesManager
 import org.lunaris.dolby.data.ProfileChangeHistoryManager
 import org.lunaris.dolby.data.SleepTimerManager
 import org.lunaris.dolby.domain.models.SleepTimerAction
@@ -42,6 +43,7 @@ import java.util.Locale
 fun AutomationSettingsScreen(navController: NavController) {
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
+    val mediaRules = remember { MediaContentRulesManager(context) }
     var batterySaver by remember { mutableStateOf(prefs.getBoolean(DolbyConstants.PREF_BATTERY_SAVER_MODE, false)) }
     var autoCall by remember { mutableStateOf(prefs.getBoolean(DolbyConstants.PREF_AUTO_DISABLE_ON_CALL, true)) }
     var mediaDetect by remember { mutableStateOf(prefs.getBoolean(DolbyConstants.PREF_MEDIA_CONTENT_DETECTION, false)) }
@@ -53,6 +55,20 @@ fun AutomationSettingsScreen(navController: NavController) {
     var sleepMinutes by remember { mutableIntStateOf(30) }
     val timerManager = remember { SleepTimerManager(context) }
     var activeTimer by remember { mutableStateOf(timerManager.getActiveTimer()) }
+    val profiles = stringArrayResource(R.array.dolby_profile_entries)
+    val profileValues = stringArrayResource(R.array.dolby_profile_values)
+    var musicProfile by remember {
+        mutableIntStateOf(mediaRules.getProfileForContentType("music"))
+    }
+    var videoProfile by remember {
+        mutableIntStateOf(mediaRules.getProfileForContentType("video"))
+    }
+    var gameProfile by remember {
+        mutableIntStateOf(mediaRules.getProfileForContentType("game"))
+    }
+    var speechProfile by remember {
+        mutableIntStateOf(mediaRules.getProfileForContentType("speech"))
+    }
 
     Scaffold(
         topBar = {
@@ -109,6 +125,63 @@ fun AutomationSettingsScreen(navController: NavController) {
                 mediaDetect = it
                 prefs.edit().putBoolean(DolbyConstants.PREF_MEDIA_CONTENT_DETECTION, it).apply()
             }}
+            if (mediaDetect) {
+                item {
+                    Text(
+                        stringResource(R.string.media_content_mapping_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                item {
+                    MediaProfilePicker(
+                        label = stringResource(R.string.media_type_music),
+                        selectedProfile = musicProfile,
+                        profiles = profiles,
+                        profileValues = profileValues,
+                        onSelected = {
+                            musicProfile = it
+                            mediaRules.setProfileForContentType("music", it)
+                        }
+                    )
+                }
+                item {
+                    MediaProfilePicker(
+                        label = stringResource(R.string.media_type_video),
+                        selectedProfile = videoProfile,
+                        profiles = profiles,
+                        profileValues = profileValues,
+                        onSelected = {
+                            videoProfile = it
+                            mediaRules.setProfileForContentType("video", it)
+                        }
+                    )
+                }
+                item {
+                    MediaProfilePicker(
+                        label = stringResource(R.string.media_type_game),
+                        selectedProfile = gameProfile,
+                        profiles = profiles,
+                        profileValues = profileValues,
+                        onSelected = {
+                            gameProfile = it
+                            mediaRules.setProfileForContentType("game", it)
+                        }
+                    )
+                }
+                item {
+                    MediaProfilePicker(
+                        label = stringResource(R.string.media_type_speech),
+                        selectedProfile = speechProfile,
+                        profiles = profiles,
+                        profileValues = profileValues,
+                        onSelected = {
+                            speechProfile = it
+                            mediaRules.setProfileForContentType("speech", it)
+                        }
+                    )
+                }
+            }
             item { PrefSwitch(stringResource(R.string.game_latency_mode), gameLatency) {
                 gameLatency = it
                 prefs.edit().putBoolean(DolbyConstants.PREF_GAME_LATENCY_MODE, it).apply()
@@ -154,6 +227,42 @@ private fun PrefSwitch(title: String, checked: Boolean, onChecked: (Boolean) -> 
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(title, modifier = Modifier.weight(1f))
         Switch(checked = checked, onCheckedChange = onChecked)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MediaProfilePicker(
+    label: String,
+    selectedProfile: Int,
+    profiles: Array<String>,
+    profileValues: Array<String>,
+    onSelected: (Int) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedIndex = profileValues.indexOf(selectedProfile.toString()).coerceAtLeast(0)
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = profiles.getOrElse(selectedIndex) { "?" },
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            profiles.forEachIndexed { index, name ->
+                DropdownMenuItem(
+                    text = { Text(name) },
+                    onClick = {
+                        profileValues.getOrNull(index)?.toIntOrNull()?.let(onSelected)
+                        expanded = false
+                    }
+                )
+            }
+        }
     }
 }
 

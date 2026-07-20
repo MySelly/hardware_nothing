@@ -388,6 +388,11 @@
     <string name="battery_saver_mode">Pil tasarrufu optimizasyonu</string>
     <string name="auto_disable_on_call">Görüşmede bypass</string>
     <string name="media_content_detection">Medya içerik algılama</string>
+    <string name="media_content_mapping_desc">Her medya türü için kullanılacak Dolby profilini seçin. Uygulamaya özel profil varsa o önceliklidir.</string>
+    <string name="media_type_music">Müzik</string>
+    <string name="media_type_video">Video</string>
+    <string name="media_type_game">Oyun</string>
+    <string name="media_type_speech">Konuşma / podcast</string>
     <string name="game_latency_mode">Oyun gecikme modu</string>
     <string name="focus_mode_integration">Odak / Rahatsız Etmeyin entegrasyonu</string>
     <string name="simple_ui_mode">Basit arayüz modu</string>

@@ -52,13 +52,10 @@ object DolbyAutomationCoordinator {
         val prefs = context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
         if (!prefs.getBoolean(DolbyConstants.PREF_MEDIA_CONTENT_DETECTION, false)) return
 
-        val profileId = when (contentType.lowercase()) {
-            "music" -> 2
-            "video", "movie" -> 1
-            "game" -> 3
-            "speech", "podcast" -> 4
-            else -> return
-        }
+        val rules = MediaContentRulesManager(context)
+        val profileId = rules.getProfileForContentType(contentType)
+        if (profileId < 0) return
+
         prefs.edit().putString("last_media_content_type", contentType).apply()
         applyProfileChange(
             context,
