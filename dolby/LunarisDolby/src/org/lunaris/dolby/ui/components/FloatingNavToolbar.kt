@@ -18,6 +18,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -177,7 +179,8 @@ private fun NavToolbarItem(
                     if (isEq) {
                         AnimatedEqualizerIconDynamic(
                             color = if (selected) onPrimaryColor else onContainerColor,
-                            size = 24.dp
+                            size = 24.dp,
+                            modifier = Modifier.semantics { contentDescription = label }
                         )
                     } else {
                         Icon(
