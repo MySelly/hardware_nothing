@@ -77,8 +77,11 @@ class DolbyAutomationReceiver : BroadcastReceiver() {
                 DolbyAutomationCoordinator.applyBatterySaverIfNeeded(context)
             }
             "android.app.action.INTERRUPTION_FILTER_CHANGED" -> {
-                val zen = intent.getIntExtra("android.app.extra.INTERRUPTION_FILTER_TYPE", -1)
-                DolbyAutomationCoordinator.applyFocusModeProfile(context, zen > 0)
+                val nm = context.getSystemService(android.app.NotificationManager::class.java)
+                val fromExtra = intent.getIntExtra("android.app.extra.INTERRUPTION_FILTER_TYPE", -1)
+                val filter = if (fromExtra > 0) fromExtra else nm?.currentInterruptionFilter ?: -1
+                val focusActive = DolbyAutomationCoordinator.isFocusInterruptionFilter(filter)
+                DolbyAutomationCoordinator.applyFocusModeProfile(context, focusActive)
             }
         }
     }

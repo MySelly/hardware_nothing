@@ -145,10 +145,56 @@ object DolbyAutomationCoordinator {
         val prefs = context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
         if (!prefs.getBoolean(DolbyConstants.PREF_FOCUS_MODE_INTEGRATION, false)) return
 
+        val alreadyApplied = prefs.getBoolean(DolbyConstants.PREF_FOCUS_APPLIED, false)
         if (focusActive) {
-            val profileId = prefs.getInt(DolbyConstants.PREF_FOCUS_PROFILE_ID, 4)
-            applyProfileChange(context, profileId, ProfileChangeSource.FOCUS, "Focus mode", saveUndo = true)
+            if (alreadyApplied) return
+            val repository = DolbyRepository(context)
+            try {
+                val current = repository.getCurrentProfile()
+                val focusProfile = prefs.getInt(DolbyConstants.PREF_FOCUS_PROFILE_ID, 4)
+                if (current == focusProfile) {
+                    prefs.edit()
+                        .putInt(DolbyConstants.PREF_FOCUS_PREVIOUS_PROFILE, current)
+                        .putBoolean(DolbyConstants.PREF_FOCUS_APPLIED, true)
+                        .apply()
+                    return
+                }
+                prefs.edit()
+                    .putInt(DolbyConstants.PREF_FOCUS_PREVIOUS_PROFILE, current)
+                    .putBoolean(DolbyConstants.PREF_FOCUS_APPLIED, true)
+                    .apply()
+                applyProfileChange(
+                    context,
+                    focusProfile,
+                    ProfileChangeSource.FOCUS,
+                    "Focus mode",
+                    saveUndo = false
+                )
+            } finally {
+                repository.close()
+            }
+        } else if (alreadyApplied) {
+            val previous = prefs.getInt(DolbyConstants.PREF_FOCUS_PREVIOUS_PROFILE, -1)
+            prefs.edit()
+                .putBoolean(DolbyConstants.PREF_FOCUS_APPLIED, false)
+                .remove(DolbyConstants.PREF_FOCUS_PREVIOUS_PROFILE)
+                .apply()
+            if (previous >= 0) {
+                applyProfileChange(
+                    context,
+                    previous,
+                    ProfileChangeSource.FOCUS,
+                    "Focus mode ended",
+                    saveUndo = false
+                )
+            }
         }
+    }
+
+    fun isFocusInterruptionFilter(filter: Int): Boolean {
+        return filter == android.app.NotificationManager.INTERRUPTION_FILTER_PRIORITY ||
+            filter == android.app.NotificationManager.INTERRUPTION_FILTER_NONE ||
+            filter == android.app.NotificationManager.INTERRUPTION_FILTER_ALARMS
     }
 
     fun enforceSafeListeningLimit(context: Context) {

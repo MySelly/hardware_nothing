@@ -71,6 +71,8 @@ object DolbyConstants {
     const val PREF_GAME_LATENCY_MODE = "game_latency_mode"
     const val PREF_FOCUS_MODE_INTEGRATION = "focus_mode_integration"
     const val PREF_FOCUS_PROFILE_ID = "focus_profile_id"
+    const val PREF_FOCUS_PREVIOUS_PROFILE = "focus_previous_profile"
+    const val PREF_FOCUS_APPLIED = "focus_profile_applied"
     const val PREF_SLEEP_TIMER_END_MS = "sleep_timer_end_ms"
     const val PREF_SLEEP_TIMER_ACTION = "sleep_timer_action"
     const val PREF_SLEEP_TIMER_PROFILE = "sleep_timer_profile"
