@@ -176,20 +176,77 @@ private fun ModernAdvancedSettingsContent(
     ) {
         if (state.settings.enabled) {
             item {
+                val context = LocalContext.current
                 val headroom = viewModel.getHeadroomInfo()
-                val engine = org.lunaris.dolby.data.AudioEnginePreferences(
-                    androidx.compose.ui.platform.LocalContext.current
-                )
-                if (engine.isHeadroomWarningEnabled() && headroom != null) {
-                    org.lunaris.dolby.ui.components.HeadroomWarningCard(headroom)
+                val engine = remember { org.lunaris.dolby.data.AudioEnginePreferences(context) }
+                val repository = remember { org.lunaris.dolby.data.DolbyRepository(context) }
+                var perDeviceGain by remember {
+                    mutableStateOf(engine.isPerDeviceGainEnabled())
                 }
-                OutlinedButton(
-                    onClick = { navController.navigate(Screen.PowerUserAudio.route) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.power_user_audio_title))
+                var deviceGain by remember { mutableFloatStateOf(0f) }
+                LaunchedEffect(perDeviceGain) {
+                    if (perDeviceGain) {
+                        val am = context.getSystemService(android.media.AudioManager::class.java)
+                        val device = am.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS).firstOrNull()
+                        if (device != null) {
+                            val key = org.lunaris.dolby.data.DeviceStateManager(context).deviceKey(device)
+                            deviceGain = engine.getDeviceGainOffsetTenths(key).toFloat()
+                        }
+                    }
+                }
+                DisposableEffect(Unit) {
+                    onDispose { repository.close() }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (engine.isHeadroomWarningEnabled() && headroom != null) {
+                        org.lunaris.dolby.ui.components.HeadroomWarningCard(headroom)
+                    }
+                    ModernSettingsCard(
+                        title = stringResource(R.string.per_device_gain_section),
+                        icon = Icons.Default.Speaker
+                    ) {
+                        ModernSettingSwitch(
+                            title = stringResource(R.string.per_device_gain_enabled),
+                            subtitle = stringResource(R.string.per_device_gain_section),
+                            checked = perDeviceGain,
+                            onCheckedChange = {
+                                perDeviceGain = it
+                                engine.setBoolean(org.lunaris.dolby.DolbyConstants.PREF_PER_DEVICE_GAIN_ENABLED, it)
+                                repository.refreshSpatialAndGeq(state.settings.currentProfile)
+                            },
+                            icon = Icons.Default.Speaker
+                        )
+                        AnimatedVisibility(visible = perDeviceGain) {
+                            Column {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(stringResource(R.string.per_device_gain_slider, deviceGain / 10f))
+                                Slider(
+                                    value = deviceGain,
+                                    onValueChange = {
+                                        deviceGain = it
+                                        val am = context.getSystemService(android.media.AudioManager::class.java)
+                                        val device = am.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS).firstOrNull()
+                                        if (device != null) {
+                                            engine.setDeviceGainOffsetTenths(
+                                                org.lunaris.dolby.data.DeviceStateManager(context).deviceKey(device),
+                                                it.toInt()
+                                            )
+                                            repository.refreshSpatialAndGeq(state.settings.currentProfile)
+                                        }
+                                    },
+                                    valueRange = -60f..60f
+                                )
+                            }
+                        }
+                    }
+                    OutlinedButton(
+                        onClick = { navController.navigate(Screen.PowerUserAudio.route) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.power_user_audio_title))
+                    }
                 }
             }
             item {
