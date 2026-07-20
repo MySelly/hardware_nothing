@@ -7,8 +7,6 @@ package org.lunaris.dolby.ui.screens
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -18,6 +16,7 @@ import org.lunaris.dolby.ui.viewmodel.DeviceMemoryViewModel
 import org.lunaris.dolby.ui.viewmodel.DolbyViewModel
 import org.lunaris.dolby.ui.viewmodel.EqualizerViewModel
 import org.lunaris.dolby.ui.viewmodel.ScheduledProfileViewModel
+import org.lunaris.dolby.ui.viewmodel.dolbyAndroidViewModel
 
 sealed class Screen(val route: String) {
     object Settings : Screen("settings")
@@ -72,43 +71,22 @@ fun DolbyNavHost(
         }
         
         composable(Screen.AppProfiles.route) {
-            val context = LocalContext.current
-            val appProfileViewModel: AppProfileViewModel = viewModel(
-                factory = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(
-                    context.applicationContext as android.app.Application
-                )
-            )
-            
             AppProfileScreen(
-                viewModel = appProfileViewModel,
+                viewModel = dolbyAndroidViewModel<AppProfileViewModel>(),
                 navController = navController
             )
         }
 
         composable(Screen.DeviceMemory.route) {
-            val context = LocalContext.current
-            val deviceMemoryViewModel: DeviceMemoryViewModel = viewModel(
-                factory = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(
-                    context.applicationContext as android.app.Application
-                )
-            )
-
             DeviceMemoryScreen(
-                viewModel = deviceMemoryViewModel,
+                viewModel = dolbyAndroidViewModel<DeviceMemoryViewModel>(),
                 navController = navController
             )
         }
         
         composable(Screen.CustomPresets.route) {
-            val context = LocalContext.current
-            val customPresetViewModel: CustomPresetViewModel = viewModel(
-                factory = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(
-                    context.applicationContext as android.app.Application
-                )
-            )
-
             CustomPresetsScreen(
-                viewModel = customPresetViewModel,
+                viewModel = dolbyAndroidViewModel<CustomPresetViewModel>(),
                 dolbyViewModel = dolbyViewModel,
                 equalizerViewModel = equalizerViewModel,
                 navController = navController
@@ -116,15 +94,8 @@ fun DolbyNavHost(
         }
 
         composable(Screen.ScheduledProfiles.route) {
-            val context = LocalContext.current
-            val scheduledProfileViewModel: ScheduledProfileViewModel = viewModel(
-                factory = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(
-                    context.applicationContext as android.app.Application
-                )
-            )
-
             ScheduledProfilesScreen(
-                viewModel = scheduledProfileViewModel,
+                viewModel = dolbyAndroidViewModel<ScheduledProfileViewModel>(),
                 navController = navController
             )
         }

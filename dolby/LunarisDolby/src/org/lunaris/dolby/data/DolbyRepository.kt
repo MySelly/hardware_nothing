@@ -36,6 +36,7 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     
     private val deviceStateManager = DeviceStateManager(context)
     private val audioEnginePrefs = AudioEnginePreferences(context)
+    private val equalizerPresetStore = EqualizerPresetStore(context)
 
     private fun clampGeqGain(gain: Int): Int = audioEnginePrefs.clampEqGain(gain)
 
@@ -63,8 +64,6 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     
     private var isReleased = false
     
-    private var cachedPresets: List<EqualizerPreset>? = null
-    private val presetCacheLock = Any()
     private var isBypassActive = false
 
     private fun checkEffect() {
@@ -752,87 +751,19 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     }
 
     fun getUserPresets(): List<EqualizerPreset> {
-        synchronized(presetCacheLock) {
-            cachedPresets?.let { return it }
-            
-            val bandMode = getBandMode()
-            val presets = presetsPrefs.all.mapNotNull { (name, value) ->
-                try {
-                    val valueStr = value as? String ?: return@mapNotNull null
-                    parsePreset(name, valueStr)
-                } catch (e: Exception) {
-                    DolbyConstants.dlog(TAG, "Error parsing preset $name: ${e.message}")
-                    null
-                }
-            }
-            
-            cachedPresets = presets
-            return presets
-        }
-    }
-
-    private fun parsePreset(name: String, valueStr: String): EqualizerPreset? {
-        return try {
-            if (valueStr.contains("|")) {
-                val parts = valueStr.split("|")
-                val presetBandMode = BandMode.fromValue(parts[1])
-                val gains = parts[0].split(",").map { it.toInt() }.toIntArray()
-                EqualizerPreset(
-                    name = name,
-                    bandGains = deserializeGains(gains, presetBandMode),
-                    isUserDefined = true,
-                    bandMode = presetBandMode
-                )
-            } else {
-                val gains = valueStr.split(",").map { it.toInt() }.toIntArray()
-                EqualizerPreset(
-                    name = name,
-                    bandGains = deserializeGains(gains, BandMode.TEN_BAND),
-                    isUserDefined = true,
-                    bandMode = BandMode.TEN_BAND
-                )
-            }
-        } catch (e: Exception) {
-            DolbyConstants.dlog(TAG, "Error parsing preset value: ${e.message}")
-            null
-        }
+        return equalizerPresetStore.getUserPresets(getBandMode())
     }
 
     fun addUserPreset(name: String, bandGains: List<BandGain>, bandMode: BandMode) {
-        try {
-            val gains = serializeGains(bandGains, bandMode).joinToString(",")
-            val value = "$gains|${bandMode.value}"
-            presetsPrefs.edit().putString(name, value).apply()
-            
-            synchronized(presetCacheLock) {
-                cachedPresets = null
-            }
-        } catch (e: Exception) {
-            DolbyConstants.dlog(TAG, "Error adding user preset: ${e.message}")
-        }
+        equalizerPresetStore.addUserPreset(name, bandGains, bandMode)
     }
 
     fun deleteUserPreset(name: String) {
-        try {
-            presetsPrefs.edit().remove(name).apply()
-            
-            synchronized(presetCacheLock) {
-                cachedPresets = null
-            }
-        } catch (e: Exception) {
-            DolbyConstants.dlog(TAG, "Error deleting user preset: ${e.message}")
-        }
+        equalizerPresetStore.deleteUserPreset(name)
     }
 
     fun clearAllUserPresets() {
-        try {
-            presetsPrefs.edit().clear().apply()
-            synchronized(presetCacheLock) {
-                cachedPresets = null
-            }
-        } catch (e: Exception) {
-            DolbyConstants.dlog(TAG, "Error clearing user presets: ${e.message}")
-        }
+        equalizerPresetStore.clearAllUserPresets()
     }
 
     fun getCustomDolbyPresets(): List<CustomDolbyPresetSummary> {
@@ -1044,74 +975,11 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
         }
     }
 
-    private fun deserializeGains(gains: IntArray, bandMode: BandMode): List<BandGain> {
-        val frequencies = when (bandMode) {
-            BandMode.TEN_BAND -> BAND_FREQUENCIES_10
-            BandMode.FIFTEEN_BAND -> BAND_FREQUENCIES_15
-            BandMode.TWENTY_BAND -> BAND_FREQUENCIES_20
-        }
-        
-        val indices = when (bandMode) {
-            BandMode.TEN_BAND -> TEN_BAND_INDICES
-            BandMode.FIFTEEN_BAND -> FIFTEEN_BAND_INDICES
-            BandMode.TWENTY_BAND -> (0..19).toList()
-        }
-        
-        return frequencies.mapIndexed { index, freq ->
-            val gainIndex = indices.getOrNull(index) ?: index
-            BandGain(frequency = freq, gain = gains.getOrElse(gainIndex) { 0 })
-        }
-    }
+    private fun deserializeGains(gains: IntArray, bandMode: BandMode): List<BandGain> =
+        EqualizerBandCodec.deserializeGains(gains, bandMode)
 
-    private fun serializeGains(bandGains: List<BandGain>, bandMode: BandMode): IntArray {
-        val result = IntArray(20) { 0 }
-        
-        when (bandMode) {
-            BandMode.TEN_BAND -> {
-                TEN_BAND_INDICES.forEachIndexed { index, targetIndex ->
-                    if (index < bandGains.size && targetIndex < 20) {
-                        result[targetIndex] = bandGains[index].gain
-                    }
-                }
-                for (i in 0 until 19 step 2) {
-                    if (i + 2 < 20) {
-                        result[i + 1] = (result[i] + result[i + 2]) / 2
-                    }
-                }   
-                result[19] = result[18]
-            }
-            BandMode.FIFTEEN_BAND -> {
-                FIFTEEN_BAND_INDICES.forEachIndexed { index, targetIndex ->
-                    if (index < bandGains.size && targetIndex < 20) {
-                        result[targetIndex] = bandGains[index].gain
-                    }
-                }
-                val missing = (0..19).filter { it !in FIFTEEN_BAND_INDICES }
-                missing.forEach { idx ->
-                    val prev = FIFTEEN_BAND_INDICES.filter { it < idx }.maxOrNull() ?: 0
-                    val next = FIFTEEN_BAND_INDICES.filter { it > idx }.minOrNull() ?: 19
-                    
-                    if (prev < idx && next > idx && prev < 20 && next < 20) {
-                        val prevValue = result[prev]
-                        val nextValue = result[next]
-                        val ratio = (idx - prev).toFloat() / (next - prev)
-                        result[idx] = (prevValue + ratio * (nextValue - prevValue)).toInt()
-                    } else if (prev < 20) {
-                        result[idx] = result[prev]
-                    }
-                }
-            }
-            BandMode.TWENTY_BAND -> {
-                bandGains.forEachIndexed { index, bandGain ->
-                    if (index < 20) {
-                        result[index] = bandGain.gain
-                    }
-                }
-            }
-        }
-        
-        return result
-    }
+    private fun serializeGains(bandGains: List<BandGain>, bandMode: BandMode): IntArray =
+        EqualizerBandCodec.serializeGains(bandGains, bandMode)
 
     fun getMidEnhancerEnabled(profile: Int): Boolean {
         val prefs = getProfilePrefs(profile)
@@ -1335,21 +1203,10 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
             .setUsage(AudioAttributes.USAGE_MEDIA)
             .build()
 
-        val BAND_FREQUENCIES_10 = listOf(32, 64, 125, 250, 500, 1000, 2250, 5000, 10000, 19688)
-        
-        val BAND_FREQUENCIES_15 = listOf(
-            32, 47, 94, 141, 234, 469, 844, 1313, 2250, 3750, 5813, 9000, 11250, 13875, 19688
-        )
-        
-        val BAND_FREQUENCIES_20 = listOf(
-            32, 47, 141, 234, 328, 469, 656, 844, 1031, 1313,
-            1688, 2250, 3000, 3750, 4688, 5813, 7125, 9000, 11250, 19688
-        )
-        
-        private val TEN_BAND_INDICES = listOf(0, 2, 4, 6, 8, 10, 12, 14, 16, 18)
-        
-        private val FIFTEEN_BAND_INDICES = listOf(0, 1, 2, 3, 4, 5, 6, 8, 11, 12, 14, 15, 17, 18, 19)
-        
+        val BAND_FREQUENCIES_10 = EqualizerBandCodec.BAND_FREQUENCIES_10
+        val BAND_FREQUENCIES_15 = EqualizerBandCodec.BAND_FREQUENCIES_15
+        val BAND_FREQUENCIES_20 = EqualizerBandCodec.BAND_FREQUENCIES_20
+
         private val BASS_CURVES = listOf(
             floatArrayOf(
                 1.00f, 1.00f, 0.95f, 0.90f, 0.80f, 0.70f, 0.55f, 0.40f, 0.25f, 0.15f,
