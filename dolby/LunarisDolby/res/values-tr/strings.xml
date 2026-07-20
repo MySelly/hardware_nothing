@@ -415,7 +415,11 @@
     <string name="scheduled_profiles_days_label">Günler (boş = her gün)</string>
     <string name="scheduled_profiles_days">Günler: %1$s</string>
     <string name="scheduled_profiles_priority">Öncelik: %1$d</string>
-    <string name="widget_desc">Hızlı Dolby aç/kapa ve profil durumu</string>
+    <string name="widget_desc">Hızlı Dolby aç/kapa, profil değiştirme ve uyku zamanlayıcı</string>
+    <string name="widget_cycle_profile">Sonraki profil</string>
+    <string name="widget_sleep_timer">Uyku 30dk</string>
+    <string name="widget_sleep_cancel">Uykuyu iptal</string>
+    <string name="widget_sleep_remaining">Uyku %1$ddk</string>
     <string name="shortcut_toggle">Dolby\'yi aç/kapat</string>
 
     <!-- Audio engine / power user -->

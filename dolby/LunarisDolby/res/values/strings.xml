@@ -415,7 +415,11 @@
     <string name="scheduled_profiles_days_label">Days (empty = every day)</string>
     <string name="scheduled_profiles_days">Days: %1$s</string>
     <string name="scheduled_profiles_priority">Priority: %1$d</string>
-    <string name="widget_desc">Quick Dolby toggle and profile status</string>
+    <string name="widget_desc">Quick Dolby toggle, profile cycle, and sleep timer</string>
+    <string name="widget_cycle_profile">Next profile</string>
+    <string name="widget_sleep_timer">Sleep 30m</string>
+    <string name="widget_sleep_cancel">Cancel sleep</string>
+    <string name="widget_sleep_remaining">Sleep %1$dm</string>
     <string name="shortcut_toggle">Toggle Dolby</string>
 
     <!-- Audio engine / power user -->

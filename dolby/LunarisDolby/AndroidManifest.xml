@@ -85,6 +85,8 @@
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="org.lunaris.dolby.widget.TOGGLE" />
+                <action android:name="org.lunaris.dolby.widget.CYCLE" />
+                <action android:name="org.lunaris.dolby.widget.SLEEP" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
