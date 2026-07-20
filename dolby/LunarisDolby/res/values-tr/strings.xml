@@ -365,6 +365,8 @@
     <string name="status_media">Medya türü</string>
     <string name="status_atmos">Atmos içerik</string>
     <string name="undo_profile_change">Profil değişikliğini geri al</string>
+    <string name="undo">Geri al</string>
+    <string name="undo_snackbar_message">Profil değişti: %1$s</string>
     <string name="source_manual">Manuel</string>
     <string name="source_schedule">Zamanlama</string>
     <string name="source_app">Uygulama profili</string>

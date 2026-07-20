@@ -26,7 +26,9 @@ object DolbyAutomationCoordinator {
         val history = ProfileChangeHistoryManager(context)
         try {
             if (saveUndo) {
-                history.saveUndoProfile(repository.getCurrentProfile())
+                val previous = repository.getCurrentProfile()
+                history.saveUndoProfile(previous)
+                UndoOfferNotifier.offer(previous, detail)
             }
             repository.setCurrentProfile(profileId)
             history.recordChange(profileId, source, detail)

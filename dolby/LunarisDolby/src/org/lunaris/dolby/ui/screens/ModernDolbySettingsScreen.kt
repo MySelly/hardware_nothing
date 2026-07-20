@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import org.lunaris.dolby.data.AutomationStatusResolver
 import org.lunaris.dolby.data.ProfileChangeHistoryManager
+import org.lunaris.dolby.data.UndoOfferNotifier
 import org.lunaris.dolby.domain.models.DolbyUiState
 import org.lunaris.dolby.ui.components.*
 import org.lunaris.dolby.ui.viewmodel.DolbyViewModel
@@ -43,10 +44,27 @@ fun ModernDolbySettingsScreen(
     var showCreditsDialog by remember { mutableStateOf(false) }
     val currentRoute by navController.currentBackStackEntryFlow.collectAsState(null)
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    val undoLabel = stringResource(R.string.undo)
 
     LaunchedEffect(Unit) {
         viewModel.userMessages.collect { message ->
             snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        UndoOfferNotifier.offers.collect { offer ->
+            val result = snackbarHostState.showSnackbar(
+                message = context.getString(R.string.undo_snackbar_message, offer.detail),
+                actionLabel = undoLabel,
+                duration = SnackbarDuration.Long
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                ProfileChangeHistoryManager(context).consumeUndoProfile()?.let { profile ->
+                    viewModel.setProfile(profile)
+                } ?: viewModel.setProfile(offer.previousProfileId)
+            }
         }
     }
     
