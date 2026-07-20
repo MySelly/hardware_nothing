@@ -9,10 +9,10 @@ import android.content.Context
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.provider.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
@@ -32,6 +32,10 @@ object HapticFeedbackHelper {
     suspend fun triggerVibration(context: Context, intensity: HapticIntensity) {
         withContext(executor) {
             try {
+                if (!isHapticFeedbackEnabled(context)) {
+                    return@withContext
+                }
+
                 val vibrator = getVibrator(context) ?: return@withContext
                 
                 if (!vibrator.hasVibrator()) {
@@ -44,6 +48,22 @@ object HapticFeedbackHelper {
                 vibrator.vibrate(effect)
             } catch (e: Exception) {
             }
+        }
+    }
+
+    private fun isHapticFeedbackEnabled(context: Context): Boolean {
+        return try {
+            val resolver = context.contentResolver
+            if (Settings.System.getInt(resolver, Settings.System.HAPTIC_FEEDBACK_ENABLED, 1) == 0) {
+                return false
+            }
+            // Some OEMs expose the same toggle under Settings.Global.
+            if (Settings.Global.getInt(resolver, Settings.System.HAPTIC_FEEDBACK_ENABLED, 1) == 0) {
+                return false
+            }
+            true
+        } catch (_: Exception) {
+            true
         }
     }
     
