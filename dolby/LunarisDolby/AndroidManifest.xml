@@ -16,6 +16,13 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
 
+    <permission
+        android:name="org.lunaris.dolby.permission.AUTOMATION"
+        android:protectionLevel="signature|privileged"
+        android:label="@string/dolby_title" />
+
+    <uses-permission android:name="org.lunaris.dolby.permission.AUTOMATION" />
+
     <application
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
@@ -53,13 +60,19 @@
 
         <receiver
             android:name=".receiver.DolbyAutomationReceiver"
-            android:exported="true">
+            android:exported="true"
+            android:permission="org.lunaris.dolby.permission.AUTOMATION">
             <intent-filter>
                 <action android:name="org.lunaris.dolby.action.SET_PROFILE" />
                 <action android:name="org.lunaris.dolby.action.TOGGLE" />
                 <action android:name="org.lunaris.dolby.action.APPLY_PRESET" />
                 <action android:name="org.lunaris.dolby.action.SET_ENABLED" />
             </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receiver.DolbySystemEventReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.POWER_SAVE_MODE_CHANGED" />
                 <action android:name="android.app.action.INTERRUPTION_FILTER_CHANGED" />

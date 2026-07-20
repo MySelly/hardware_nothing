@@ -8,7 +8,6 @@ package org.lunaris.dolby.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.PowerManager
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.data.DolbyAutomationCoordinator
 import org.lunaris.dolby.data.DolbyRepository
@@ -16,6 +15,10 @@ import org.lunaris.dolby.data.ProfileChangeHistoryManager
 import org.lunaris.dolby.domain.models.ProfileChangeSource
 import org.lunaris.dolby.service.DolbyEffectService
 
+/**
+ * Explicit automation intents. Protected by signature|privileged permission so
+ * arbitrary apps cannot toggle Dolby or switch profiles.
+ */
 class DolbyAutomationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -72,16 +75,6 @@ class DolbyAutomationReceiver : BroadcastReceiver() {
                 } finally {
                     repository.close()
                 }
-            }
-            PowerManager.ACTION_POWER_SAVE_MODE_CHANGED -> {
-                DolbyAutomationCoordinator.applyBatterySaverIfNeeded(context)
-            }
-            "android.app.action.INTERRUPTION_FILTER_CHANGED" -> {
-                val nm = context.getSystemService(android.app.NotificationManager::class.java)
-                val fromExtra = intent.getIntExtra("android.app.extra.INTERRUPTION_FILTER_TYPE", -1)
-                val filter = if (fromExtra > 0) fromExtra else nm?.currentInterruptionFilter ?: -1
-                val focusActive = DolbyAutomationCoordinator.isFocusInterruptionFilter(filter)
-                DolbyAutomationCoordinator.applyFocusModeProfile(context, focusActive)
             }
         }
     }
