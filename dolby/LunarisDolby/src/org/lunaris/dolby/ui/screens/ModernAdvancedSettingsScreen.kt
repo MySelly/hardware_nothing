@@ -36,11 +36,19 @@ fun ModernAdvancedSettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val currentRoute by navController.currentBackStackEntryFlow.collectAsState(null)
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.userMessages.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
     
     val layoutDirection = LocalLayoutDirection.current
     val cutoutInsets = WindowInsets.displayCutout.asPaddingValues()
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { 

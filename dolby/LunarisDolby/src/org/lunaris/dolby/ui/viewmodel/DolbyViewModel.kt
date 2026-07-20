@@ -16,6 +16,7 @@ import org.lunaris.dolby.data.LoudnessPreset
 import org.lunaris.dolby.domain.models.*
 import org.lunaris.dolby.service.DolbyEffectService
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancelChildren
@@ -27,9 +28,17 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow<DolbyUiState>(DolbyUiState.Loading)
     val uiState: StateFlow<DolbyUiState> = _uiState.asStateFlow()
     val currentProfile: StateFlow<Int> = repository.currentProfile
-    
+
+    private val _userMessages = MutableSharedFlow<String>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val userMessages: SharedFlow<String> = _userMessages.asSharedFlow()
+
     private var audioOutputStateJob: Job? = null
     private var profileChangeJob: Job? = null
+    private var loadSettingsJob: Job? = null
+    private var loadGeneration = 0
     private var isCleared = false
 
     init {
@@ -38,7 +47,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
         observeAudioOutputState()
         observeProfileChanges()
     }
-    
+
     private fun observeAudioOutputState() {
         audioOutputStateJob?.cancel()
         audioOutputStateJob = viewModelScope.launch {
@@ -50,7 +59,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-    
+
     private fun observeProfileChanges() {
         profileChangeJob?.cancel()
         profileChangeJob = viewModelScope.launch {
@@ -63,18 +72,26 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private suspend fun reportSettingFailure(action: String, e: Exception) {
+        DolbyConstants.dlog(TAG, "Error $action: ${e.message}")
+        _userMessages.emit(e.message ?: "Failed to $action")
+        loadSettings()
+    }
+
     fun loadSettings() {
         if (isCleared) {
             DolbyConstants.dlog(TAG, "ViewModel cleared, skipping loadSettings")
             return
         }
-        
-        viewModelScope.launch {
+
+        val generation = ++loadGeneration
+        loadSettingsJob?.cancel()
+        loadSettingsJob = viewModelScope.launch {
             try {
                 val enabled = repository.getDolbyEnabled()
                 val profile = repository.getCurrentProfile()
                 val bandMode = repository.getBandMode()
-                
+
                 val settings = DolbySettings(
                     enabled = enabled,
                     currentProfile = profile,
@@ -82,7 +99,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     volumeLevelerEnabled = repository.getVolumeLevelerEnabled(profile),
                     bandMode = bandMode
                 )
-                
+
                 val profileSettings = ProfileSettings(
                     profile = profile,
                     ieqPreset = repository.getIeqPreset(profile),
@@ -122,8 +139,8 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     dspVolumeBoostEnabled = repository.isDspVolumeBoostEnabled(),
                     dspVolumeBoostStrength = repository.getDspVolumeBoostStrength()
                 )
-                
-                if (!isCleared) {
+
+                if (!isCleared && generation == loadGeneration) {
                     _uiState.value = DolbyUiState.Success(
                         settings = settings,
                         profileSettings = profileSettings,
@@ -133,7 +150,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 }
             } catch (e: Exception) {
-                if (!isCleared) {
+                if (!isCleared && generation == loadGeneration) {
                     DolbyConstants.dlog(TAG, "Error loading settings: ${e.message}")
                     _uiState.value = DolbyUiState.Error(e.message ?: "Unknown error")
                 }
@@ -152,7 +169,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting Dolby enabled: ${e.message}")
+                reportSettingFailure("setting Dolby enabled", e)
             }
         }
     }
@@ -161,7 +178,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
         try {
             repository.setDolbyBypass(bypass)
         } catch (e: Exception) {
-            DolbyConstants.dlog(TAG, "Error setting Dolby bypass: ${e.message}")
+            viewModelScope.launch { reportSettingFailure("setting Dolby bypass", e) }
         }
     }
 
@@ -176,7 +193,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     "Manual selection"
                 )
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting profile: ${e.message}")
+                reportSettingFailure("setting profile", e)
             }
         }
     }
@@ -188,7 +205,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setBassEnhancerEnabled(profile, enabled)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting bass enhancer: ${e.message}")
+                reportSettingFailure("setting bass enhancer", e)
             }
         }
     }
@@ -199,12 +216,8 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 val profile = repository.getCurrentProfile()
                 repository.setBassLevel(profile, level)
                 loadSettings()
-            } catch (e: IllegalArgumentException) {
-                DolbyConstants.dlog(TAG, "Invalid bass level: ${e.message}")
-                _uiState.value = DolbyUiState.Error("Invalid bass level: ${e.message}")
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting bass level: ${e.message}")
-                _uiState.value = DolbyUiState.Error("Failed to set bass level")
+                reportSettingFailure("setting bass level", e)
             }
         }
     }
@@ -216,7 +229,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setBassCurve(profile, curve)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting bass curve: ${e.message}")
+                reportSettingFailure("setting bass curve", e)
             }
         }
     }
@@ -227,12 +240,8 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 val profile = repository.getCurrentProfile()
                 repository.setMidLevel(profile, level)
                 loadSettings()
-            } catch (e: IllegalArgumentException) {
-                DolbyConstants.dlog(TAG, "Invalid mid level: ${e.message}")
-                _uiState.value = DolbyUiState.Error("Invalid mid level: ${e.message}")
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting mid level: ${e.message}")
-                _uiState.value = DolbyUiState.Error("Failed to set mid level")
+                reportSettingFailure("setting mid level", e)
             }
         }
     }
@@ -243,12 +252,8 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 val profile = repository.getCurrentProfile()
                 repository.setTrebleLevel(profile, level)
                 loadSettings()
-            } catch (e: IllegalArgumentException) {
-                DolbyConstants.dlog(TAG, "Invalid treble level: ${e.message}")
-                _uiState.value = DolbyUiState.Error("Invalid treble level: ${e.message}")
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting treble level: ${e.message}")
-                _uiState.value = DolbyUiState.Error("Failed to set treble level")
+                reportSettingFailure("setting treble level", e)
             }
         }
     }
@@ -260,7 +265,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setVolumeLevelerEnabled(profile, enabled)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting volume leveler: ${e.message}")
+                reportSettingFailure("setting volume leveler", e)
             }
         }
     }
@@ -272,7 +277,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setIeqPreset(profile, preset)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting IEQ preset: ${e.message}")
+                reportSettingFailure("setting IEQ preset", e)
             }
         }
     }
@@ -284,7 +289,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setHeadphoneVirtualizerEnabled(profile, enabled)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting headphone virtualizer: ${e.message}")
+                reportSettingFailure("setting headphone virtualizer", e)
             }
         }
     }
@@ -296,7 +301,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setSpeakerVirtualizerEnabled(profile, enabled)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting speaker virtualizer: ${e.message}")
+                reportSettingFailure("setting speaker virtualizer", e)
             }
         }
     }
@@ -308,7 +313,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setStereoWideningAmount(profile, amount)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting stereo widening: ${e.message}")
+                reportSettingFailure("setting stereo widening", e)
             }
         }
     }
@@ -320,7 +325,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setDialogueEnhancerEnabled(profile, enabled)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting dialogue enhancer: ${e.message}")
+                reportSettingFailure("setting dialogue enhancer", e)
             }
         }
     }
@@ -332,7 +337,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setDialogueEnhancerAmount(profile, amount)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting dialogue enhancer amount: ${e.message}")
+                reportSettingFailure("setting dialogue enhancer amount", e)
             }
         }
     }
@@ -343,7 +348,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.resetAllProfiles()
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error resetting profiles: ${e.message}")
+                reportSettingFailure("resetting profiles", e)
             }
         }
     }
@@ -355,7 +360,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setOutputBoost(profile, enabled, tenthsDb)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting output boost: ${e.message}")
+                reportSettingFailure("setting output boost", e)
             }
         }
     }
@@ -367,7 +372,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setVolmaxBoost(profile, enabled, value)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting volmax boost: ${e.message}")
+                reportSettingFailure("setting volmax boost", e)
             }
         }
     }
@@ -379,7 +384,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setIeqAmount(profile, amount)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting IEQ amount: ${e.message}")
+                reportSettingFailure("setting IEQ amount", e)
             }
         }
     }
@@ -391,7 +396,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setSurroundBoost(profile, enabled, value)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting surround boost: ${e.message}")
+                reportSettingFailure("setting surround boost", e)
             }
         }
     }
@@ -403,7 +408,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setVolumeLevelerAmount(profile, amount)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting volume leveler amount: ${e.message}")
+                reportSettingFailure("setting volume leveler amount", e)
             }
         }
     }
@@ -415,7 +420,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setVirtualBassEnabled(profile, enabled)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting virtual bass: ${e.message}")
+                reportSettingFailure("setting virtual bass", e)
             }
         }
     }
@@ -427,7 +432,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setVirtualBassSpeakerEnabled(profile, enabled)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting speaker virtual bass: ${e.message}")
+                reportSettingFailure("setting speaker virtual bass", e)
             }
         }
     }
@@ -439,7 +444,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setVirtualBassBluetoothEnabled(profile, enabled)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting Bluetooth virtual bass: ${e.message}")
+                reportSettingFailure("setting Bluetooth virtual bass", e)
             }
         }
     }
@@ -451,7 +456,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setGraphicEqEnabled(profile, enabled)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting graphic EQ enable: ${e.message}")
+                reportSettingFailure("setting graphic EQ enable", e)
             }
         }
     }
@@ -463,7 +468,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setDialogueDucking(profile, enabled, amount)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting dialogue ducking: ${e.message}")
+                reportSettingFailure("setting dialogue ducking", e)
             }
         }
     }
@@ -475,7 +480,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setSurroundDecoderEnabled(profile, enabled)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting surround decoder: ${e.message}")
+                reportSettingFailure("setting surround decoder", e)
             }
         }
     }
@@ -487,7 +492,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setLevelerTarget(profile, enabled, targetDb)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting leveler target: ${e.message}")
+                reportSettingFailure("setting leveler target", e)
             }
         }
     }
@@ -499,7 +504,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setAdvancedBass(profile, enabled, boostPercent, cutoffHz)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting advanced bass: ${e.message}")
+                reportSettingFailure("setting advanced bass", e)
             }
         }
     }
@@ -511,7 +516,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setReverbSuppression(profile, enabled, amount)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting reverb suppression: ${e.message}")
+                reportSettingFailure("setting reverb suppression", e)
             }
         }
     }
@@ -523,7 +528,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setRegulator(profile, enabled, overdriveDb)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting regulator: ${e.message}")
+                reportSettingFailure("setting regulator", e)
             }
         }
     }
@@ -535,7 +540,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setHearingProtectionEnabled(profile, enabled)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting hearing protection: ${e.message}")
+                reportSettingFailure("setting hearing protection", e)
             }
         }
     }
@@ -546,7 +551,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.setDspVolumeBoost(enabled, strength)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting DSP volume boost: ${e.message}")
+                reportSettingFailure("setting DSP volume boost", e)
             }
         }
     }
@@ -581,7 +586,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.applyLoudnessPreset(preset)
                 loadSettings()
             } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error applying loudness preset: ${e.message}")
+                reportSettingFailure("applying loudness preset", e)
             }
         }
     }
@@ -591,19 +596,22 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
             repository.updateSpeakerState()
         }
     }
-    
+
     override fun onCleared() {
         DolbyConstants.dlog(TAG, "ViewModel onCleared")
         isCleared = true
         viewModelScope.coroutineContext.cancelChildren()
         audioOutputStateJob?.cancel()
-        audioOutputStateJob = null
         profileChangeJob?.cancel()
+        loadSettingsJob?.cancel()
+        audioOutputStateJob = null
         profileChangeJob = null
+        loadSettingsJob = null
         repository.close()
         super.onCleared()
+        DolbyConstants.dlog(TAG, "ViewModel cleaned up")
     }
-    
+
     companion object {
         private const val TAG = "DolbyViewModel"
     }

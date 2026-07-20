@@ -42,11 +42,19 @@ fun ModernDolbySettingsScreen(
     var showResetDialog by remember { mutableStateOf(false) }
     var showCreditsDialog by remember { mutableStateOf(false) }
     val currentRoute by navController.currentBackStackEntryFlow.collectAsState(null)
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.userMessages.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
     
     val layoutDirection = LocalLayoutDirection.current
     val cutoutInsets = WindowInsets.displayCutout.asPaddingValues()
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { 
