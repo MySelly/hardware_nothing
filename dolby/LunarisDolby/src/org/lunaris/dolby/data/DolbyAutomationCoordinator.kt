@@ -15,13 +15,36 @@ import org.lunaris.dolby.domain.models.SleepTimerAction
 
 object DolbyAutomationCoordinator {
 
+    /**
+     * Apply a profile change from an automation or user source.
+     *
+     * When [respectPriority] is true (default), [AutomationPriorityResolver] may
+     * block lower-ranked automation sources (APP / DEVICE / SCHEDULE / MEDIA / FOCUS)
+     * unless [force] is set. Unranked sources (manual, widget, sleep timer, etc.)
+     * always pass through.
+     *
+     * @return true if the profile was applied, false if blocked by priority.
+     */
     fun applyProfileChange(
         context: Context,
         profileId: Int,
         source: ProfileChangeSource,
         detail: String,
-        saveUndo: Boolean = true
-    ) {
+        saveUndo: Boolean = true,
+        force: Boolean = false,
+        respectPriority: Boolean = true
+    ): Boolean {
+        if (respectPriority) {
+            val resolver = AutomationPriorityResolver(context)
+            if (!resolver.shouldAllow(source, force)) {
+                DolbyConstants.dlog(
+                    "Automation",
+                    "Skipping profile $profileId from ${source.key}: blocked by priority"
+                )
+                return false
+            }
+        }
+
         val repository = DolbyRepository(context)
         val history = ProfileChangeHistoryManager(context)
         try {
@@ -32,6 +55,7 @@ object DolbyAutomationCoordinator {
             }
             repository.setCurrentProfile(profileId)
             history.recordChange(profileId, source, detail)
+            return true
         } finally {
             repository.close()
         }
@@ -158,17 +182,19 @@ object DolbyAutomationCoordinator {
                         .apply()
                     return
                 }
-                prefs.edit()
-                    .putInt(DolbyConstants.PREF_FOCUS_PREVIOUS_PROFILE, current)
-                    .putBoolean(DolbyConstants.PREF_FOCUS_APPLIED, true)
-                    .apply()
-                applyProfileChange(
+                val applied = applyProfileChange(
                     context,
                     focusProfile,
                     ProfileChangeSource.FOCUS,
                     "Focus mode",
                     saveUndo = false
                 )
+                if (applied) {
+                    prefs.edit()
+                        .putInt(DolbyConstants.PREF_FOCUS_PREVIOUS_PROFILE, current)
+                        .putBoolean(DolbyConstants.PREF_FOCUS_APPLIED, true)
+                        .apply()
+                }
             } finally {
                 repository.close()
             }
@@ -179,12 +205,15 @@ object DolbyAutomationCoordinator {
                 .remove(DolbyConstants.PREF_FOCUS_PREVIOUS_PROFILE)
                 .apply()
             if (previous >= 0) {
+                // Force restore when focus ends so a higher-ranked last source
+                // cannot leave the user stuck on the focus profile.
                 applyProfileChange(
                     context,
                     previous,
                     ProfileChangeSource.FOCUS,
                     "Focus mode ended",
-                    saveUndo = false
+                    saveUndo = false,
+                    force = true
                 )
             }
         }
@@ -229,7 +258,8 @@ object DolbyAutomationCoordinator {
                     context,
                     config.targetProfileId,
                     ProfileChangeSource.SLEEP_TIMER,
-                    "Sleep timer"
+                    "Sleep timer",
+                    force = true
                 )
             }
             SleepTimerAction.RESTORE_PROFILE -> {
@@ -237,7 +267,8 @@ object DolbyAutomationCoordinator {
                     context,
                     config.previousProfileId,
                     ProfileChangeSource.SLEEP_TIMER,
-                    "Sleep timer restore"
+                    "Sleep timer restore",
+                    force = true
                 )
             }
         }

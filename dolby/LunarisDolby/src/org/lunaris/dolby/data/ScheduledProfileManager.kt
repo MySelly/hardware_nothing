@@ -71,13 +71,18 @@ class ScheduledProfileManager(private val context: Context) {
         if (!isEnabled()) return
         val rule = findActiveRule() ?: return
         if (repository.getCurrentProfile() != rule.profileId) {
-            ProfileChangeHistoryManager(context).recordChange(
+            // Route through coordinator so AutomationPriorityResolver can block
+            // schedule when APP or DEVICE currently owns a higher rank.
+            val applied = DolbyAutomationCoordinator.applyProfileChange(
+                context,
                 rule.profileId,
                 ProfileChangeSource.SCHEDULE,
-                rule.name
+                rule.name,
+                saveUndo = false
             )
-            repository.setCurrentProfile(rule.profileId)
-            DolbyConstants.dlog(TAG, "Applied scheduled profile ${rule.profileId} (${rule.name})")
+            if (applied) {
+                DolbyConstants.dlog(TAG, "Applied scheduled profile ${rule.profileId} (${rule.name})")
+            }
         }
     }
 

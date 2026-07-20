@@ -22,6 +22,7 @@ import android.util.Log
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.R
 import org.lunaris.dolby.data.AppProfileManager
+import org.lunaris.dolby.data.AutomationPriorityResolver
 import org.lunaris.dolby.data.DolbyRepository
 import org.lunaris.dolby.data.DolbyAutomationCoordinator
 import org.lunaris.dolby.data.MediaContentRulesManager
@@ -37,6 +38,7 @@ class AppProfileMonitorService : Service() {
     private lateinit var appProfileManager: AppProfileManager
     private lateinit var dolbyRepository: DolbyRepository
     private lateinit var historyManager: ProfileChangeHistoryManager
+    private lateinit var priorityResolver: AutomationPriorityResolver
     private lateinit var audioManager: AudioManager
     private val lastPackageName = AtomicReference<String?>(null)
     private var originalProfile: Int = -1
@@ -94,6 +96,7 @@ class AppProfileMonitorService : Service() {
         appProfileManager = AppProfileManager(this)
         dolbyRepository = DolbyRepository(this)
         historyManager = ProfileChangeHistoryManager(this)
+        priorityResolver = AutomationPriorityResolver(this)
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         
         val prefs = getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
@@ -288,6 +291,15 @@ class AppProfileMonitorService : Service() {
                             val showToasts = prefs.getBoolean("app_profile_show_toasts", true)
                             
                             if (assignedProfile >= 0) {
+                                // Central priority check: DEVICE/BT (or other higher source)
+                                // can block app-driven switches when mode says so.
+                                if (!priorityResolver.shouldAllow(ProfileChangeSource.APP)) {
+                                    DolbyConstants.dlog(
+                                        TAG,
+                                        "App profile blocked by priority for $packageName"
+                                    )
+                                    return@Runnable
+                                }
                                 DolbyConstants.dlog(TAG, "Switching to profile $assignedProfile for $packageName")
                                 lastProfileChangeTime = System.currentTimeMillis()
                                 historyManager.saveUndoProfile(dolbyRepository.getCurrentProfile())
@@ -312,6 +324,8 @@ class AppProfileMonitorService : Service() {
                                     val currentProfile = prefs.getString(DolbyConstants.PREF_PROFILE, "0")?.toIntOrNull() ?: 0
                                     
                                     if (currentProfile != originalProfile) {
+                                        // Restoring the baseline when leaving a mapped app:
+                                        // force so a higher-ranked last source cannot trap us.
                                         DolbyConstants.dlog(TAG, "Restoring original profile $originalProfile for $packageName (current: $currentProfile)")
                                         lastProfileChangeTime = System.currentTimeMillis()
                                         dolbyRepository.setCurrentProfile(originalProfile)
