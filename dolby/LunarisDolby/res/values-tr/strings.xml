@@ -465,6 +465,9 @@
     <string name="headroom_remaining">Kalan</string>
     <string name="headroom_over_limit">Toplam gain güvenli headroom\'u aşıyor — distorsiyon olabilir</string>
     <string name="loudness_stack_title">Ses yığını</string>
+    <string name="exact_alarm_required">Kesin alarm izni gerekli</string>
+    <string name="exact_alarm_required_desc">Zamanlanmış profillerin güvenilir çalışması için kesin alarm izni gerekir.</string>
+    <string name="exact_alarm_open_settings">Kesin alarmlara izin ver</string>
     <string name="hub_tools_title">Araçlar</string>
     <string name="hub_tools_desc">Presetler, zamanlama, otomasyon ve geçmiş</string>
 

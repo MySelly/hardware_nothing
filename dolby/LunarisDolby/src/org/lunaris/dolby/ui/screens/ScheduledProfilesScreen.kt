@@ -24,6 +24,7 @@ import androidx.navigation.NavController
 import org.lunaris.dolby.R
 import org.lunaris.dolby.domain.models.ScheduledProfileRule
 import org.lunaris.dolby.domain.models.ScheduledProfileUiState
+import org.lunaris.dolby.ui.components.ExactAlarmPermissionCard
 import org.lunaris.dolby.ui.components.ModernConfirmDialog
 import org.lunaris.dolby.ui.viewmodel.ScheduledProfileViewModel
 
@@ -82,6 +83,9 @@ fun ScheduledProfilesScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    item {
+                        ExactAlarmPermissionCard()
+                    }
                     item {
                         Row(
                             Modifier.fillMaxWidth(),
