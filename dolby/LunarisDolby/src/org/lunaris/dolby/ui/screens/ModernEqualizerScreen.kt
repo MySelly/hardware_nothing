@@ -62,8 +62,10 @@ fun ModernEqualizerScreen(
     var showSaveDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showResetDialog by remember { mutableStateOf(false) }
+    var shareCodeAfterSave by remember { mutableStateOf<String?>(null) }
     var viewMode by remember { mutableStateOf(EqualizerViewMode.CURVE) }
     val currentRoute by navController.currentBackStackEntryFlow.collectAsState(null)
+    val context = LocalContext.current
     
     val layoutDirection = LocalLayoutDirection.current
     val cutoutInsets = WindowInsets.displayCutout.asPaddingValues()
@@ -211,16 +213,57 @@ fun ModernEqualizerScreen(
         }
     }
 
-    if (showSaveDialog) {
+    if (showSaveDialog && uiState is EqualizerUiState.Success) {
+        val state = uiState as EqualizerUiState.Success
         SavePresetDialog(
             onSave = { name ->
                 val error = viewModel.savePreset(name)
                 if (error == null) {
+                    val preset = EqualizerPreset(
+                        name = name.trim(),
+                        bandGains = state.bandGains,
+                        isUserDefined = true,
+                        bandMode = state.bandMode
+                    )
+                    shareCodeAfterSave = PresetShareCodec.encode(preset)
                     showSaveDialog = false
                 }
                 error
             },
             onDismiss = { showSaveDialog = false }
+        )
+    }
+
+    shareCodeAfterSave?.let { code ->
+        AlertDialog(
+            onDismissRequest = { shareCodeAfterSave = null },
+            title = { Text(stringResource(R.string.eq_share_code)) },
+            text = {
+                Text(
+                    code,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE)
+                        as android.content.ClipboardManager
+                    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("dolby_share", code))
+                    android.widget.Toast.makeText(
+                        context,
+                        context.getString(R.string.eq_share_copied),
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    shareCodeAfterSave = null
+                }) {
+                    Text(stringResource(R.string.eq_share_code))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { shareCodeAfterSave = null }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
         )
     }
 
