@@ -32,6 +32,7 @@ import org.lunaris.dolby.data.ProfileChangeHistoryManager
 import org.lunaris.dolby.data.SleepTimerManager
 import org.lunaris.dolby.domain.models.SleepTimerAction
 import org.lunaris.dolby.data.DolbyStatusHelper
+import org.lunaris.dolby.ui.theme.DolbyAppearanceState
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -120,10 +121,12 @@ fun AutomationSettingsScreen(navController: NavController) {
             item { PrefSwitch(stringResource(R.string.simple_ui_mode), simpleUi) {
                 simpleUi = it
                 prefs.edit().putBoolean(DolbyConstants.PREF_SIMPLE_UI_MODE, it).apply()
+                DolbyAppearanceState.notifyChanged()
             }}
             item { PrefSwitch(stringResource(R.string.amoled_theme), amoled) {
                 amoled = it
                 prefs.edit().putBoolean(DolbyConstants.PREF_AMOLED_THEME, it).apply()
+                DolbyAppearanceState.notifyChanged()
             }}
             item {
                 Text(stringResource(R.string.safe_listening_limit))

@@ -26,6 +26,7 @@ import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.R
+import org.lunaris.dolby.ui.theme.DolbyAppearanceState
 import org.lunaris.dolby.utils.*
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -38,7 +39,8 @@ fun FloatingNavToolbar(
     val haptic = rememberHapticFeedback()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val simpleMode = remember {
+    val appearanceRevision by DolbyAppearanceState.revision.collectAsState()
+    val simpleMode = remember(appearanceRevision) {
         context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
             .getBoolean(DolbyConstants.PREF_SIMPLE_UI_MODE, false)
     }

@@ -12,6 +12,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -131,8 +134,13 @@ fun DolbyTheme(
 ) {
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("dolby_prefs", android.content.Context.MODE_PRIVATE)
-    val amoled = prefs.getBoolean(org.lunaris.dolby.DolbyConstants.PREF_AMOLED_THEME, false)
-    val useDynamic = dynamicColor && prefs.getBoolean(org.lunaris.dolby.DolbyConstants.PREF_DYNAMIC_COLOR, true)
+    val appearanceRevision by DolbyAppearanceState.revision.collectAsState()
+    val amoled = remember(appearanceRevision) {
+        prefs.getBoolean(org.lunaris.dolby.DolbyConstants.PREF_AMOLED_THEME, false)
+    }
+    val useDynamic = remember(appearanceRevision) {
+        dynamicColor && prefs.getBoolean(org.lunaris.dolby.DolbyConstants.PREF_DYNAMIC_COLOR, true)
+    }
 
     val colorScheme = when {
         amoled && darkTheme -> darkColorScheme(
