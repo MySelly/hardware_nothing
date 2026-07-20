@@ -164,12 +164,7 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     }
 
     fun getCurrentOutputDevice(): AudioDeviceInfo? {
-        val devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
-        for (type in OUTPUT_DEVICE_PRIORITY) {
-            val device = devices.firstOrNull { it.type == type }
-            if (device != null) return device
-        }
-        return devices.firstOrNull()
+        return deviceStateManager.getCurrentOutputDevice(audioManager)
     }
 
     private fun resolveActiveAudioDevice(): ActiveAudioDevice {
@@ -1329,19 +1324,6 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
 
         private const val BACKUP_TYPE = "dolby_full_backup"
         private const val BACKUP_VERSION = 1
-
-        private val OUTPUT_DEVICE_PRIORITY = listOf(
-            AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
-            AudioDeviceInfo.TYPE_BLE_HEADSET,
-            AudioDeviceInfo.TYPE_BLE_SPEAKER,
-            AudioDeviceInfo.TYPE_BLE_BROADCAST,
-            AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
-            AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
-            AudioDeviceInfo.TYPE_WIRED_HEADSET,
-            AudioDeviceInfo.TYPE_USB_HEADSET,
-            AudioDeviceInfo.TYPE_USB_DEVICE,
-            AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
-        )
         
         private const val BASS_GAIN_MULTIPLIER = 1.4f
         private const val MID_GAIN_MULTIPLIER = 1.3f

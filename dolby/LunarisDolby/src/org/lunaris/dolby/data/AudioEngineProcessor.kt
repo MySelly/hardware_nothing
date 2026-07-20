@@ -6,8 +6,6 @@
 package org.lunaris.dolby.data
 
 import android.content.Context
-import android.media.AudioDeviceInfo
-import android.media.AudioManager
 import org.lunaris.dolby.audio.DolbyHalBridge
 
 internal class AudioEngineProcessor(private val context: Context) {
@@ -16,8 +14,7 @@ internal class AudioEngineProcessor(private val context: Context) {
     private val deviceStateManager = DeviceStateManager(context)
 
     fun currentDeviceKey(): String? {
-        val am = context.getSystemService(AudioManager::class.java) ?: return null
-        val device = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS).firstOrNull() ?: return null
+        val device = deviceStateManager.getCurrentOutputDevice() ?: return null
         return deviceStateManager.deviceKey(device)
     }
 

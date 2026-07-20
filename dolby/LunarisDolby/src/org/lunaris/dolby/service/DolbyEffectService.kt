@@ -163,26 +163,7 @@ class DolbyEffectService : Service() {
     }
 
     private fun getCurrentOutputDevice(): AudioDeviceInfo? {
-        val devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
-
-        val priorityOrder = listOf(
-            AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
-            AudioDeviceInfo.TYPE_BLE_HEADSET,
-            AudioDeviceInfo.TYPE_BLE_SPEAKER,
-            AudioDeviceInfo.TYPE_BLE_BROADCAST,
-            AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
-            AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
-            AudioDeviceInfo.TYPE_WIRED_HEADSET,
-            AudioDeviceInfo.TYPE_USB_HEADSET,
-            AudioDeviceInfo.TYPE_USB_DEVICE,
-            AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
-        )
-
-        for (type in priorityOrder) {
-            val device = devices.firstOrNull { it.type == type }
-            if (device != null) return device
-        }
-        return devices.firstOrNull()
+        return deviceStateManager.getCurrentOutputDevice(audioManager)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

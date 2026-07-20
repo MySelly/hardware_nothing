@@ -36,6 +36,17 @@ class DeviceStateManager(private val context: Context) {
         }
     }
 
+    fun getCurrentOutputDevice(audioManager: AudioManager? = null): AudioDeviceInfo? {
+        val am = audioManager
+            ?: context.getSystemService(AudioManager::class.java)
+            ?: return null
+        val devices = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+        for (type in OUTPUT_DEVICE_PRIORITY) {
+            devices.firstOrNull { it.type == type }?.let { return it }
+        }
+        return devices.firstOrNull()
+    }
+
     fun deviceDisplayName(device: AudioDeviceInfo): String {
         val productName = device.productName?.toString()?.takeIf { it.isNotBlank() }
         return when (device.type) {
@@ -315,6 +326,19 @@ class DeviceStateManager(private val context: Context) {
         private const val TAG = "DeviceStateManager"
 
         const val SNAPSHOT_VERSION = 3
+
+        val OUTPUT_DEVICE_PRIORITY = listOf(
+            AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+            AudioDeviceInfo.TYPE_BLE_HEADSET,
+            AudioDeviceInfo.TYPE_BLE_SPEAKER,
+            AudioDeviceInfo.TYPE_BLE_BROADCAST,
+            AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
+            AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
+            AudioDeviceInfo.TYPE_WIRED_HEADSET,
+            AudioDeviceInfo.TYPE_USB_HEADSET,
+            AudioDeviceInfo.TYPE_USB_DEVICE,
+            AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
+        )
 
         private const val KEY_VERSION = "snapshot_version"
         private const val KEY_DOLBY_ENABLED = "enabled"
