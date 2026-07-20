@@ -8,10 +8,13 @@ package org.lunaris.dolby.service
 import android.app.Service
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import android.media.AudioPlaybackConfiguration
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -38,6 +41,9 @@ class AppProfileMonitorService : Service() {
     private val lastPackageName = AtomicReference<String?>(null)
     private var originalProfile: Int = -1
     private var isMonitoring = false
+    private var screenOn = true
+    private var playbackCallbackRegistered = false
+    private var screenReceiverRegistered = false
     private var pendingSwitchRunnable: Runnable? = null
     private var hasOriginalProfile = false
     private var lastProfileChangeTime: Long = 0
@@ -45,10 +51,42 @@ class AppProfileMonitorService : Service() {
     private val checkForegroundAppRunnable = object : Runnable {
         override fun run() {
             checkForegroundApp()
-            if (isMonitoring) {
-                handler.postDelayed(this, CHECK_INTERVAL)
+            scheduleNextPoll()
+        }
+    }
+
+    private val audioPlaybackCallback = object : AudioManager.AudioPlaybackCallback() {
+        override fun onPlaybackConfigChanged(configs: MutableList<AudioPlaybackConfiguration>?) {
+            if (isMonitoring && screenOn) {
+                handler.removeCallbacks(checkForegroundAppRunnable)
+                handler.post { checkForegroundApp() }
+                scheduleNextPoll()
             }
         }
+    }
+
+    private val screenReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                Intent.ACTION_SCREEN_OFF -> {
+                    screenOn = false
+                    handler.removeCallbacks(checkForegroundAppRunnable)
+                }
+                Intent.ACTION_SCREEN_ON -> {
+                    screenOn = true
+                    if (isMonitoring) {
+                        handler.post { checkForegroundApp() }
+                        scheduleNextPoll()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun scheduleNextPoll() {
+        if (!isMonitoring || !screenOn) return
+        handler.removeCallbacks(checkForegroundAppRunnable)
+        handler.postDelayed(checkForegroundAppRunnable, BACKUP_POLL_INTERVAL_MS)
     }
 
     override fun onCreate() {
@@ -74,6 +112,10 @@ class AppProfileMonitorService : Service() {
         when (intent?.action) {
             ACTION_START_MONITORING -> startMonitoring()
             ACTION_STOP_MONITORING -> stopMonitoring()
+            ACTION_CHECK_NOW -> {
+                if (!isMonitoring) startMonitoring()
+                handler.post { checkForegroundApp() }
+            }
         }
         return START_STICKY
     }
@@ -88,9 +130,12 @@ class AppProfileMonitorService : Service() {
                 hasOriginalProfile = true
                 DolbyConstants.dlog(TAG, "Re-initialized original profile on start: $originalProfile")
             }
+
+            registerEventListeners()
             
-            DolbyConstants.dlog(TAG, "Started monitoring foreground app (original profile: $originalProfile)")
-            handler.post(checkForegroundAppRunnable)
+            DolbyConstants.dlog(TAG, "Started event-driven foreground monitoring (original profile: $originalProfile)")
+            handler.post { checkForegroundApp() }
+            scheduleNextPoll()
         }
     }
 
@@ -98,6 +143,7 @@ class AppProfileMonitorService : Service() {
         if (isMonitoring) {
             isMonitoring = false
             handler.removeCallbacks(checkForegroundAppRunnable)
+            unregisterEventListeners()
             
             synchronized(this) {
                 pendingSwitchRunnable?.let { switchHandler.removeCallbacks(it) }
@@ -120,6 +166,48 @@ class AppProfileMonitorService : Service() {
             }
             
             DolbyConstants.dlog(TAG, "Stopped monitoring foreground app")
+        }
+    }
+
+    private fun registerEventListeners() {
+        if (!playbackCallbackRegistered) {
+            try {
+                audioManager.registerAudioPlaybackCallback(audioPlaybackCallback, handler)
+                playbackCallbackRegistered = true
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Failed to register playback callback: ${e.message}")
+            }
+        }
+        if (!screenReceiverRegistered) {
+            try {
+                val filter = IntentFilter().apply {
+                    addAction(Intent.ACTION_SCREEN_ON)
+                    addAction(Intent.ACTION_SCREEN_OFF)
+                }
+                registerReceiver(screenReceiver, filter)
+                screenReceiverRegistered = true
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Failed to register screen receiver: ${e.message}")
+            }
+        }
+    }
+
+    private fun unregisterEventListeners() {
+        if (playbackCallbackRegistered) {
+            try {
+                audioManager.unregisterAudioPlaybackCallback(audioPlaybackCallback)
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Failed to unregister playback callback: ${e.message}")
+            }
+            playbackCallbackRegistered = false
+        }
+        if (screenReceiverRegistered) {
+            try {
+                unregisterReceiver(screenReceiver)
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "Failed to unregister screen receiver: ${e.message}")
+            }
+            screenReceiverRegistered = false
         }
     }
 
@@ -259,7 +347,7 @@ class AppProfileMonitorService : Service() {
         val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
         val currentTime = System.currentTimeMillis()
         
-        val usageEvents = usageStatsManager.queryEvents(currentTime - 1000, currentTime)
+        val usageEvents = usageStatsManager.queryEvents(currentTime - FOREGROUND_LOOKBACK_MS, currentTime)
         val event = UsageEvents.Event()
         
         var lastPackage: String? = null
@@ -305,17 +393,20 @@ class AppProfileMonitorService : Service() {
         super.onDestroy()
         DolbyConstants.dlog(TAG, "Service destroyed")
         stopMonitoring()
+        unregisterEventListeners()
         dolbyRepository.close()
         hasOriginalProfile = false
     }
 
     companion object {
         private const val TAG = "AppProfileMonitor"
-        private const val CHECK_INTERVAL = 2000L
+        private const val BACKUP_POLL_INTERVAL_MS = 5000L
+        private const val FOREGROUND_LOOKBACK_MS = 8000L
         private const val SWITCH_DELAY = 300L
         
         const val ACTION_START_MONITORING = "org.lunaris.dolby.START_MONITORING"
         const val ACTION_STOP_MONITORING = "org.lunaris.dolby.STOP_MONITORING"
+        const val ACTION_CHECK_NOW = "org.lunaris.dolby.CHECK_FOREGROUND_NOW"
 
         fun startMonitoring(context: Context) {
             val intent = Intent(context, AppProfileMonitorService::class.java).apply {
@@ -327,6 +418,13 @@ class AppProfileMonitorService : Service() {
         fun stopMonitoring(context: Context) {
             val intent = Intent(context, AppProfileMonitorService::class.java).apply {
                 action = ACTION_STOP_MONITORING
+            }
+            context.startService(intent)
+        }
+
+        fun requestImmediateCheck(context: Context) {
+            val intent = Intent(context, AppProfileMonitorService::class.java).apply {
+                action = ACTION_CHECK_NOW
             }
             context.startService(intent)
         }

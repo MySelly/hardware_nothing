@@ -83,14 +83,8 @@ class DolbyNotificationListener : NotificationListenerService() {
         val prefs = getSharedPreferences("dolby_prefs", MODE_PRIVATE)
         val isMonitoringEnabled = prefs.getBoolean("app_profile_monitoring_enabled", false)
         if (!isMonitoringEnabled) return
-        try {
-            val assignedProfile = appProfileManager.getAppProfile(packageName)
-            if (assignedProfile >= 0) {
-                DolbyConstants.dlog(TAG, "Package change detected: $packageName -> profile $assignedProfile")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error handling package change", e)
-        }
+        DolbyConstants.dlog(TAG, "Notification hint for package change: $packageName")
+        AppProfileMonitorService.requestImmediateCheck(this)
     }
 
     override fun onDestroy() {
