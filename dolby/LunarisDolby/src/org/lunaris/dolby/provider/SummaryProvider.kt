@@ -14,7 +14,9 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import org.lunaris.dolby.R
+import org.lunaris.dolby.data.AutomationStatusResolver
 import org.lunaris.dolby.data.DolbyRepository
+import org.lunaris.dolby.domain.models.ProfileChangeSource
 
 private const val KEY_DOLBY = "dolby"
 private const val META_DATA_PREFERENCE_SUMMARY = "com.android.settings.summary"
@@ -57,21 +59,40 @@ class SummaryProvider : ContentProvider() {
     private fun getDolbySummary(): String {
         val context = context ?: return ""
         val repository = DolbyRepository(context)
-        
-        if (!repository.getDolbyEnabled()) {
-            return context.getString(R.string.dolby_off)
+        val statusResolver = AutomationStatusResolver(context)
+        try {
+            if (!repository.getDolbyEnabled()) {
+                return context.getString(R.string.dolby_off)
+            }
+
+            val profile = repository.getCurrentProfile()
+            val profiles = context.resources.getStringArray(R.array.dolby_profile_entries)
+            val profileValues = context.resources.getStringArray(R.array.dolby_profile_values)
+
+            val profileName = try {
+                val index = profileValues.indexOf(profile.toString())
+                if (index != -1) profiles[index] else context.getString(R.string.dolby_unknown)
+            } catch (_: Exception) {
+                return context.getString(R.string.dolby_on)
+            }
+
+            val base = context.getString(R.string.dolby_on_with_profile, profileName)
+            val status = statusResolver.resolve()
+            val automationSuffix = formatAutomationSuffix(status.activeSource, status.activeDetail)
+            return if (automationSuffix != null) "$base · $automationSuffix" else base
+        } finally {
+            statusResolver.close()
+            repository.close()
         }
-        
-        val profile = repository.getCurrentProfile()
-        val profiles = context.resources.getStringArray(R.array.dolby_profile_entries)
-        val profileValues = context.resources.getStringArray(R.array.dolby_profile_values)
-        
-        return try {
-            val index = profileValues.indexOf(profile.toString())
-            val profileName = if (index != -1) profiles[index] else context.getString(R.string.dolby_unknown)
-            context.getString(R.string.dolby_on_with_profile, profileName)
-        } catch (e: Exception) {
-            context.getString(R.string.dolby_on)
+    }
+
+    private fun formatAutomationSuffix(source: ProfileChangeSource?, detail: String): String? {
+        if (source == null) return null
+        val trimmed = detail.trim()
+        return if (trimmed.isNotEmpty()) {
+            "${source.key}: $trimmed"
+        } else {
+            source.key
         }
     }
 }
