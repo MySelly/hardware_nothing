@@ -9,6 +9,7 @@
 // tests themselves do not require a running Activity or Robolectric.
 android_test {
     name: "LunarisDolbyUnitTests",
+    manifest: "AndroidManifest.xml",
     srcs: ["src/**/*.kt"],
     certificate: "platform",
     platform_apis: true,
