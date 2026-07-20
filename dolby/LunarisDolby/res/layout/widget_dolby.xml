@@ -3,15 +3,17 @@
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/system_neutral1_900"
+    android:background="@android:color/system_accent2_100"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="12dp"
+    android:theme="@android:style/Theme.DeviceDefault.DayNight">
 
     <TextView
         android:id="@+id/widget_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@android:color/system_neutral1_900"
         android:textStyle="bold" />
 
     <TextView
@@ -19,7 +21,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@android:color/system_neutral1_800" />
 
     <TextView
         android:id="@+id/widget_automation"
@@ -27,7 +30,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textColor="@android:color/darker_gray" />
+        android:textColor="@android:color/system_neutral1_600" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -42,7 +45,8 @@
             android:paddingEnd="12dp"
             android:text="@string/dolby_enable"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="@android:color/holo_blue_light" />
+            android:textColor="@android:color/system_accent1_700"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/widget_cycle"
@@ -51,7 +55,8 @@
             android:paddingEnd="12dp"
             android:text="@string/widget_cycle_profile"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="@android:color/holo_blue_light" />
+            android:textColor="@android:color/system_accent1_700"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/widget_sleep"
@@ -59,6 +64,7 @@
             android:layout_height="wrap_content"
             android:text="@string/widget_sleep_timer"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="@android:color/holo_blue_light" />
+            android:textColor="@android:color/system_accent1_700"
+            android:textStyle="bold" />
     </LinearLayout>
 </LinearLayout>
