@@ -14,6 +14,7 @@ import org.lunaris.dolby.data.DolbyRepository
 import org.lunaris.dolby.domain.models.*
 import org.lunaris.dolby.utils.ToastHelper
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancelChildren
@@ -29,6 +30,8 @@ class EqualizerViewModel(application: Application) : AndroidViewModel(applicatio
     private var currentProfile = 0
     private var currentBandMode = BandMode.TEN_BAND
     private var profileChangeJob: Job? = null
+    private var bandGainDebounceJob: Job? = null
+    private var pendingBandGains: List<BandGain>? = null
     private var isCleared = false
 
     init {
@@ -228,27 +231,43 @@ class EqualizerViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun setBandGain(index: Int, gain: Int) {
-        viewModelScope.launch {
-            try {
-                val state = _uiState.value
-                if (state is EqualizerUiState.Success) {
-                    val isFlatPreset = state.currentPreset.name == context.getString(R.string.dolby_preset_default)
-                    if (!isFlatPreset && state.currentPreset.bandMode != currentBandMode) {
-                        ToastHelper.showToast(
-                            context,
-                            "Cannot edit ${state.currentPreset.bandMode.displayName} preset in ${currentBandMode.displayName} mode. " +
-                            "Switch to ${state.currentPreset.bandMode.displayName} or select a different preset."
-                        )
-                        return@launch
-                    }
-                    val newBandGains = state.bandGains.toMutableList()
-                    newBandGains[index] = newBandGains[index].copy(gain = gain)
-                    repository.setEqualizerGains(currentProfile, newBandGains, currentBandMode)
-                    loadEqualizer()
-                }
-            } catch (e: Exception) {
-                DolbyConstants.dlog(TAG, "Error setting band gain: ${e.message}")
+        val state = _uiState.value
+        if (state !is EqualizerUiState.Success) return
+        try {
+            val isFlatPreset = state.currentPreset.name == context.getString(R.string.dolby_preset_default)
+            if (!isFlatPreset && state.currentPreset.bandMode != currentBandMode) {
+                ToastHelper.showToast(
+                    context,
+                    "Cannot edit ${state.currentPreset.bandMode.displayName} preset in ${currentBandMode.displayName} mode. " +
+                        "Switch to ${state.currentPreset.bandMode.displayName} or select a different preset."
+                )
+                return
             }
+            val newBandGains = state.bandGains.toMutableList()
+            newBandGains[index] = newBandGains[index].copy(gain = gain)
+            pendingBandGains = newBandGains
+            // Update local UI immediately; debounce HAL write.
+            _uiState.value = state.copy(
+                bandGains = newBandGains,
+                currentPreset = state.currentPreset.copy(
+                    name = context.getString(R.string.dolby_preset_custom),
+                    bandGains = newBandGains,
+                    isCustom = true
+                )
+            )
+            bandGainDebounceJob?.cancel()
+            bandGainDebounceJob = viewModelScope.launch {
+                delay(BAND_GAIN_DEBOUNCE_MS)
+                val gains = pendingBandGains ?: return@launch
+                try {
+                    repository.setEqualizerGains(currentProfile, gains, currentBandMode)
+                    loadEqualizer()
+                } catch (e: Exception) {
+                    DolbyConstants.dlog(TAG, "Error setting band gain: ${e.message}")
+                }
+            }
+        } catch (e: Exception) {
+            DolbyConstants.dlog(TAG, "Error setting band gain: ${e.message}")
         }
     }
 
@@ -332,6 +351,9 @@ class EqualizerViewModel(application: Application) : AndroidViewModel(applicatio
     override fun onCleared() {
         DolbyConstants.dlog(TAG, "ViewModel onCleared")
         isCleared = true
+        bandGainDebounceJob?.cancel()
+        bandGainDebounceJob = null
+        pendingBandGains = null
         viewModelScope.coroutineContext.cancelChildren()
         profileChangeJob?.cancel()
         profileChangeJob = null
@@ -341,5 +363,6 @@ class EqualizerViewModel(application: Application) : AndroidViewModel(applicatio
     
     companion object {
         private const val TAG = "EqualizerViewModel"
+        private const val BAND_GAIN_DEBOUNCE_MS = 140L
     }
 }
