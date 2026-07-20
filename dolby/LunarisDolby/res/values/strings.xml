@@ -455,4 +455,6 @@
     <string name="headroom_remaining">Remaining</string>
     <string name="headroom_over_limit">Total gain exceeds safe headroom — distortion possible</string>
     <string name="loudness_stack_title">Loudness stack</string>
+    <string name="hub_tools_title">Tools</string>
+    <string name="hub_tools_desc">Presets, schedules, automation, and history</string>
 </resources>

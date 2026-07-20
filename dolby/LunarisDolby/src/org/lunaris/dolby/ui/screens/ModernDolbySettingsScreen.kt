@@ -304,64 +304,6 @@ private fun ModernDolbySettingsContent(
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
-                ModernSettingsCard(
-                    title = stringResource(R.string.custom_presets_title),
-                    icon = Icons.Default.Bookmark
-                ) {
-                    Text(
-                        text = stringResource(R.string.custom_presets_home_desc),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    Button(
-                        onClick = { navController.navigate("custom_presets") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Icon(Icons.Default.BookmarkBorder, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.custom_presets_manage))
-                    }
-                }
-            }
-        }
-
-        item {
-            AnimatedVisibility(
-                visible = state.settings.enabled,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                ModernSettingsCard(
-                    title = stringResource(R.string.scheduled_profiles_title),
-                    icon = Icons.Default.Schedule
-                ) {
-                    Text(
-                        text = stringResource(R.string.scheduled_profiles_home_desc),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    Button(
-                        onClick = { navController.navigate("scheduled_profiles") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.scheduled_profiles_manage))
-                    }
-                }
-            }
-        }
-
-        item {
-            AnimatedVisibility(
-                visible = state.settings.enabled,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
                 AppProfileSettingsCard(
                     onManageClick = { navController.navigate("app_profiles") },
                     onManageDeviceMemoryClick = { navController.navigate("device_memory") }
@@ -376,88 +318,82 @@ private fun ModernDolbySettingsContent(
                 exit = fadeOut() + shrinkVertically()
             ) {
                 ModernSettingsCard(
-                    title = stringResource(R.string.bt_rules_title),
-                    icon = Icons.Default.Bluetooth
+                    title = stringResource(R.string.hub_tools_title),
+                    icon = Icons.Default.Apps
                 ) {
                     Text(
-                        text = stringResource(R.string.bt_rules_desc),
+                        text = stringResource(R.string.hub_tools_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    Button(
-                        onClick = { navController.navigate(Screen.BluetoothRules.route) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Icon(Icons.Default.Bluetooth, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.bt_rules_title))
-                    }
-                }
-            }
-        }
-
-        item {
-            AnimatedVisibility(
-                visible = state.settings.enabled,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                ModernSettingsCard(
-                    title = stringResource(R.string.automation_settings_title),
-                    icon = Icons.Default.Tune
-                ) {
-                    Text(
-                        text = stringResource(R.string.automation_settings_desc),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                    HubDestinationRow(
+                        title = stringResource(R.string.custom_presets_title),
+                        icon = Icons.Default.Bookmark,
+                        onClick = { navController.navigate("custom_presets") }
                     )
-                    Button(
-                        onClick = { navController.navigate(Screen.AutomationSettings.route) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.automation_settings_title))
-                    }
-                }
-            }
-        }
-
-        item {
-            AnimatedVisibility(
-                visible = state.settings.enabled,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                ModernSettingsCard(
-                    title = stringResource(R.string.profile_history_title),
-                    icon = Icons.Default.History
-                ) {
-                    Text(
-                        text = stringResource(R.string.profile_history_desc),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                    HubDestinationRow(
+                        title = stringResource(R.string.scheduled_profiles_title),
+                        icon = Icons.Default.Schedule,
+                        onClick = { navController.navigate("scheduled_profiles") }
                     )
-                    Button(
-                        onClick = { navController.navigate(Screen.ProfileHistory.route) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.profile_history_title))
-                    }
+                    HubDestinationRow(
+                        title = stringResource(R.string.bt_rules_title),
+                        icon = Icons.Default.Bluetooth,
+                        onClick = { navController.navigate(Screen.BluetoothRules.route) }
+                    )
+                    HubDestinationRow(
+                        title = stringResource(R.string.automation_settings_title),
+                        icon = Icons.Default.Tune,
+                        onClick = { navController.navigate(Screen.AutomationSettings.route) }
+                    )
+                    HubDestinationRow(
+                        title = stringResource(R.string.profile_history_title),
+                        icon = Icons.Default.History,
+                        onClick = { navController.navigate(Screen.ProfileHistory.route) }
+                    )
                 }
             }
         }
         
         item {
             Spacer(modifier = Modifier.height(70.dp))
+        }
+    }
+}
+
+@Composable
+private fun HubDestinationRow(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit
+) {
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
