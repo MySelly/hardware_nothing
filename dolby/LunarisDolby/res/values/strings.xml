@@ -411,6 +411,8 @@
     <string name="diagnostics_title">Diagnostics</string>
     <string name="diagnostics_desc">Dolby effect status and automation state</string>
     <string name="diagnostics_effect">Effect status</string>
+    <string name="diagnostics_copy">Copy report</string>
+    <string name="diagnostics_copied">Diagnostics copied</string>
     <string name="calibration_title">Audio calibration</string>
     <string name="calibration_desc">Live spectrum view while tuning your listening environment</string>
     <string name="calibration_hint">Play reference audio and watch the spectrum. Adjust EQ on the Equalizer tab.</string>

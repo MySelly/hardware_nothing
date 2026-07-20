@@ -374,10 +374,34 @@ fun ProfileHistoryScreen(navController: NavController) {
 fun DiagnosticsScreen(navController: NavController) {
     val context = LocalContext.current
     val helper = remember { DolbyStatusHelper(context) }
-    val diagnostics = remember { helper.getDiagnostics() }
+    var diagnostics by remember { mutableStateOf(helper.getDiagnostics()) }
+    var tick by remember { mutableIntStateOf(0) }
     DisposableEffect(Unit) { onDispose { helper.close() } }
     val profiles = stringArrayResource(R.array.dolby_profile_entries)
     val values = stringArrayResource(R.array.dolby_profile_values)
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(1500)
+            diagnostics = helper.getDiagnostics()
+            tick++
+        }
+    }
+
+    val profileName = remember(diagnostics.currentProfile, tick) {
+        val idx = values.indexOf(diagnostics.currentProfile.toString())
+        profiles.getOrElse(idx.coerceAtLeast(0)) { "?" }
+    }
+    val report = remember(diagnostics, profileName, tick) {
+        buildString {
+            appendLine("Dolby: ${if (diagnostics.dolbyEnabled) "ON" else "OFF"}")
+            appendLine("Profile: $profileName (${diagnostics.currentProfile})")
+            appendLine("Effect: ${if (diagnostics.effectHasControl) "OK" else "FAIL"}")
+            appendLine("Device: ${diagnostics.activeDevice.name}")
+            appendLine("Source: ${diagnostics.automationStatus.activeSource?.key ?: "-"}")
+            appendLine("Detail: ${diagnostics.automationStatus.activeDetail}")
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -387,19 +411,36 @@ fun DiagnosticsScreen(navController: NavController) {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        diagnostics = helper.getDiagnostics()
+                        tick++
+                    }) {
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.app_profiles_retry))
+                    }
+                    IconButton(onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Dolby diagnostics", report))
+                        android.widget.Toast.makeText(
+                            context,
+                            context.getString(R.string.diagnostics_copied),
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    }) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.diagnostics_copy))
+                    }
                 }
             )
         }
     ) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(16.dp)) {
             item { DiagRow(stringResource(R.string.dolby_enable), if (diagnostics.dolbyEnabled) "ON" else "OFF") }
-            item {
-                val idx = values.indexOf(diagnostics.currentProfile.toString())
-                DiagRow(stringResource(R.string.dolby_profile_title), profiles.getOrElse(idx.coerceAtLeast(0)) { "?" })
-            }
+            item { DiagRow(stringResource(R.string.dolby_profile_title), profileName) }
             item { DiagRow(stringResource(R.string.diagnostics_effect), if (diagnostics.effectHasControl) "OK" else "FAIL") }
             item { DiagRow(stringResource(R.string.audio_output_active_device), diagnostics.activeDevice.name) }
             item { DiagRow(stringResource(R.string.status_active_source), diagnostics.automationStatus.activeSource?.key ?: "-") }
+            item { DiagRow(stringResource(R.string.status_detail), diagnostics.automationStatus.activeDetail.ifBlank { "-" }) }
         }
     }
 }
