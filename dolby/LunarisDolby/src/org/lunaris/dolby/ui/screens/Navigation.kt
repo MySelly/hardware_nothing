@@ -32,12 +32,31 @@ sealed class Screen(val route: String) {
     object ProfileHistory : Screen("profile_history")
     object Diagnostics : Screen("diagnostics")
     object PowerUserAudio : Screen("power_user_audio")
+
+    companion object {
+        val allRoutes: Set<String> = setOf(
+            Settings.route,
+            Equalizer.route,
+            Advanced.route,
+            AppProfiles.route,
+            DeviceMemory.route,
+            CustomPresets.route,
+            ScheduledProfiles.route,
+            ImportExport.route,
+            AutomationSettings.route,
+            BluetoothRules.route,
+            ProfileHistory.route,
+            Diagnostics.route,
+            PowerUserAudio.route
+        )
+    }
 }
 
 @Composable
 fun DolbyNavHost(
     dolbyViewModel: DolbyViewModel,
-    equalizerViewModel: EqualizerViewModel
+    equalizerViewModel: EqualizerViewModel,
+    startRoute: String? = null
 ) {
     val navController = rememberNavController()
 
@@ -129,6 +148,14 @@ fun DolbyNavHost(
                 navController = navController,
                 dolbyViewModel = dolbyViewModel
             )
+        }
+    }
+
+    LaunchedEffect(startRoute) {
+        val route = startRoute?.takeIf { it in Screen.allRoutes } ?: return@LaunchedEffect
+        if (route == Screen.Settings.route) return@LaunchedEffect
+        navController.navigate(route) {
+            launchSingleTop = true
         }
     }
 }

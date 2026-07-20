@@ -5,6 +5,7 @@
 
 package org.lunaris.dolby.ui
 
+import android.content.Intent
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
@@ -16,6 +17,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -35,6 +39,7 @@ class DolbyActivity : ComponentActivity() {
     
     private var isAudioCallbackRegistered = false
     private var isActivityActive = false
+    private var startRoute by mutableStateOf<String?>(null)
     
     private val audioDeviceCallback = object : AudioDeviceCallback() {
         override fun onAudioDevicesAdded(addedDevices: Array<AudioDeviceInfo>) {
@@ -102,6 +107,7 @@ class DolbyActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         DolbyConstants.dlog(TAG, "Activity onCreate")
         lifecycle.addObserver(lifecycleObserver)
+        startRoute = intent.getStringExtra(DolbyConstants.EXTRA_ROUTE)
         
         setContent {
             DolbyTheme {
@@ -111,11 +117,19 @@ class DolbyActivity : ComponentActivity() {
                 ) {
                     DolbyNavHost(
                         dolbyViewModel = dolbyViewModel,
-                        equalizerViewModel = equalizerViewModel
+                        equalizerViewModel = equalizerViewModel,
+                        startRoute = startRoute
                     )
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        startRoute = intent.getStringExtra(DolbyConstants.EXTRA_ROUTE)
+        DolbyConstants.dlog(TAG, "Activity onNewIntent route=$startRoute")
     }
     
     private fun registerAudioCallback() {
