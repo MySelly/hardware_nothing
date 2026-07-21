@@ -23,7 +23,6 @@ import androidx.navigation.NavController
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.R
 import org.lunaris.dolby.data.AudioEnginePreferences
-import org.lunaris.dolby.data.DeviceStateManager
 import org.lunaris.dolby.data.DolbyRepository
 import org.lunaris.dolby.data.LoudnessPreset
 import org.lunaris.dolby.ui.components.HeadroomWarningCard
@@ -48,8 +47,6 @@ fun PowerUserAudioScreen(
     var headroomWarn by remember { mutableStateOf(prefs.isHeadroomWarningEnabled()) }
     var loudnessPresets by remember { mutableStateOf(prefs.isLoudnessPresetsEnabled()) }
     var autoLoudness by remember { mutableStateOf(prefs.isAutoLoudnessEnabled()) }
-    var perDeviceGain by remember { mutableStateOf(prefs.isPerDeviceGainEnabled()) }
-    var deviceGain by remember { mutableFloatStateOf(0f) }
     var stereoBalanceOn by remember { mutableStateOf(prefs.isStereoBalanceEnabled()) }
     var stereoBalance by remember { mutableFloatStateOf(prefs.getStereoBalance().toFloat()) }
     var monoMix by remember { mutableStateOf(prefs.isMonoMixEnabled()) }
@@ -62,17 +59,6 @@ fun PowerUserAudioScreen(
     val extendedEqEnabled = prefs.isExtendedEqEnabled()
     val headroom = remember(profile, profileSettings, extendedEqEnabled, extendedBoost) {
         repository.getHeadroomInfo(profile)
-    }
-
-    LaunchedEffect(perDeviceGain) {
-        if (perDeviceGain) {
-            val am = context.getSystemService(android.media.AudioManager::class.java)
-            val device = am.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS).firstOrNull()
-            if (device != null) {
-                val key = DeviceStateManager(context).deviceKey(device)
-                deviceGain = prefs.getDeviceGainOffsetTenths(key).toFloat()
-            }
-        }
     }
 
     DisposableEffect(Unit) {
@@ -242,36 +228,6 @@ fun PowerUserAudioScreen(
                         },
                         valueRange = 60f..150f,
                         steps = 8
-                    )
-                }
-            }
-
-            item { AudioSectionTitle(stringResource(R.string.per_device_gain_section)) }
-            item {
-                EngineSwitch(stringResource(R.string.per_device_gain_enabled), perDeviceGain) {
-                    perDeviceGain = it
-                    prefs.setBoolean(DolbyConstants.PREF_PER_DEVICE_GAIN_ENABLED, it)
-                    repository.refreshSpatialAndGeq(profile)
-                }
-            }
-            if (perDeviceGain) {
-                item {
-                    Text(stringResource(R.string.per_device_gain_slider, deviceGain / 10f))
-                    Slider(
-                        value = deviceGain,
-                        onValueChange = {
-                            deviceGain = it
-                            val am = context.getSystemService(android.media.AudioManager::class.java)
-                            val device = am.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS).firstOrNull()
-                            if (device != null) {
-                                prefs.setDeviceGainOffsetTenths(
-                                    DeviceStateManager(context).deviceKey(device),
-                                    it.toInt()
-                                )
-                                repository.refreshSpatialAndGeq(profile)
-                            }
-                        },
-                        valueRange = -60f..60f
                     )
                 }
             }
