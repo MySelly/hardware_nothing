@@ -46,7 +46,6 @@ fun PowerUserAudioScreen(
     var extendedBoost by remember { mutableStateOf(prefs.isExtendedOutputBoostEnabled()) }
     var boostMax by remember { mutableFloatStateOf(prefs.getOutputBoostMaxTenths().toFloat()) }
     var headroomWarn by remember { mutableStateOf(prefs.isHeadroomWarningEnabled()) }
-    var softClip by remember { mutableStateOf(prefs.isSoftClipEnabled()) }
     var loudnessPresets by remember { mutableStateOf(prefs.isLoudnessPresetsEnabled()) }
     var autoLoudness by remember { mutableStateOf(prefs.isAutoLoudnessEnabled()) }
     var perDeviceGain by remember { mutableStateOf(prefs.isPerDeviceGainEnabled()) }
@@ -56,8 +55,6 @@ fun PowerUserAudioScreen(
     var monoMix by remember { mutableStateOf(prefs.isMonoMixEnabled()) }
     var crossfeedOn by remember { mutableStateOf(prefs.isCrossfeedEnabled()) }
     var crossfeed by remember { mutableFloatStateOf(prefs.getCrossfeedStrength().toFloat()) }
-    var highPassOn by remember { mutableStateOf(prefs.isHighPassEnabled()) }
-    var highPassHz by remember { mutableFloatStateOf(prefs.getHighPassHz().toFloat()) }
     var spectrumOverlay by remember { mutableStateOf(prefs.isEqSpectrumOverlayEnabled()) }
     var coloredLabels by remember { mutableStateOf(prefs.isEqColoredDbLabelsEnabled()) }
     var stackVisual by remember { mutableStateOf(prefs.isLoudnessStackVisualEnabled()) }
@@ -130,36 +127,6 @@ fun PowerUserAudioScreen(
                 EngineSwitch(stringResource(R.string.headroom_warning_enabled), headroomWarn) {
                     headroomWarn = it
                     prefs.setHeadroomWarningEnabled(it)
-                }
-            }
-            item {
-                EngineSwitch(stringResource(R.string.soft_clip_enabled), softClip) {
-                    softClip = it
-                    prefs.setSoftClipEnabled(it)
-                    repository.refreshSpatialAndGeq(profile)
-                }
-            }
-            item {
-                EngineSwitch(stringResource(R.string.high_pass_enabled), highPassOn) {
-                    highPassOn = it
-                    prefs.setBoolean(DolbyConstants.PREF_HIGH_PASS_ENABLED, it)
-                    repository.refreshSpatialAndGeq(profile)
-                }
-            }
-            if (highPassOn) {
-                item {
-                    Text(stringResource(R.string.high_pass_hz_label, highPassHz.toInt()))
-                    Slider(
-                        value = highPassHz,
-                        onValueChange = {
-                            highPassHz = it
-                            context.getSharedPreferences("dolby_prefs", Context.MODE_PRIVATE)
-                                .edit().putInt(DolbyConstants.PREF_HIGH_PASS_HZ, it.toInt()).apply()
-                            repository.refreshSpatialAndGeq(profile)
-                        },
-                        valueRange = 20f..120f,
-                        steps = 10
-                    )
                 }
             }
 

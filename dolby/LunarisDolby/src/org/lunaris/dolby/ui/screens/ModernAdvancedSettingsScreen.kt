@@ -184,6 +184,9 @@ private fun ModernAdvancedSettingsContent(
                     mutableStateOf(engine.isPerDeviceGainEnabled())
                 }
                 var deviceGain by remember { mutableFloatStateOf(0f) }
+                var softClip by remember { mutableStateOf(engine.isSoftClipEnabled()) }
+                var highPassOn by remember { mutableStateOf(engine.isHighPassEnabled()) }
+                var highPassHz by remember { mutableIntStateOf(engine.getHighPassHz()) }
                 LaunchedEffect(perDeviceGain) {
                     if (perDeviceGain) {
                         val am = context.getSystemService(android.media.AudioManager::class.java)
@@ -200,6 +203,54 @@ private fun ModernAdvancedSettingsContent(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (engine.isHeadroomWarningEnabled() && headroom != null) {
                         org.lunaris.dolby.ui.components.HeadroomWarningCard(headroom)
+                    }
+                    ModernSettingsCard(
+                        title = stringResource(R.string.processing_section),
+                        icon = Icons.Default.Tune
+                    ) {
+                        ModernSettingSwitch(
+                            title = stringResource(R.string.soft_clip_enabled),
+                            subtitle = stringResource(R.string.processing_section),
+                            checked = softClip,
+                            onCheckedChange = {
+                                softClip = it
+                                engine.setSoftClipEnabled(it)
+                                repository.refreshSpatialAndGeq(state.settings.currentProfile)
+                            },
+                            icon = Icons.Default.Compress
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        ModernSettingSwitch(
+                            title = stringResource(R.string.high_pass_enabled),
+                            subtitle = stringResource(R.string.high_pass_hz_label, highPassHz),
+                            checked = highPassOn,
+                            onCheckedChange = {
+                                highPassOn = it
+                                engine.setBoolean(org.lunaris.dolby.DolbyConstants.PREF_HIGH_PASS_ENABLED, it)
+                                repository.refreshSpatialAndGeq(state.settings.currentProfile)
+                            },
+                            icon = Icons.Default.FilterList
+                        )
+                        AnimatedVisibility(visible = highPassOn) {
+                            Column {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                ModernSettingSlider(
+                                    title = stringResource(R.string.high_pass_hz_label, highPassHz),
+                                    value = highPassHz,
+                                    onValueChange = {
+                                        highPassHz = it.toInt()
+                                        context.getSharedPreferences("dolby_prefs", android.content.Context.MODE_PRIVATE)
+                                            .edit()
+                                            .putInt(org.lunaris.dolby.DolbyConstants.PREF_HIGH_PASS_HZ, it.toInt())
+                                            .apply()
+                                        repository.refreshSpatialAndGeq(state.settings.currentProfile)
+                                    },
+                                    valueRange = 20f..120f,
+                                    steps = 10,
+                                    valueLabel = { "${it} Hz" }
+                                )
+                            }
+                        }
                     }
                     ModernSettingsCard(
                         title = stringResource(R.string.per_device_gain_section),
