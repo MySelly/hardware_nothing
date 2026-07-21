@@ -109,7 +109,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
         if (isReleased) return false
         return try {
             synchronized(EFFECT_LOCK) { getOrCreateDolbyEffect().hasControl() }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            DolbyDiagRecorder.record(context, "effect", "hasEffectControl failed", e)
             false
         }
     }
@@ -180,7 +181,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
             // Must never escape to DolbyEffectService.onCreate — an uncaught throw after
             // startForegroundService() kills the whole process and DolbyActivity cannot stay open
             // while widget/QS (which catch effect errors) still appear to work.
-            DolbyConstants.dlog(TAG, "Failed to apply saved state: ${e.message}")
+            DolbyConstants.elog(TAG, "Failed to apply saved state: ${e.message}", e)
+            DolbyDiagRecorder.record(context, "effect", "applySavedState failed", e)
         }
     }
 
@@ -224,7 +226,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
         return try {
             dolbyEffect.dsOn
         } catch (e: Exception) {
-            DolbyConstants.dlog(TAG, "Error getting Dolby enabled state: ${e.message}")
+            DolbyConstants.elog(TAG, "Error getting Dolby enabled state: ${e.message}", e)
+            DolbyDiagRecorder.record(context, "effect", "getDolbyEnabled failed", e)
             false
         }
     }
@@ -239,7 +242,8 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
             isBypassActive = false
             DolbyStatusNotifier.notifyChanged(context)
         } catch (e: Exception) {
-            DolbyConstants.dlog(TAG, "Error setting Dolby enabled: ${e.message}")
+            DolbyConstants.elog(TAG, "Error setting Dolby enabled: ${e.message}", e)
+            DolbyDiagRecorder.record(context, "effect", "setDolbyEnabled failed", e)
         }
     }
 
@@ -1094,7 +1098,7 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
                         sharedDolbyEffect = it
                     }
                 } catch (e: Exception) {
-                    DolbyConstants.dlog(TAG, "Failed to create shared Dolby effect: ${e.message}")
+                    DolbyConstants.elog(TAG, "Failed to create shared Dolby effect: ${e.message}", e)
                     throw e
                 }
             }

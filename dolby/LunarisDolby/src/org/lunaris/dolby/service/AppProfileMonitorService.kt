@@ -131,11 +131,7 @@ class AppProfileMonitorService : Service() {
     }
 
     private fun promoteForeground() {
-        try {
-            val notification = DolbyForegroundNotifications.build(
-                this,
-                R.string.notification_monitor_active
-            )
+        fun startFg(notification: android.app.Notification) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 startForeground(
                     DolbyForegroundNotifications.NOTIFICATION_ID_MONITOR,
@@ -145,9 +141,17 @@ class AppProfileMonitorService : Service() {
             } else {
                 startForeground(DolbyForegroundNotifications.NOTIFICATION_ID_MONITOR, notification)
             }
-        } catch (e: Exception) {
-            DolbyConstants.dlog(TAG, "promoteForeground failed: ${e.message}")
-            try {
+        }
+        val attempts = listOf(
+            {
+                startFg(
+                    DolbyForegroundNotifications.build(
+                        this,
+                        R.string.notification_monitor_active
+                    )
+                )
+            },
+            {
                 DolbyForegroundNotifications.ensureChannel(this)
                 val fallback = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     android.app.Notification.Builder(this, DolbyForegroundNotifications.CHANNEL_ID)
@@ -160,11 +164,40 @@ class AppProfileMonitorService : Service() {
                     .setSmallIcon(R.drawable.ic_dolby_qs)
                     .setOngoing(true)
                     .build()
-                startForeground(DolbyForegroundNotifications.NOTIFICATION_ID_MONITOR, fallback)
-            } catch (fatal: Exception) {
-                DolbyConstants.dlog(TAG, "Minimal promoteForeground failed: ${fatal.message}")
+                startFg(fallback)
+            },
+            {
+                DolbyForegroundNotifications.ensureChannel(this)
+                val emergency = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    android.app.Notification.Builder(this, DolbyForegroundNotifications.CHANNEL_ID)
+                } else {
+                    @Suppress("DEPRECATION")
+                    android.app.Notification.Builder(this)
+                }
+                    .setContentTitle("Dolby")
+                    .setContentText("Monitor")
+                    .setSmallIcon(android.R.drawable.ic_media_play)
+                    .setOngoing(true)
+                    .build()
+                startFg(emergency)
+            }
+        )
+        var lastError: Exception? = null
+        for ((index, attempt) in attempts.withIndex()) {
+            try {
+                attempt()
+                return
+            } catch (e: Exception) {
+                lastError = e
+                Log.e(TAG, "promoteForeground attempt #$index failed", e)
             }
         }
+        org.lunaris.dolby.data.DolbyDiagRecorder.record(
+            this,
+            "fgs-monitor",
+            "promoteForeground exhausted all fallbacks",
+            lastError
+        )
     }
 
     private fun startMonitoring() {

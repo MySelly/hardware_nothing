@@ -127,8 +127,16 @@ class DolbyActivity : ComponentActivity() {
                 }
             }
         } catch (e: Exception) {
-            // Last-resort: keep process alive and show a recoverable error instead of a black flash.
             DolbyConstants.dlog(TAG, "setContent failed: ${e.message}")
+            try {
+                org.lunaris.dolby.data.DolbyDiagRecorder.record(
+                    this,
+                    "ui",
+                    "DolbyActivity setContent failed",
+                    e
+                )
+            } catch (_: Exception) {
+            }
             setContent {
                 MaterialTheme {
                     Surface(modifier = Modifier.fillMaxSize()) {

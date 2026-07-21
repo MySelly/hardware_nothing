@@ -440,7 +440,12 @@
     <string name="diagnostics_desc">Dolby effect status and automation state</string>
     <string name="diagnostics_effect">Effect status</string>
     <string name="diagnostics_copy">Copy report</string>
-    <string name="diagnostics_copied">Diagnostics copied</string>
+    <string name="diagnostics_copied">Diagnostics copied — paste it here as text</string>
+    <string name="diagnostics_share">Share report</string>
+    <string name="diagnostics_share_hint">No log file needed. Copy or share this report and paste the text in chat.</string>
+    <string name="diagnostics_effect_error">Effect error</string>
+    <string name="diagnostics_last_crash">Last crash</string>
+    <string name="diagnostics_recent_events">Recent events</string>
     <string name="calibration_title">Audio calibration</string>
     <string name="calibration_desc">Live spectrum view while tuning your listening environment</string>
     <string name="calibration_hint">Play reference audio and watch the spectrum. Adjust EQ on the Equalizer tab.</string>
