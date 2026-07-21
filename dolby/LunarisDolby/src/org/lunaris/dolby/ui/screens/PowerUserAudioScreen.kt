@@ -125,28 +125,6 @@ fun PowerUserAudioScreen(
                 }
             }
 
-            item { AudioSectionTitle(stringResource(R.string.output_boost_section)) }
-            item {
-                EngineSwitch(stringResource(R.string.extended_output_boost_enabled), extendedBoost) {
-                    extendedBoost = it
-                    prefs.setExtendedOutputBoostEnabled(it)
-                }
-            }
-            if (extendedBoost) {
-                item {
-                    Text(stringResource(R.string.output_boost_max_label, boostMax / 10f))
-                    Slider(
-                        value = boostMax,
-                        onValueChange = {
-                            boostMax = it
-                            prefs.setOutputBoostMaxTenths(it.toInt())
-                        },
-                        valueRange = 60f..150f,
-                        steps = 8
-                    )
-                }
-            }
-
             item { AudioSectionTitle(stringResource(R.string.processing_section)) }
             item {
                 EngineSwitch(stringResource(R.string.headroom_warning_enabled), headroomWarn) {
@@ -276,6 +254,28 @@ fun PowerUserAudioScreen(
                             .edit().putInt(DolbyConstants.PREF_CROSSFEED_STRENGTH, it.toInt()).apply()
                         repository.refreshSpatialAndGeq(profile)
                     }, valueRange = 0f..100f)
+                }
+            }
+
+            item { AudioSectionTitle(stringResource(R.string.output_boost_section)) }
+            item {
+                EngineSwitch(stringResource(R.string.extended_output_boost_enabled), extendedBoost) {
+                    extendedBoost = it
+                    prefs.setExtendedOutputBoostEnabled(it)
+                }
+            }
+            if (extendedBoost) {
+                item {
+                    Text(stringResource(R.string.output_boost_max_label, boostMax / 10f))
+                    Slider(
+                        value = boostMax,
+                        onValueChange = {
+                            boostMax = it
+                            prefs.setOutputBoostMaxTenths(it.toInt())
+                        },
+                        valueRange = 60f..150f,
+                        steps = 8
+                    )
                 }
             }
 
