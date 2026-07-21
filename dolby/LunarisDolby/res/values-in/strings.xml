@@ -339,7 +339,6 @@
     <string name="soft_clip_enabled">Soft clip (reduce peaks instead of hard cut)</string>
     <string name="high_pass_enabled">High-pass filter</string>
     <string name="high_pass_hz_label">Cut below %1$d Hz</string>
-    <string name="auto_loudness_enabled">Auto-loudness at low volume</string>
     <string name="spatial_section">Spatial</string>
     <string name="stereo_balance_enabled">Stereo balance</string>
     <string name="mono_mix_enabled">Mono mix</string>

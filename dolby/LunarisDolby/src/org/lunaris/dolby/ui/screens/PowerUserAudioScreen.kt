@@ -46,7 +46,6 @@ fun PowerUserAudioScreen(
     var boostMax by remember { mutableFloatStateOf(prefs.getOutputBoostMaxTenths().toFloat()) }
     var headroomWarn by remember { mutableStateOf(prefs.isHeadroomWarningEnabled()) }
     var loudnessPresets by remember { mutableStateOf(prefs.isLoudnessPresetsEnabled()) }
-    var autoLoudness by remember { mutableStateOf(prefs.isAutoLoudnessEnabled()) }
     var stereoBalanceOn by remember { mutableStateOf(prefs.isStereoBalanceEnabled()) }
     var stereoBalance by remember { mutableFloatStateOf(prefs.getStereoBalance().toFloat()) }
     var monoMix by remember { mutableStateOf(prefs.isMonoMixEnabled()) }
@@ -144,12 +143,6 @@ fun PowerUserAudioScreen(
                             )
                         }
                     }
-                }
-            }
-            item {
-                EngineSwitch(stringResource(R.string.auto_loudness_enabled), autoLoudness) {
-                    autoLoudness = it
-                    prefs.setAutoLoudnessEnabled(it)
                 }
             }
 

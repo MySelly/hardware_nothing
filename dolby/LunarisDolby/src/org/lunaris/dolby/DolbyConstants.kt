@@ -121,7 +121,6 @@ object DolbyConstants {
     const val PREF_HEADROOM_WARNING_ENABLED = "headroom_warning_enabled"
     const val PREF_SOFT_CLIP_ENABLED = "soft_clip_enabled"
     const val PREF_LOUDNESS_PRESETS_ENABLED = "loudness_presets_enabled"
-    const val PREF_AUTO_LOUDNESS_ENABLED = "auto_loudness_enabled"
     const val PREF_PER_DEVICE_GAIN_ENABLED = "per_device_gain_enabled"
     const val PREF_DEVICE_GAIN_OFFSETS = "device_gain_offsets"
     const val PREF_STEREO_BALANCE_ENABLED = "stereo_balance_enabled"

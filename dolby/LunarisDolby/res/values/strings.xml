@@ -488,7 +488,6 @@
     <string name="loudness_punch">Punch</string>
     <string name="loudness_warm">Warm</string>
     <string name="loudness_max">Max</string>
-    <string name="auto_loudness_enabled">Auto-loudness at low volume</string>
     <string name="spatial_section">Spatial</string>
     <string name="stereo_balance_enabled">Stereo balance</string>
     <string name="mono_mix_enabled">Mono mix</string>

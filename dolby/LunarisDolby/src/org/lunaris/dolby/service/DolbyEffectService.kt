@@ -25,7 +25,6 @@ import org.lunaris.dolby.data.DeviceStateManager
 import org.lunaris.dolby.data.DolbyDiagRecorder
 import org.lunaris.dolby.data.DolbyRepository
 import org.lunaris.dolby.data.DolbyAutomationCoordinator
-import org.lunaris.dolby.data.AudioEngineProcessor
 
 class DolbyEffectService : Service() {
 
@@ -45,7 +44,6 @@ class DolbyEffectService : Service() {
             checkCallState()
             DolbyAutomationCoordinator.applyGameLatencyMode(this@DolbyEffectService)
             DolbyAutomationCoordinator.enforceSafeListeningLimit(this@DolbyEffectService)
-            applyAutoLoudnessIfNeeded()
             handler.postDelayed(this, 2000L)
         }
     }
@@ -74,15 +72,8 @@ class DolbyEffectService : Service() {
             val isActive = configs?.any { it.isActive } == true
             if (isActive) {
                 repository.applySavedState()
-                applyAutoLoudnessIfNeeded()
             }
         }
-    }
-
-    private fun applyAutoLoudnessIfNeeded() {
-        val maxSteps = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
-        val step = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-        AudioEngineProcessor(this).applyAutoLoudness(step, maxSteps, repository.getCurrentProfile(), repository)
     }
 
     private fun promoteForeground() {
@@ -192,7 +183,6 @@ class DolbyEffectService : Service() {
             audioManager.registerAudioDeviceCallback(audioDeviceCallback, handler)
             audioManager.registerAudioPlaybackCallback(playbackCallback, handler)
             handler.post(callCheckRunnable)
-            applyAutoLoudnessIfNeeded()
             Log.d(TAG, "Dolby effect service created")
         } catch (e: Exception) {
             Log.e(TAG, "Dolby effect service init failed after foreground promote", e)

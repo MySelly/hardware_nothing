@@ -488,7 +488,6 @@
     <string name="loudness_punch">Punch</string>
     <string name="loudness_warm">Warm</string>
     <string name="loudness_max">Maks</string>
-    <string name="auto_loudness_enabled">Düşük seste otomatik yükseltme</string>
     <string name="spatial_section">Spatial</string>
     <string name="stereo_balance_enabled">Stereo denge</string>
     <string name="mono_mix_enabled">Mono karışım</string>

@@ -92,13 +92,6 @@ class AudioEnginePreferences(context: Context) {
     fun isLoudnessPresetsEnabled(): Boolean =
         prefs.getBoolean(DolbyConstants.PREF_LOUDNESS_PRESETS_ENABLED, true)
 
-    fun isAutoLoudnessEnabled(): Boolean =
-        prefs.getBoolean(DolbyConstants.PREF_AUTO_LOUDNESS_ENABLED, false)
-
-    fun setAutoLoudnessEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean(DolbyConstants.PREF_AUTO_LOUDNESS_ENABLED, enabled).apply()
-    }
-
     fun isPerDeviceGainEnabled(): Boolean =
         prefs.getBoolean(DolbyConstants.PREF_PER_DEVICE_GAIN_ENABLED, false)
 

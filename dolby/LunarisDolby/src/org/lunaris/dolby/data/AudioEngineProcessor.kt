@@ -53,21 +53,5 @@ internal class AudioEngineProcessor(private val context: Context) {
         )
     }
 
-    fun applyAutoLoudness(volumeStep: Int, maxSteps: Int, profile: Int, repository: DolbyRepository) {
-        if (!engine.isAutoLoudnessEnabled()) return
-        val fraction = volumeStep.toFloat() / maxSteps.coerceAtLeast(1)
-        val tenths = when {
-            fraction < 0.3f -> (engine.getOutputBoostMaxTenths() * (0.3f - fraction)).toInt()
-            fraction > 0.85f -> 0
-            else -> 0
-        }
-        if (tenths > 0) {
-            repository.setOutputBoost(profile, true, tenths.coerceAtMost(engine.getOutputBoostMaxTenths()))
-        } else {
-            // High volume, mid range, or zero tenths after a prior boost — clear leftover boost.
-            repository.setOutputBoost(profile, false, 0)
-        }
-    }
-
     fun preferences(): AudioEnginePreferences = engine
 }
