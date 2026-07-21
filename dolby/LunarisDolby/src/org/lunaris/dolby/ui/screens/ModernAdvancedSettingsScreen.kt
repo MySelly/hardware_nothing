@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import org.lunaris.dolby.R
+import org.lunaris.dolby.domain.models.AudioDeviceCategory
 import org.lunaris.dolby.domain.models.DolbyUiState
 import org.lunaris.dolby.ui.components.*
 import org.lunaris.dolby.ui.viewmodel.DolbyViewModel
@@ -421,6 +422,7 @@ private fun ModernAdvancedSettingsContent(
                     profileSettings = state.profileSettings,
                     volumeLevelerEnabled = state.settings.volumeLevelerEnabled,
                     showIeqAmount = state.settings.currentProfile != 0,
+                    isOnBluetooth = state.activeAudioDevice.category == AudioDeviceCategory.BLUETOOTH,
                     viewModel = viewModel
                 )
             }
@@ -705,6 +707,7 @@ private fun AudioTuningSettingsCard(
     profileSettings: org.lunaris.dolby.domain.models.ProfileSettings,
     volumeLevelerEnabled: Boolean,
     showIeqAmount: Boolean,
+    isOnBluetooth: Boolean,
     viewModel: DolbyViewModel
 ) {
     val context = LocalContext.current
@@ -838,24 +841,29 @@ private fun AudioTuningSettingsCard(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-        ModernSettingSwitch(
-            title = stringResource(R.string.virtual_bass_speaker_title),
-            subtitle = stringResource(R.string.virtual_bass_speaker_summary),
-            checked = profileSettings.virtualBassSpeakerEnabled,
-            onCheckedChange = { viewModel.setVirtualBassSpeaker(it) },
-            icon = Icons.Default.GraphicEq
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-        ModernSettingSwitch(
-            title = stringResource(R.string.virtual_bass_bluetooth_title),
-            subtitle = stringResource(R.string.virtual_bass_bluetooth_summary),
-            checked = profileSettings.virtualBassBluetoothEnabled,
-            onCheckedChange = { viewModel.setVirtualBassBluetooth(it) },
-            icon = Icons.Default.GraphicEq
-        )
+        if (isOnBluetooth) {
+            ModernSettingSwitch(
+                title = stringResource(R.string.virtual_bass_bluetooth_title),
+                subtitle = stringResource(R.string.virtual_bass_bluetooth_summary),
+                checked = profileSettings.virtualBassBluetoothEnabled,
+                onCheckedChange = { viewModel.setVirtualBassBluetooth(it) },
+                icon = Icons.Default.Bluetooth
+            )
+        } else {
+            ModernSettingSwitch(
+                title = stringResource(R.string.virtual_bass_speaker_title),
+                subtitle = stringResource(R.string.virtual_bass_speaker_summary),
+                checked = profileSettings.virtualBassSpeakerEnabled,
+                onCheckedChange = { viewModel.setVirtualBassSpeaker(it) },
+                icon = Icons.Default.GraphicEq
+            )
+        }
         AnimatedVisibility(
-            visible = profileSettings.virtualBassSpeakerEnabled || profileSettings.virtualBassBluetoothEnabled
+            visible = if (isOnBluetooth) {
+                profileSettings.virtualBassBluetoothEnabled
+            } else {
+                profileSettings.virtualBassSpeakerEnabled
+            }
         ) {
             Column {
                 Spacer(modifier = Modifier.height(8.dp))
