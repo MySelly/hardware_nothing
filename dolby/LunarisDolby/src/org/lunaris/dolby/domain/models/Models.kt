@@ -236,9 +236,12 @@ data class DolbyDiagnostics(
     val dolbyEnabled: Boolean,
     val currentProfile: Int,
     val effectHasControl: Boolean,
+    val effectCreateError: String?,
     val activeDevice: ActiveAudioDevice,
     val automationStatus: AutomationStatus,
-    val recentHistory: List<ProfileHistoryEntry>
+    val recentHistory: List<ProfileHistoryEntry>,
+    val lastCrash: String?,
+    val recentEvents: List<String>
 )
 
 sealed class ScheduledProfileUiState {

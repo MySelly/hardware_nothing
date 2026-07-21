@@ -17,10 +17,12 @@ import android.os.Build
 import android.os.Handler
 import android.content.SharedPreferences
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.R
 import org.lunaris.dolby.data.DeviceStateManager
+import org.lunaris.dolby.data.DolbyDiagRecorder
 import org.lunaris.dolby.data.DolbyRepository
 import org.lunaris.dolby.data.DolbyAutomationCoordinator
 import org.lunaris.dolby.data.AudioEngineProcessor
@@ -33,7 +35,7 @@ class DolbyEffectService : Service() {
     }
     private val isDeviceStateMemoryEnabled: Boolean
         get() = dolbyPrefs.getBoolean(DolbyConstants.PREF_DEVICE_STATE_MEMORY, false)
-    private val handler = Handler()
+    private val handler = Handler(Looper.getMainLooper())
     private lateinit var repository: DolbyRepository
     private lateinit var deviceStateManager: DeviceStateManager
     private var previousActiveDevice: AudioDeviceInfo? = null
@@ -84,11 +86,9 @@ class DolbyEffectService : Service() {
     }
 
     private fun promoteForeground() {
-        try {
-            val notification = DolbyForegroundNotifications.build(
-                this,
-                R.string.notification_effect_active
-            )
+        // Must call startForeground successfully after startForegroundService(), or Android
+        // kills the whole process and DolbyActivity appears unable to open.
+        fun startFg(notification: android.app.Notification) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 startForeground(
                     DolbyForegroundNotifications.NOTIFICATION_ID_EFFECT,
@@ -98,11 +98,17 @@ class DolbyEffectService : Service() {
             } else {
                 startForeground(DolbyForegroundNotifications.NOTIFICATION_ID_EFFECT, notification)
             }
-        } catch (e: Exception) {
-            // Still enter foreground with a minimal notification if channel/build fails —
-            // otherwise startForegroundService() will kill the process and DolbyActivity won't open.
-            Log.e(TAG, "promoteForeground failed, retrying minimal notification", e)
-            try {
+        }
+        val attempts = listOf(
+            {
+                startFg(
+                    DolbyForegroundNotifications.build(
+                        this,
+                        R.string.notification_effect_active
+                    )
+                )
+            },
+            {
                 DolbyForegroundNotifications.ensureChannel(this)
                 val fallback = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     android.app.Notification.Builder(this, DolbyForegroundNotifications.CHANNEL_ID)
@@ -115,11 +121,48 @@ class DolbyEffectService : Service() {
                     .setSmallIcon(R.drawable.ic_dolby_qs)
                     .setOngoing(true)
                     .build()
-                startForeground(DolbyForegroundNotifications.NOTIFICATION_ID_EFFECT, fallback)
-            } catch (fatal: Exception) {
-                Log.e(TAG, "Minimal promoteForeground also failed", fatal)
+                startFg(fallback)
+            },
+            {
+                // Absolute last resort: system icon in case the Dolby drawable is invalid.
+                DolbyForegroundNotifications.ensureChannel(this)
+                val emergency = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    android.app.Notification.Builder(this, DolbyForegroundNotifications.CHANNEL_ID)
+                } else {
+                    @Suppress("DEPRECATION")
+                    android.app.Notification.Builder(this)
+                }
+                    .setContentTitle("Dolby")
+                    .setContentText("Active")
+                    .setSmallIcon(android.R.drawable.ic_media_play)
+                    .setOngoing(true)
+                    .build()
+                startFg(emergency)
+            }
+        )
+        var lastError: Exception? = null
+        for ((index, attempt) in attempts.withIndex()) {
+            try {
+                attempt()
+                if (index > 0) {
+                    DolbyDiagRecorder.record(
+                        this,
+                        "fgs",
+                        "promoteForeground succeeded via fallback #$index"
+                    )
+                }
+                return
+            } catch (e: Exception) {
+                lastError = e
+                Log.e(TAG, "promoteForeground attempt #$index failed", e)
             }
         }
+        DolbyDiagRecorder.record(
+            this,
+            "fgs",
+            "promoteForeground exhausted all fallbacks",
+            lastError
+        )
     }
 
     override fun onCreate() {
@@ -153,6 +196,7 @@ class DolbyEffectService : Service() {
             Log.d(TAG, "Dolby effect service created")
         } catch (e: Exception) {
             Log.e(TAG, "Dolby effect service init failed after foreground promote", e)
+            DolbyDiagRecorder.record(this, "effect-service", "onCreate init failed", e)
         }
     }
 
@@ -218,6 +262,7 @@ class DolbyEffectService : Service() {
             repository.applySavedState()
         } catch (e: Exception) {
             Log.e(TAG, "applySavedState in onStartCommand failed", e)
+            DolbyDiagRecorder.record(this, "effect-service", "onStartCommand applySavedState failed", e)
         }
         return START_STICKY
     }
@@ -260,10 +305,12 @@ class DolbyEffectService : Service() {
                 context.startForegroundService(intent)
             } catch (e: Exception) {
                 Log.e(TAG, "startForegroundService failed, falling back to startService", e)
+                DolbyDiagRecorder.record(context, "fgs", "startForegroundService failed", e)
                 try {
                     context.startService(intent)
                 } catch (fatal: Exception) {
                     Log.e(TAG, "startService fallback failed", fatal)
+                    DolbyDiagRecorder.record(context, "fgs", "startService fallback failed", fatal)
                 }
             }
         }

@@ -173,6 +173,9 @@ fun ModernDolbySettingsScreen(
                         ) {
                             Text(stringResource(R.string.app_profiles_retry))
                         }
+                        TextButton(onClick = { navController.navigate(Screen.Diagnostics.route) }) {
+                            Text(stringResource(R.string.diagnostics_title))
+                        }
                     }
                 }
             }

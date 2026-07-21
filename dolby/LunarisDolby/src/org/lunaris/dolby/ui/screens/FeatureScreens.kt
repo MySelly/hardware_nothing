@@ -601,14 +601,31 @@ fun DiagnosticsScreen(navController: NavController) {
         profiles.getOrElse(idx.coerceAtLeast(0)) { "?" }
     }
     val report = remember(diagnostics, profileName, tick) {
-        buildString {
-            appendLine("Dolby: ${if (diagnostics.dolbyEnabled) "ON" else "OFF"}")
-            appendLine("Profile: $profileName (${diagnostics.currentProfile})")
-            appendLine("Effect: ${if (diagnostics.effectHasControl) "OK" else "FAIL"}")
-            appendLine("Device: ${diagnostics.activeDevice.name}")
-            appendLine("Source: ${diagnostics.automationStatus.activeSource?.key ?: "-"}")
-            appendLine("Detail: ${diagnostics.automationStatus.activeDetail}")
+        helper.buildShareableReport(profileName)
+    }
+
+    fun copyReport() {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Dolby diagnostics", report))
+        android.widget.Toast.makeText(
+            context,
+            context.getString(R.string.diagnostics_copied),
+            android.widget.Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    fun shareReport() {
+        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(android.content.Intent.EXTRA_SUBJECT, "LunarisDolby diagnostics")
+            putExtra(android.content.Intent.EXTRA_TEXT, report)
         }
+        context.startActivity(
+            android.content.Intent.createChooser(
+                intent,
+                context.getString(R.string.diagnostics_share)
+            )
+        )
     }
 
     Scaffold(
@@ -627,28 +644,91 @@ fun DiagnosticsScreen(navController: NavController) {
                     }) {
                         Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.app_profiles_retry))
                     }
-                    IconButton(onClick = {
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Dolby diagnostics", report))
-                        android.widget.Toast.makeText(
-                            context,
-                            context.getString(R.string.diagnostics_copied),
-                            android.widget.Toast.LENGTH_SHORT
-                        ).show()
-                    }) {
+                    IconButton(onClick = { copyReport() }) {
                         Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.diagnostics_copy))
+                    }
+                    IconButton(onClick = { shareReport() }) {
+                        Icon(Icons.Default.Share, contentDescription = stringResource(R.string.diagnostics_share))
                     }
                 }
             )
         }
     ) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(16.dp)) {
+            item {
+                Text(
+                    text = stringResource(R.string.diagnostics_share_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+            }
             item { DiagRow(stringResource(R.string.dolby_enable), if (diagnostics.dolbyEnabled) "ON" else "OFF") }
             item { DiagRow(stringResource(R.string.dolby_profile_title), profileName) }
             item { DiagRow(stringResource(R.string.diagnostics_effect), if (diagnostics.effectHasControl) "OK" else "FAIL") }
+            if (!diagnostics.effectCreateError.isNullOrBlank()) {
+                item { DiagRow(stringResource(R.string.diagnostics_effect_error), diagnostics.effectCreateError!!) }
+            }
             item { DiagRow(stringResource(R.string.audio_output_active_device), diagnostics.activeDevice.name) }
             item { DiagRow(stringResource(R.string.status_active_source), diagnostics.automationStatus.activeSource?.key ?: "-") }
             item { DiagRow(stringResource(R.string.status_detail), diagnostics.automationStatus.activeDetail.ifBlank { "-" }) }
+            if (!diagnostics.lastCrash.isNullOrBlank()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.diagnostics_last_crash),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                    )
+                }
+                item {
+                    Text(
+                        text = diagnostics.lastCrash!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+            if (diagnostics.recentEvents.isNotEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.diagnostics_recent_events),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                    )
+                }
+                items(diagnostics.recentEvents.takeLast(12).asReversed()) { event ->
+                    Text(
+                        text = event,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
+                }
+            }
+            item {
+                Button(
+                    onClick = { shareReport() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp)
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.diagnostics_share))
+                }
+            }
+            item {
+                OutlinedButton(
+                    onClick = { copyReport() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.diagnostics_copy))
+                }
+            }
         }
     }
 }

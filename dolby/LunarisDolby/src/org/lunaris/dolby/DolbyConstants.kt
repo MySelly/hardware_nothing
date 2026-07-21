@@ -240,4 +240,13 @@ object DolbyConstants {
             Log.d("$TAG-$tag", msg)
         }
     }
+
+    /** Always-on error log for failures that matter when users cannot share full logcat. */
+    fun elog(tag: String, msg: String, error: Throwable? = null) {
+        if (error != null) {
+            Log.e("$TAG-$tag", msg, error)
+        } else {
+            Log.e("$TAG-$tag", msg)
+        }
+    }
 }
