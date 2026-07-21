@@ -6,7 +6,8 @@
 package org.lunaris.dolby.ui.theme
 
 import android.app.Activity
-import android.os.Build
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -125,6 +126,15 @@ private val DolbyTypography = Typography(
     )
 )
 
+private fun Context.findActivity(): Activity? {
+    var ctx: Context? = this
+    while (ctx is ContextWrapper) {
+        if (ctx is Activity) return ctx
+        ctx = ctx.baseContext
+    }
+    return null
+}
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DolbyTheme(
@@ -158,8 +168,10 @@ fun DolbyTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
+            val window = view.context.findActivity()?.window ?: return@SideEffect
+            @Suppress("DEPRECATION")
             window.statusBarColor = colorScheme.surface.toArgb()
+            @Suppress("DEPRECATION")
             window.navigationBarColor = colorScheme.surface.toArgb()
             WindowCompat.getInsetsController(window, view).apply {
                 isAppearanceLightStatusBars = !darkTheme
@@ -168,11 +180,27 @@ fun DolbyTheme(
         }
     }
 
-    MaterialExpressiveTheme(
-        colorScheme = colorScheme,
-        motionScheme = MotionScheme.expressive(),
-        shapes = ExpressiveShapes,
-        typography = DolbyTypography,
-        content = content
-    )
+    // Prefer expressive theme; fall back if the prebuilt Material3 lacks runtime support.
+    val motionScheme = try {
+        MotionScheme.expressive()
+    } catch (_: Throwable) {
+        null
+    }
+
+    if (motionScheme != null) {
+        MaterialExpressiveTheme(
+            colorScheme = colorScheme,
+            motionScheme = motionScheme,
+            shapes = ExpressiveShapes,
+            typography = DolbyTypography,
+            content = content
+        )
+    } else {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            shapes = ExpressiveShapes,
+            typography = DolbyTypography,
+            content = content
+        )
+    }
 }

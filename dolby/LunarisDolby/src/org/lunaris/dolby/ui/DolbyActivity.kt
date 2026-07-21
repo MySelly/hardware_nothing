@@ -15,11 +15,13 @@ import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -108,18 +110,35 @@ class DolbyActivity : ComponentActivity() {
         DolbyConstants.dlog(TAG, "Activity onCreate")
         lifecycle.addObserver(lifecycleObserver)
         startRoute = intent.getStringExtra(DolbyConstants.EXTRA_ROUTE)
-        
-        setContent {
-            DolbyTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.surface
-                ) {
-                    DolbyNavHost(
-                        dolbyViewModel = dolbyViewModel,
-                        equalizerViewModel = equalizerViewModel,
-                        startRoute = startRoute
-                    )
+
+        try {
+            setContent {
+                DolbyTheme {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.surface
+                    ) {
+                        DolbyNavHost(
+                            dolbyViewModel = dolbyViewModel,
+                            equalizerViewModel = equalizerViewModel,
+                            startRoute = startRoute
+                        )
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // Last-resort: keep process alive and show a recoverable error instead of a black flash.
+            DolbyConstants.dlog(TAG, "setContent failed: ${e.message}")
+            setContent {
+                MaterialTheme {
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = e.message ?: "Failed to open Dolby UI")
+                        }
+                    }
                 }
             }
         }
