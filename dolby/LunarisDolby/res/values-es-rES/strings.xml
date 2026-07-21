@@ -276,7 +276,7 @@
     <string name="widget_sleep_cancel">Cancel sleep</string>
     <string name="widget_sleep_remaining">Sleep %1$dm</string>
     <string name="power_user_audio_title">Audio engine</string>
-    <string name="power_user_audio_desc">Configure EQ limits, loudness, spatial audio, and visual options. Each feature can be turned off.</string>
+    <string name="power_user_audio_desc">Configure loudness, spatial audio, and visual options. Each feature can be turned off.</string>
     <string name="headroom_warning_enabled">Headroom warnings</string>
     <string name="loudness_presets_section">Loudness presets</string>
     <string name="loudness_presets_enabled">Show loudness presets</string>

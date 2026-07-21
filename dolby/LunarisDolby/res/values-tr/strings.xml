@@ -467,7 +467,7 @@
 
     <!-- Audio engine / power user -->
     <string name="power_user_audio_title">Ses motoru</string>
-    <string name="power_user_audio_desc">EQ limitleri, ses yüksekliği, spatial ve görsel seçenekler. Her özellik kapatılabilir.</string>
+    <string name="power_user_audio_desc">Ses yüksekliği, spatial ve görsel seçenekler. Her özellik kapatılabilir.</string>
     <string name="eq_limits_section">EQ aralığı</string>
     <string name="extended_eq_enabled">Genişletilmiş EQ aralığı</string>
     <string name="eq_range_label">Maksimum EQ kazancı</string>

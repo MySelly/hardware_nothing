@@ -43,8 +43,6 @@ fun PowerUserAudioScreen(
     val profile = (uiState as? org.lunaris.dolby.domain.models.DolbyUiState.Success)?.settings?.currentProfile ?: 0
     val profileSettings = (uiState as? org.lunaris.dolby.domain.models.DolbyUiState.Success)?.profileSettings
 
-    var extendedEq by remember { mutableStateOf(prefs.isExtendedEqEnabled()) }
-    var eqPreset by remember { mutableStateOf(prefs.getEqRangePreset()) }
     var extendedBoost by remember { mutableStateOf(prefs.isExtendedOutputBoostEnabled()) }
     var boostMax by remember { mutableFloatStateOf(prefs.getOutputBoostMaxTenths().toFloat()) }
     var headroomWarn by remember { mutableStateOf(prefs.isHeadroomWarningEnabled()) }
@@ -64,7 +62,8 @@ fun PowerUserAudioScreen(
     var coloredLabels by remember { mutableStateOf(prefs.isEqColoredDbLabelsEnabled()) }
     var stackVisual by remember { mutableStateOf(prefs.isLoudnessStackVisualEnabled()) }
 
-    val headroom = remember(profile, profileSettings, extendedEq, extendedBoost) {
+    val extendedEqEnabled = prefs.isExtendedEqEnabled()
+    val headroom = remember(profile, profileSettings, extendedEqEnabled, extendedBoost) {
         repository.getHeadroomInfo(profile)
     }
 
@@ -123,39 +122,6 @@ fun PowerUserAudioScreen(
                             profileSettings.dspVolumeBoostStrength.toFloat() else 0f,
                         maxDb = prefs.maxGainDb() + prefs.getOutputBoostMaxTenths() / 10f
                     )
-                }
-            }
-
-            item { AudioSectionTitle(stringResource(R.string.eq_limits_section)) }
-            item {
-                EngineSwitch(stringResource(R.string.extended_eq_enabled), extendedEq) {
-                    extendedEq = it
-                    prefs.setExtendedEqEnabled(it)
-                    dolbyViewModel.loadSettings()
-                }
-            }
-            if (extendedEq) {
-                item {
-                    Text(stringResource(R.string.eq_range_label))
-                    AudioEnginePreferences.EqRangePreset.entries.forEach { preset ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(
-                                selected = eqPreset == preset,
-                                onClick = {
-                                    eqPreset = preset
-                                    prefs.setEqRangePreset(preset)
-                                    dolbyViewModel.loadSettings()
-                                }
-                            )
-                            Text(stringResource(
-                                when (preset) {
-                                    AudioEnginePreferences.EqRangePreset.STANDARD -> R.string.eq_range_standard
-                                    AudioEnginePreferences.EqRangePreset.EXTENDED -> R.string.eq_range_extended
-                                    AudioEnginePreferences.EqRangePreset.EXTREME -> R.string.eq_range_extreme
-                                }
-                            ))
-                        }
-                    }
                 }
             }
 

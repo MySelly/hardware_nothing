@@ -303,6 +303,13 @@ private fun ModernEqualizerContent(
     onViewModeChange: (EqualizerViewMode) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val enginePrefs = remember { AudioEnginePreferences(context) }
+    var extendedEq by remember { mutableStateOf(enginePrefs.isExtendedEqEnabled()) }
+    var eqPreset by remember { mutableStateOf(enginePrefs.getEqRangePreset()) }
+    val maxGainRaw = if (extendedEq) eqPreset.maxRaw else AudioEnginePreferences.EqRangePreset.STANDARD.maxRaw
+    val maxGainDb = maxGainRaw / 10f
+
     val isFlatPreset = state.currentPreset.name == stringResource(R.string.dolby_preset_default)
     val scrollState = rememberScrollState()
     val isBandModeCompatible = state.currentPreset.bandMode == state.bandMode
@@ -449,6 +456,20 @@ private fun ModernEqualizerContent(
             }
         }
 
+        ExtendedEqRangeCard(
+            extendedEq = extendedEq,
+            eqPreset = eqPreset,
+            onExtendedEqChange = {
+                extendedEq = it
+                enginePrefs.setExtendedEqEnabled(it)
+                eqPreset = enginePrefs.getEqRangePreset()
+            },
+            onEqPresetChange = {
+                eqPreset = it
+                enginePrefs.setEqRangePreset(it)
+            }
+        )
+
         AnimatedContent(
             targetState = viewMode,
             transitionSpec = {
@@ -463,14 +484,17 @@ private fun ModernEqualizerContent(
                         state = state,
                         viewModel = viewModel,
                         canEdit = canEdit,
-                        isActive = isActive
+                        isActive = isActive,
+                        maxGainRaw = maxGainRaw
                     )
                 }
                 EqualizerViewMode.SLIDERS -> {
                     SlidersViewContent(
                         state = state,
                         viewModel = viewModel,
-                        canEdit = canEdit
+                        canEdit = canEdit,
+                        maxGainRaw = maxGainRaw,
+                        maxGainDb = maxGainDb
                     )
                 }
             }
@@ -481,15 +505,75 @@ private fun ModernEqualizerContent(
 }
 
 @Composable
+private fun ExtendedEqRangeCard(
+    extendedEq: Boolean,
+    eqPreset: AudioEnginePreferences.EqRangePreset,
+    onExtendedEqChange: (Boolean) -> Unit,
+    onEqPresetChange: (AudioEnginePreferences.EqRangePreset) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceBright
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            ModernSettingSwitch(
+                title = stringResource(R.string.extended_eq_enabled),
+                subtitle = stringResource(R.string.eq_range_label),
+                checked = extendedEq,
+                onCheckedChange = onExtendedEqChange,
+                icon = Icons.Default.GraphicEq
+            )
+            AnimatedVisibility(visible = extendedEq) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = stringResource(R.string.eq_limits_section),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    AudioEnginePreferences.EqRangePreset.entries.forEach { preset ->
+                        FilterChip(
+                            selected = eqPreset == preset,
+                            onClick = { onEqPresetChange(preset) },
+                            label = {
+                                Text(
+                                    stringResource(
+                                        when (preset) {
+                                            AudioEnginePreferences.EqRangePreset.STANDARD ->
+                                                R.string.eq_range_standard
+                                            AudioEnginePreferences.EqRangePreset.EXTENDED ->
+                                                R.string.eq_range_extended
+                                            AudioEnginePreferences.EqRangePreset.EXTREME ->
+                                                R.string.eq_range_extreme
+                                        }
+                                    )
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun CurveViewContent(
     state: EqualizerUiState.Success,
     viewModel: EqualizerViewModel,
     canEdit: Boolean,
-    isActive: Boolean
+    isActive: Boolean,
+    maxGainRaw: Int
 ) {
     val context = LocalContext.current
     val engine = remember { AudioEnginePreferences(context) }
-    val maxGainRaw = engine.getEqGainMax()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -565,11 +649,12 @@ private fun CurveViewContent(
 private fun SlidersViewContent(
     state: EqualizerUiState.Success,
     viewModel: EqualizerViewModel,
-    canEdit: Boolean
+    canEdit: Boolean,
+    maxGainRaw: Int,
+    maxGainDb: Float
 ) {
     val context = LocalContext.current
     val engine = remember { AudioEnginePreferences(context) }
-    val maxGainDb = engine.maxGainDb()
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Card(
             modifier = Modifier
@@ -608,7 +693,7 @@ private fun SlidersViewContent(
                 Spacer(modifier = Modifier.height(12.dp))
                 FrequencyResponseCurve(
                     bandGains = state.bandGains,
-                    maxGainRaw = engine.getEqGainMax(),
+                    maxGainRaw = maxGainRaw,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)

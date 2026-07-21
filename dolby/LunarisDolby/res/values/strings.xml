@@ -467,7 +467,7 @@
 
     <!-- Audio engine / power user -->
     <string name="power_user_audio_title">Audio engine</string>
-    <string name="power_user_audio_desc">Configure EQ limits, loudness, spatial audio, and visual options. Each feature can be turned off.</string>
+    <string name="power_user_audio_desc">Configure loudness, spatial audio, and visual options. Each feature can be turned off.</string>
     <string name="eq_limits_section">EQ range</string>
     <string name="extended_eq_enabled">Extended EQ range</string>
     <string name="eq_range_label">Maximum EQ gain</string>
