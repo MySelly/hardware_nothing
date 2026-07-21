@@ -51,7 +51,6 @@ fun PowerUserAudioScreen(
     var monoMix by remember { mutableStateOf(prefs.isMonoMixEnabled()) }
     var crossfeedOn by remember { mutableStateOf(prefs.isCrossfeedEnabled()) }
     var crossfeed by remember { mutableFloatStateOf(prefs.getCrossfeedStrength().toFloat()) }
-    var spectrumOverlay by remember { mutableStateOf(prefs.isEqSpectrumOverlayEnabled()) }
     var coloredLabels by remember { mutableStateOf(prefs.isEqColoredDbLabelsEnabled()) }
     var stackVisual by remember { mutableStateOf(prefs.isLoudnessStackVisualEnabled()) }
 
@@ -269,12 +268,6 @@ fun PowerUserAudioScreen(
             }
 
             item { AudioSectionTitle(stringResource(R.string.eq_ui_section)) }
-            item {
-                EngineSwitch(stringResource(R.string.eq_spectrum_overlay), spectrumOverlay) {
-                    spectrumOverlay = it
-                    prefs.setBoolean(DolbyConstants.PREF_EQ_SPECTRUM_OVERLAY, it)
-                }
-            }
             item {
                 EngineSwitch(stringResource(R.string.eq_colored_db_labels), coloredLabels) {
                     coloredLabels = it

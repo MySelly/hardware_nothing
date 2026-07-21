@@ -116,9 +116,6 @@ class AudioEnginePreferences(context: Context) {
     fun getHighPassHz(): Int =
         prefs.getInt(DolbyConstants.PREF_HIGH_PASS_HZ, 40).coerceIn(20, 120)
 
-    fun isEqSpectrumOverlayEnabled(): Boolean =
-        prefs.getBoolean(DolbyConstants.PREF_EQ_SPECTRUM_OVERLAY, false)
-
     fun isEqColoredDbLabelsEnabled(): Boolean =
         prefs.getBoolean(DolbyConstants.PREF_EQ_COLORED_DB_LABELS, true)
 

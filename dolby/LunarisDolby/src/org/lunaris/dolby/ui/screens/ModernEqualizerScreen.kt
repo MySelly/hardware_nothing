@@ -572,8 +572,6 @@ private fun CurveViewContent(
     isActive: Boolean,
     maxGainRaw: Int
 ) {
-    val context = LocalContext.current
-    val engine = remember { AudioEnginePreferences(context) }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -636,7 +634,6 @@ private fun CurveViewContent(
                 isActive = isActive,
                 isEditable = canEdit,
                 maxGainRaw = maxGainRaw,
-                showSpectrumOverlay = engine.isEqSpectrumOverlayEnabled(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)

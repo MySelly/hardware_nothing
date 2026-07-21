@@ -37,8 +37,7 @@ fun InteractiveFrequencyResponseCurve(
     modifier: Modifier = Modifier,
     isActive: Boolean = false,
     isEditable: Boolean = true,
-    maxGainRaw: Int = 150,
-    showSpectrumOverlay: Boolean = false
+    maxGainRaw: Int = 150
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val surfaceColor = MaterialTheme.colorScheme.surfaceVariant
@@ -76,14 +75,6 @@ fun InteractiveFrequencyResponseCurve(
     val borderWidth = if (isActive) 2.dp else if (!isEditable) 1.dp else 0.dp
     
     Box(modifier = modifier) {
-        if (showSpectrumOverlay) {
-            AudioVisualizerBars(
-                modifier = Modifier.fillMaxSize().matchParentSize(),
-                enabled = true,
-                useFft = true,
-                barCount = bandGains.size.coerceAtLeast(10)
-            )
-        }
         Canvas(
             modifier = Modifier
                 .fillMaxSize()

@@ -496,7 +496,6 @@
     <string name="per_device_gain_enabled">Cihaz bazlı gain offset</string>
     <string name="per_device_gain_slider">Cihaz gain: %1$.1f dB</string>
     <string name="eq_ui_section">EQ görünümü</string>
-    <string name="eq_spectrum_overlay">EQ eğrisinde spektrum overlay</string>
     <string name="eq_colored_db_labels">Renkli dB etiketleri</string>
     <string name="loudness_stack_visual">Ses yığını görselleştirmesi</string>
     <string name="headroom_title">Ses headroom</string>

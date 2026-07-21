@@ -130,7 +130,6 @@ object DolbyConstants {
     const val PREF_CROSSFEED_STRENGTH = "crossfeed_strength"
     const val PREF_HIGH_PASS_ENABLED = "high_pass_enabled"
     const val PREF_HIGH_PASS_HZ = "high_pass_hz"
-    const val PREF_EQ_SPECTRUM_OVERLAY = "eq_spectrum_overlay"
     const val PREF_EQ_COLORED_DB_LABELS = "eq_colored_db_labels"
     const val PREF_LOUDNESS_STACK_VISUAL = "loudness_stack_visual"
 

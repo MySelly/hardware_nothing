@@ -496,7 +496,6 @@
     <string name="per_device_gain_enabled">Per-device gain offset</string>
     <string name="per_device_gain_slider">Device gain: %1$.1f dB</string>
     <string name="eq_ui_section">EQ display</string>
-    <string name="eq_spectrum_overlay">Spectrum overlay on EQ curve</string>
     <string name="eq_colored_db_labels">Color-coded dB labels</string>
     <string name="loudness_stack_visual">Loudness stack visualization</string>
     <string name="headroom_title">Audio headroom</string>

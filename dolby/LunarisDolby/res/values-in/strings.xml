@@ -344,7 +344,6 @@
     <string name="mono_mix_enabled">Mono mix</string>
     <string name="crossfeed_enabled">Headphone crossfeed</string>
     <string name="eq_ui_section">EQ display</string>
-    <string name="eq_spectrum_overlay">Spectrum overlay on EQ curve</string>
     <string name="eq_colored_db_labels">Color-coded dB labels</string>
     <string name="media_package_overrides_title">App package overrides</string>
     <string name="media_package_add">Add override</string>
