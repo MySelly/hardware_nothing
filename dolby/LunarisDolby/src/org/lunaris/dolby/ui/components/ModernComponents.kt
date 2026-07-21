@@ -513,12 +513,14 @@ fun ModernSettingSlider(
 ) {
     val haptic = rememberHapticFeedback()
     val scope = rememberCoroutineScope()
-    var sliderValue by remember(value) { mutableFloatStateOf(value.toFloat()) }
-    var lastHapticValue by remember { mutableIntStateOf(value) }
+    // Coerce into range — out-of-range prefs crash Compose Slider with IllegalArgumentException.
+    val coercedValue = value.toFloat().coerceIn(valueRange.start, valueRange.endInclusive)
+    var sliderValue by remember(coercedValue, valueRange) { mutableFloatStateOf(coercedValue) }
+    var lastHapticValue by remember(coercedValue) { mutableIntStateOf(coercedValue.toInt()) }
 
-    LaunchedEffect(value) {
-        sliderValue = value.toFloat()
-        lastHapticValue = value
+    LaunchedEffect(coercedValue, valueRange) {
+        sliderValue = coercedValue
+        lastHapticValue = coercedValue.toInt()
     }
 
     val displayValue = sliderValue.toInt()

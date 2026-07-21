@@ -181,6 +181,8 @@ object DolbyAutomationCoordinator {
                         .remove(PREF_GL_PREV_SURROUND_DEC)
                         .apply()
                     repository.applySavedState()
+                } catch (e: Exception) {
+                    DolbyConstants.dlog("Automation", "Game latency restore failed: ${e.message}")
                 } finally {
                     repository.close()
                 }
@@ -188,17 +190,21 @@ object DolbyAutomationCoordinator {
             return
         }
 
+        // Poller runs every 2s — only mutate once when becoming active.
+        if (wasActive) return
+
         val repository = DolbyRepository(context)
         try {
             val profile = repository.getCurrentProfile()
-            if (!wasActive) {
-                prefs.edit()
-                    .putBoolean(PREF_GL_PREV_HP_VIRT, repository.getHeadphoneVirtualizerEnabled(profile))
-                    .putBoolean(PREF_GL_PREV_SPK_VIRT, repository.getSpeakerVirtualizerEnabled(profile))
-                    .putBoolean(PREF_GL_PREV_LEVELER, repository.getVolumeLevelerEnabled(profile))
-                    .putBoolean(PREF_GL_PREV_SURROUND_DEC, repository.isSurroundDecoderEnabled(profile))
-                    .apply()
-            }
+            // Game profile only (matches previous behavior; avoids hammering all profiles).
+            if (profile != 3) return
+
+            prefs.edit()
+                .putBoolean(PREF_GL_PREV_HP_VIRT, repository.getHeadphoneVirtualizerEnabled(profile))
+                .putBoolean(PREF_GL_PREV_SPK_VIRT, repository.getSpeakerVirtualizerEnabled(profile))
+                .putBoolean(PREF_GL_PREV_LEVELER, repository.getVolumeLevelerEnabled(profile))
+                .putBoolean(PREF_GL_PREV_SURROUND_DEC, repository.isSurroundDecoderEnabled(profile))
+                .apply()
             repository.setHeadphoneVirtualizerEnabled(profile, false)
             repository.setSpeakerVirtualizerEnabled(profile, false)
             repository.setVolumeLevelerEnabled(profile, false)
@@ -213,6 +219,8 @@ object DolbyAutomationCoordinator {
             )
             org.lunaris.dolby.audio.DolbyHalBridge.applyGameLatencyHal(context, true)
             prefs.edit().putBoolean(PREF_GAME_LATENCY_ACTIVE, true).apply()
+        } catch (e: Exception) {
+            DolbyConstants.dlog("Automation", "Game latency apply failed: ${e.message}")
         } finally {
             repository.close()
         }
@@ -310,6 +318,8 @@ object DolbyAutomationCoordinator {
                 repository.setHearingProtectionDynamics(profile, rmsTarget, attack, release)
                 repository.setHearingProtectionEnabled(profile, true)
             }
+        } catch (e: Exception) {
+            DolbyConstants.dlog("Automation", "Safe listening HP apply failed: ${e.message}")
         } finally {
             repository.close()
         }

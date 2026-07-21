@@ -131,18 +131,39 @@ class AppProfileMonitorService : Service() {
     }
 
     private fun promoteForeground() {
-        val notification = DolbyForegroundNotifications.build(
-            this,
-            R.string.notification_monitor_active
-        )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                DolbyForegroundNotifications.NOTIFICATION_ID_MONITOR,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+        try {
+            val notification = DolbyForegroundNotifications.build(
+                this,
+                R.string.notification_monitor_active
             )
-        } else {
-            startForeground(DolbyForegroundNotifications.NOTIFICATION_ID_MONITOR, notification)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    DolbyForegroundNotifications.NOTIFICATION_ID_MONITOR,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            } else {
+                startForeground(DolbyForegroundNotifications.NOTIFICATION_ID_MONITOR, notification)
+            }
+        } catch (e: Exception) {
+            DolbyConstants.dlog(TAG, "promoteForeground failed: ${e.message}")
+            try {
+                DolbyForegroundNotifications.ensureChannel(this)
+                val fallback = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    android.app.Notification.Builder(this, DolbyForegroundNotifications.CHANNEL_ID)
+                } else {
+                    @Suppress("DEPRECATION")
+                    android.app.Notification.Builder(this)
+                }
+                    .setContentTitle(getString(R.string.dolby_title))
+                    .setContentText(getString(R.string.notification_monitor_active))
+                    .setSmallIcon(R.drawable.ic_dolby_qs)
+                    .setOngoing(true)
+                    .build()
+                startForeground(DolbyForegroundNotifications.NOTIFICATION_ID_MONITOR, fallback)
+            } catch (fatal: Exception) {
+                DolbyConstants.dlog(TAG, "Minimal promoteForeground failed: ${fatal.message}")
+            }
         }
     }
 
@@ -454,7 +475,16 @@ class AppProfileMonitorService : Service() {
             val intent = Intent(context, AppProfileMonitorService::class.java).apply {
                 action = ACTION_START_MONITORING
             }
-            context.startForegroundService(intent)
+            try {
+                context.startForegroundService(intent)
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "startForegroundService failed: ${e.message}")
+                try {
+                    context.startService(intent)
+                } catch (fatal: Exception) {
+                    DolbyConstants.dlog(TAG, "startService fallback failed: ${fatal.message}")
+                }
+            }
         }
 
         fun stopMonitoring(context: Context) {
@@ -468,7 +498,16 @@ class AppProfileMonitorService : Service() {
             val intent = Intent(context, AppProfileMonitorService::class.java).apply {
                 action = ACTION_CHECK_NOW
             }
-            context.startForegroundService(intent)
+            try {
+                context.startForegroundService(intent)
+            } catch (e: Exception) {
+                DolbyConstants.dlog(TAG, "requestImmediateCheck FGS failed: ${e.message}")
+                try {
+                    context.startService(intent)
+                } catch (fatal: Exception) {
+                    DolbyConstants.dlog(TAG, "requestImmediateCheck fallback failed: ${fatal.message}")
+                }
+            }
         }
     }
 }

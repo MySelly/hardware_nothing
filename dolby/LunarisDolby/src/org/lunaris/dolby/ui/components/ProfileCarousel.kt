@@ -69,10 +69,12 @@ fun ProfileCarousel(
         listOf(Color(0xFFa18cd1), Color(0xFFfbc2eb))
     )
     
-    val initialPage = profileValues.indexOfFirst { it.toInt() == currentProfile }.coerceAtLeast(0)
+    val initialPage = profileValues.indexOfFirst {
+        it.toIntOrNull() == currentProfile
+    }.coerceAtLeast(0)
     val pagerState = rememberPagerState(
         initialPage = initialPage,
-        pageCount = { profiles.size }
+        pageCount = { profiles.size.coerceAtLeast(1) }
     )
     
     var lastPage by remember { mutableIntStateOf(initialPage) }
@@ -83,7 +85,8 @@ fun ProfileCarousel(
             lastPage = pagerState.currentPage
             
             if (pagerState.currentPage != initialPage) {
-                val selectedValue = profileValues[pagerState.currentPage].toInt()
+                val selectedValue = profileValues.getOrNull(pagerState.currentPage)
+                    ?.toIntOrNull() ?: return@LaunchedEffect
                 onProfileChange(selectedValue)
             }
         }
@@ -116,11 +119,11 @@ fun ProfileCarousel(
                 contentPadding = PaddingValues(horizontal = 64.dp),
                 pageSpacing = 8.dp
             ) { page ->
-                val profileValue = profileValues[page].toInt()
+                val profileValue = profileValues.getOrNull(page)?.toIntOrNull() ?: page
                 val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
                 
                 ProfileCard(
-                    profile = profiles[page],
+                    profile = profiles.getOrElse(page) { "?" },
                     icon = profileIcons[profileValue] ?: Icons.Default.Tune,
                     gradient = profileGradients.getOrElse(profileValue) { profileGradients[0] },
                     isSelected = page == pagerState.currentPage,

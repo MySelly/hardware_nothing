@@ -169,11 +169,18 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     }
 
     fun applySavedState() {
-    checkEffect()
-        val enabled = defaultPrefs.getBoolean(DolbyConstants.PREF_ENABLE, false)
-        dolbyEffect.dsOn = enabled
-        if (enabled) {
-            restoreSavedProfileIfNeeded()
+        try {
+            checkEffect()
+            val enabled = defaultPrefs.getBoolean(DolbyConstants.PREF_ENABLE, false)
+            dolbyEffect.dsOn = enabled
+            if (enabled) {
+                restoreSavedProfileIfNeeded()
+            }
+        } catch (e: Exception) {
+            // Must never escape to DolbyEffectService.onCreate — an uncaught throw after
+            // startForegroundService() kills the whole process and DolbyActivity cannot stay open
+            // while widget/QS (which catch effect errors) still appear to work.
+            DolbyConstants.dlog(TAG, "Failed to apply saved state: ${e.message}")
         }
     }
 

@@ -84,18 +84,41 @@ class DolbyEffectService : Service() {
     }
 
     private fun promoteForeground() {
-        val notification = DolbyForegroundNotifications.build(
-            this,
-            R.string.notification_effect_active
-        )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                DolbyForegroundNotifications.NOTIFICATION_ID_EFFECT,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+        try {
+            val notification = DolbyForegroundNotifications.build(
+                this,
+                R.string.notification_effect_active
             )
-        } else {
-            startForeground(DolbyForegroundNotifications.NOTIFICATION_ID_EFFECT, notification)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    DolbyForegroundNotifications.NOTIFICATION_ID_EFFECT,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                )
+            } else {
+                startForeground(DolbyForegroundNotifications.NOTIFICATION_ID_EFFECT, notification)
+            }
+        } catch (e: Exception) {
+            // Still enter foreground with a minimal notification if channel/build fails —
+            // otherwise startForegroundService() will kill the process and DolbyActivity won't open.
+            Log.e(TAG, "promoteForeground failed, retrying minimal notification", e)
+            try {
+                DolbyForegroundNotifications.ensureChannel(this)
+                val fallback = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    android.app.Notification.Builder(this, DolbyForegroundNotifications.CHANNEL_ID)
+                } else {
+                    @Suppress("DEPRECATION")
+                    android.app.Notification.Builder(this)
+                }
+                    .setContentTitle(getString(R.string.dolby_title))
+                    .setContentText(getString(R.string.notification_effect_active))
+                    .setSmallIcon(R.drawable.ic_dolby_qs)
+                    .setOngoing(true)
+                    .build()
+                startForeground(DolbyForegroundNotifications.NOTIFICATION_ID_EFFECT, fallback)
+            } catch (fatal: Exception) {
+                Log.e(TAG, "Minimal promoteForeground also failed", fatal)
+            }
         }
     }
 
@@ -103,29 +126,34 @@ class DolbyEffectService : Service() {
         super.onCreate()
         repository = DolbyRepository(this)
         deviceStateManager = DeviceStateManager(this)
+        // Must reach startForeground before any HAL/prefs work that might throw.
         promoteForeground()
-        DolbyAutomationCoordinator.applyBatterySaverIfNeeded(this)
-        DolbyAutomationCoordinator.applyGameLatencyMode(this)
-        DolbyAutomationCoordinator.enforceSafeListeningLimit(this)
-        val currentDevice = getCurrentOutputDevice()
-        if (currentDevice != null) {
-            previousActiveDevice = currentDevice
-            if (isDeviceStateMemoryEnabled) {
-                val key = deviceStateManager.deviceKey(currentDevice)
-                val restored = deviceStateManager.restoreSnapshot(key, repository)
-                if (!restored) repository.applySavedState()
+        try {
+            DolbyAutomationCoordinator.applyBatterySaverIfNeeded(this)
+            DolbyAutomationCoordinator.applyGameLatencyMode(this)
+            DolbyAutomationCoordinator.enforceSafeListeningLimit(this)
+            val currentDevice = getCurrentOutputDevice()
+            if (currentDevice != null) {
+                previousActiveDevice = currentDevice
+                if (isDeviceStateMemoryEnabled) {
+                    val key = deviceStateManager.deviceKey(currentDevice)
+                    val restored = deviceStateManager.restoreSnapshot(key, repository)
+                    if (!restored) repository.applySavedState()
+                } else {
+                    repository.applySavedState()
+                }
             } else {
                 repository.applySavedState()
             }
-        } else {
-            repository.applySavedState()
-        }
 
-        audioManager.registerAudioDeviceCallback(audioDeviceCallback, handler)
-        audioManager.registerAudioPlaybackCallback(playbackCallback, handler)
-        handler.post(callCheckRunnable)
-        applyAutoLoudnessIfNeeded()
-        Log.d(TAG, "Dolby effect service created")
+            audioManager.registerAudioDeviceCallback(audioDeviceCallback, handler)
+            audioManager.registerAudioPlaybackCallback(playbackCallback, handler)
+            handler.post(callCheckRunnable)
+            applyAutoLoudnessIfNeeded()
+            Log.d(TAG, "Dolby effect service created")
+        } catch (e: Exception) {
+            Log.e(TAG, "Dolby effect service init failed after foreground promote", e)
+        }
     }
 
     private fun handleDeviceChange() {
@@ -186,7 +214,11 @@ class DolbyEffectService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         promoteForeground()
-        repository.applySavedState()
+        try {
+            repository.applySavedState()
+        } catch (e: Exception) {
+            Log.e(TAG, "applySavedState in onStartCommand failed", e)
+        }
         return START_STICKY
     }
 
@@ -224,7 +256,16 @@ class DolbyEffectService : Service() {
 
         fun start(context: Context) {
             val intent = Intent(context, DolbyEffectService::class.java)
-            context.startForegroundService(intent)
+            try {
+                context.startForegroundService(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "startForegroundService failed, falling back to startService", e)
+                try {
+                    context.startService(intent)
+                } catch (fatal: Exception) {
+                    Log.e(TAG, "startService fallback failed", fatal)
+                }
+            }
         }
 
         fun stop(context: Context) {
