@@ -34,21 +34,26 @@ sealed class Screen(val route: String) {
     object PowerUserAudio : Screen("power_user_audio")
 
     companion object {
-        val allRoutes: Set<String> = setOf(
-            Settings.route,
-            Equalizer.route,
-            Advanced.route,
-            AppProfiles.route,
-            DeviceMemory.route,
-            CustomPresets.route,
-            ScheduledProfiles.route,
-            ImportExport.route,
-            AutomationSettings.route,
-            BluetoothRules.route,
-            ProfileHistory.route,
-            Diagnostics.route,
-            PowerUserAudio.route
-        )
+        // Must be lazy: eager init of allRoutes during Screen.<clinit> reads nested
+        // objects (Settings, …) before they exist → NPE → ExceptionInInitializerError
+        // and DolbyActivity can never open (widget/QS still work).
+        val allRoutes: Set<String> by lazy {
+            setOf(
+                Settings.route,
+                Equalizer.route,
+                Advanced.route,
+                AppProfiles.route,
+                DeviceMemory.route,
+                CustomPresets.route,
+                ScheduledProfiles.route,
+                ImportExport.route,
+                AutomationSettings.route,
+                BluetoothRules.route,
+                ProfileHistory.route,
+                Diagnostics.route,
+                PowerUserAudio.route
+            )
+        }
     }
 }
 
