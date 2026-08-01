@@ -937,8 +937,6 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
             raw,
             getOutputBoostTenths(profile),
             isOutputBoostEnabled(profile),
-            isVolmaxBoostEnabled(profile),
-            getVolmaxBoost(profile),
             deviceOffset,
             audioEnginePrefs
         )
@@ -956,14 +954,6 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     fun getOutputBoostTenths(profile: Int) = audioTuning.getOutputBoostTenths(profile)
     fun setOutputBoost(profile: Int, enabled: Boolean, tenthsDb: Int) =
         audioTuning.setOutputBoost(profile, enabled, tenthsDb)
-
-    fun isVolmaxBoostEnabled(profile: Int) = audioTuning.isVolmaxBoostEnabled(profile)
-    fun getVolmaxBoost(profile: Int) = audioTuning.getVolmaxBoost(profile)
-    fun setVolmaxBoost(profile: Int, enabled: Boolean, value: Int) =
-        audioTuning.setVolmaxBoost(profile, enabled, value)
-
-    fun getIeqAmount(profile: Int) = audioTuning.getIeqAmount(profile)
-    fun setIeqAmount(profile: Int, amount: Int) = audioTuning.setIeqAmount(profile, amount)
 
     fun isSurroundBoostEnabled(profile: Int) = audioTuning.isSurroundBoostEnabled(profile)
     fun getSurroundBoost(profile: Int) = audioTuning.getSurroundBoost(profile)
@@ -1018,11 +1008,6 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
         width: Int = getAdvancedBassWidth(profile)
     ) = audioTuning.setAdvancedBass(profile, enabled, boostPercent, cutoffHz, width)
 
-    fun isReverbSuppressionEnabled(profile: Int) = audioTuning.isReverbSuppressionEnabled(profile)
-    fun getReverbSuppressionAmount(profile: Int) = audioTuning.getReverbSuppressionAmount(profile)
-    fun setReverbSuppression(profile: Int, enabled: Boolean, amount: Int) =
-        audioTuning.setReverbSuppression(profile, enabled, amount)
-
     fun isRegulatorEnabled(profile: Int) = audioTuning.isRegulatorEnabled(profile)
     fun getRegulatorOverdriveDb(profile: Int) = audioTuning.getRegulatorOverdriveDb(profile)
     fun isRegulatorTimbreEnabled(profile: Int) = audioTuning.isRegulatorTimbreEnabled(profile)
@@ -1048,10 +1033,6 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     fun setHeadphoneVirtualizerTuning(profile: Int, mode: Int, lrAngle: Int, startBand: Int) =
         audioTuning.setHeadphoneVirtualizerTuning(profile, mode, lrAngle, startBand)
 
-    fun isVolumeModelerEnabled(profile: Int) = audioTuning.isVolumeModelerEnabled(profile)
-    fun setVolumeModelerEnabled(profile: Int, enabled: Boolean) =
-        audioTuning.setVolumeModelerEnabled(profile, enabled)
-
     fun getVirtualBassMode(profile: Int) = audioTuning.getVirtualBassMode(profile)
     fun getVirtualBassOverallGain(profile: Int) = audioTuning.getVirtualBassOverallGain(profile)
     fun getVirtualBassSlopeGain(profile: Int) = audioTuning.getVirtualBassSlopeGain(profile)
@@ -1061,10 +1042,6 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     fun getSurroundDiffuseFront(profile: Int) = audioTuning.getSurroundDiffuseFront(profile)
     fun setSurroundDiffuseFront(profile: Int, amount: Int) =
         audioTuning.setSurroundDiffuseFront(profile, amount)
-
-    fun isMiSteeringEnabled(profile: Int) = audioTuning.isMiSteeringEnabled(profile)
-    fun setMiSteeringEnabled(profile: Int, enabled: Boolean) =
-        audioTuning.setMiSteeringEnabled(profile, enabled)
 
     fun isSpatialAudioEnabled() = audioTuning.isSpatialAudioEnabled()
     fun setSpatialAudioEnabled(enabled: Boolean) = audioTuning.setSpatialAudioEnabled(enabled)
@@ -1076,11 +1053,6 @@ class DolbyRepository(private val context: Context) : AutoCloseable {
     fun setCalibrationBoostHeadphone(boost: Int) = audioTuning.setCalibrationBoostHeadphone(boost)
     fun setCalibrationBoostBluetooth(boost: Int) = audioTuning.setCalibrationBoostBluetooth(boost)
     fun applyCalibrationBoost() = audioTuning.applyCalibrationBoost()
-
-    fun isDspVolumeBoostEnabled() = audioTuning.isDspVolumeBoostEnabled()
-    fun getDspVolumeBoostStrength() = audioTuning.getDspVolumeBoostStrength()
-    fun setDspVolumeBoost(enabled: Boolean, strength: Int) =
-        audioTuning.setDspVolumeBoost(enabled, strength)
 
     companion object {
         private const val TAG = "DolbyRepository"

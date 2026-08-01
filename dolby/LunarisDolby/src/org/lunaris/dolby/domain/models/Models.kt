@@ -47,9 +47,6 @@ data class ProfileSettings(
     val bassCurve: Int = 0,
     val outputBoostEnabled: Boolean = false,
     val outputBoostTenthsDb: Int = 0,
-    val volmaxBoostEnabled: Boolean = false,
-    val volmaxBoost: Int = 48,
-    val ieqAmount: Int = 6,
     val surroundBoostEnabled: Boolean = false,
     val surroundBoost: Int = 0,
     val surroundDecoderEnabled: Boolean = true,
@@ -66,8 +63,6 @@ data class ProfileSettings(
     val advancedBassBoost: Int = 40,
     val advancedBassCutoff: Int = 303,
     val advancedBassWidth: Int = 8,
-    val reverbSuppressionEnabled: Boolean = false,
-    val reverbSuppressionAmount: Int = 9,
     val regulatorEnabled: Boolean = true,
     val regulatorOverdriveDb: Int = 0,
     val regulatorTimbre: Boolean = true,
@@ -79,11 +74,7 @@ data class ProfileSettings(
     val hpReleaseMs: Int = 1600,
     val hpVirtMode: Int = 0,
     val hpVirtLrAngle: Int = 45,
-    val hpVirtStartBand: Int = 0,
-    val volumeModelerEnabled: Boolean = false,
-    val miSteeringEnabled: Boolean = false,
-    val dspVolumeBoostEnabled: Boolean = false,
-    val dspVolumeBoostStrength: Int = 0
+    val hpVirtStartBand: Int = 0
 )
 
 data class EqualizerPreset(

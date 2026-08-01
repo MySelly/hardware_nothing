@@ -7,7 +7,6 @@ package org.lunaris.dolby.data
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.media.AudioManager
 import org.lunaris.dolby.DolbyConstants
 import org.lunaris.dolby.DolbyConstants.DsParam
 import org.lunaris.dolby.audio.DolbyAudioEffect
@@ -30,8 +29,6 @@ internal class AudioTuningController(
         if (isReleased()) return
         pushGeqToHardware(profile)
         applyGraphicEqEnable(profile)
-        applyVolmaxBoost(profile)
-        applyIeqAmount(profile)
         applySurroundBoost(profile)
         applySurroundDecoder(profile)
         applyVolumeLevelerAmount(profile)
@@ -39,14 +36,10 @@ internal class AudioTuningController(
         applyDialogueDucking(profile)
         applyVirtualBass(profile)
         applyAdvancedBass(profile)
-        applyReverbSuppression(profile)
         applyRegulator(profile)
         applyHearingProtection(profile)
         applyHeadphoneVirtualizerTuning(profile)
-        applyVolumeModeler(profile)
-        applyMiSteering(profile)
         applyCalibrationBoost()
-        applyDspVolumeBoost()
         applySpatialMaster(profile)
     }
 
@@ -114,50 +107,6 @@ internal class AudioTuningController(
     }
 
     fun getAudioEnginePreferences(): AudioEnginePreferences = audioEngine.preferences()
-
-    // --- Volmax boost ---
-
-    fun isVolmaxBoostEnabled(profile: Int): Boolean =
-        profilePrefs(profile).getBoolean(DolbyConstants.PREF_VOLMAX_BOOST_ENABLED, false)
-
-    fun getVolmaxBoost(profile: Int): Int =
-        profilePrefs(profile).getInt(DolbyConstants.PREF_VOLMAX_BOOST, 48)
-            .coerceIn(0, DolbyConstants.VOLMAX_BOOST_MAX)
-
-    fun setVolmaxBoost(profile: Int, enabled: Boolean, value: Int) {
-        if (isReleased()) return
-        val clamped = value.coerceIn(0, DolbyConstants.VOLMAX_BOOST_MAX)
-        profilePrefs(profile).edit()
-            .putBoolean(DolbyConstants.PREF_VOLMAX_BOOST_ENABLED, enabled)
-            .putInt(DolbyConstants.PREF_VOLMAX_BOOST, clamped)
-            .apply()
-        applyVolmaxBoost(profile)
-    }
-
-    private fun applyVolmaxBoost(profile: Int) {
-        val enabled = isVolmaxBoostEnabled(profile)
-        val value = getVolmaxBoost(profile)
-        setDapInt(DsParam.VOLMAX_BOOST, profile, if (enabled) value else 0)
-        DolbyHalBridge.applyVolmaxBoost(context, enabled, value)
-    }
-
-    // --- IEQ amount ---
-
-    fun getIeqAmount(profile: Int): Int {
-        val prefs = profilePrefs(profile)
-        if (prefs.contains(DolbyConstants.PREF_IEQ_AMOUNT)) {
-            return prefs.getInt(DolbyConstants.PREF_IEQ_AMOUNT, 6)
-        }
-        return readDapInt(DsParam.IEQ_AMOUNT, profile, 6)
-            .also { prefs.edit().putInt(DolbyConstants.PREF_IEQ_AMOUNT, it).apply() }
-    }
-
-    fun setIeqAmount(profile: Int, amount: Int) {
-        if (isReleased()) return
-        val clamped = amount.coerceIn(0, DolbyConstants.IEQ_AMOUNT_MAX)
-        profilePrefs(profile).edit().putInt(DolbyConstants.PREF_IEQ_AMOUNT, clamped).apply()
-        setDapInt(DsParam.IEQ_AMOUNT, profile, clamped)
-    }
 
     // --- Surround boost ---
 
@@ -471,32 +420,6 @@ internal class AudioTuningController(
         )
     }
 
-    // --- Reverb suppression ---
-
-    fun isReverbSuppressionEnabled(profile: Int): Boolean =
-        profilePrefs(profile).getBoolean(DolbyConstants.PREF_REVERB_SUPPRESSION_ENABLED, false)
-
-    fun getReverbSuppressionAmount(profile: Int): Int =
-        profilePrefs(profile).getInt(DolbyConstants.PREF_REVERB_SUPPRESSION_AMOUNT, 9)
-            .coerceIn(0, DolbyConstants.REVERB_SUPPRESSION_MAX)
-
-    fun setReverbSuppression(profile: Int, enabled: Boolean, amount: Int) {
-        if (isReleased()) return
-        val clamped = amount.coerceIn(0, DolbyConstants.REVERB_SUPPRESSION_MAX)
-        profilePrefs(profile).edit()
-            .putBoolean(DolbyConstants.PREF_REVERB_SUPPRESSION_ENABLED, enabled)
-            .putInt(DolbyConstants.PREF_REVERB_SUPPRESSION_AMOUNT, clamped)
-            .apply()
-        applyReverbSuppression(profile)
-    }
-
-    private fun applyReverbSuppression(profile: Int) {
-        val enabled = isReverbSuppressionEnabled(profile)
-        val amount = getReverbSuppressionAmount(profile)
-        setDapInt(DsParam.REVERB_SUPPRESSION_AMOUNT, profile, if (enabled) amount else 0)
-        DolbyHalBridge.applyReverbSuppression(context, enabled, amount)
-    }
-
     // --- Speaker regulator (vendor HAL tuning) ---
 
     fun isRegulatorEnabled(profile: Int): Boolean =
@@ -647,40 +570,6 @@ internal class AudioTuningController(
         )
     }
 
-    // --- Volume modeler ---
-
-    fun isVolumeModelerEnabled(profile: Int): Boolean =
-        profilePrefs(profile).getBoolean(DolbyConstants.PREF_VOLUME_MODELER_ENABLED, false)
-
-    fun setVolumeModelerEnabled(profile: Int, enabled: Boolean) {
-        if (isReleased()) return
-        profilePrefs(profile).edit()
-            .putBoolean(DolbyConstants.PREF_VOLUME_MODELER_ENABLED, enabled)
-            .apply()
-        applyVolumeModeler(profile)
-    }
-
-    private fun applyVolumeModeler(profile: Int) {
-        DolbyHalBridge.applyVolumeModeler(context, isVolumeModelerEnabled(profile))
-    }
-
-    // --- MI steering ---
-
-    fun isMiSteeringEnabled(profile: Int): Boolean =
-        profilePrefs(profile).getBoolean(DolbyConstants.PREF_MI_STEERING_ENABLED, false)
-
-    fun setMiSteeringEnabled(profile: Int, enabled: Boolean) {
-        if (isReleased()) return
-        profilePrefs(profile).edit()
-            .putBoolean(DolbyConstants.PREF_MI_STEERING_ENABLED, enabled)
-            .apply()
-        applyMiSteering(profile)
-    }
-
-    private fun applyMiSteering(profile: Int) {
-        DolbyHalBridge.applyMiSteering(context, isMiSteeringEnabled(profile))
-    }
-
     // --- Endpoint calibration boost (global per endpoint category) ---
 
     fun getCalibrationBoostSpeaker(): Int =
@@ -749,35 +638,6 @@ internal class AudioTuningController(
 
     private fun applySpatialMaster(@Suppress("UNUSED_PARAMETER") profile: Int = -1) {
         audioEngine.applySpatialProcessing(forceCrossfeed = isSpatialAudioEnabled())
-    }
-
-    // --- DSP volume boost (global) ---
-
-    fun isDspVolumeBoostEnabled(): Boolean =
-        defaultPrefs.getBoolean(DolbyConstants.PREF_DSP_VOLUME_BOOST_ENABLED, false)
-
-    fun getDspVolumeBoostStrength(): Int =
-        defaultPrefs.getInt(DolbyConstants.PREF_DSP_VOLUME_BOOST_STRENGTH, 0).coerceIn(0, 100)
-
-    fun setDspVolumeBoost(enabled: Boolean, strength: Int) {
-        val clamped = strength.coerceIn(0, 100)
-        defaultPrefs.edit()
-            .putBoolean(DolbyConstants.PREF_DSP_VOLUME_BOOST_ENABLED, enabled)
-            .putInt(DolbyConstants.PREF_DSP_VOLUME_BOOST_STRENGTH, clamped)
-            .apply()
-        applyDspVolumeBoost()
-    }
-
-    private fun applyDspVolumeBoost() {
-        val enabled = isDspVolumeBoostEnabled()
-        val strength = getDspVolumeBoostStrength()
-        val am = context.getSystemService(AudioManager::class.java) ?: return
-        val step = am.getStreamVolume(AudioManager.STREAM_MUSIC)
-        DolbyHalBridge.syncDspVolume(context, step, enabled, strength)
-    }
-
-    private fun applyIeqAmount(profile: Int) {
-        setDapInt(DsParam.IEQ_AMOUNT, profile, getIeqAmount(profile))
     }
 
     private fun applySurroundBoost(profile: Int) {

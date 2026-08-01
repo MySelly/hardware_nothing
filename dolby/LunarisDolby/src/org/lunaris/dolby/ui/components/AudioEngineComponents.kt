@@ -33,11 +33,11 @@ fun HeadroomWarningCard(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(modifier.padding(16.dp)) {
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 if (headroom.isOverLimit) {
                     Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(modifier.width(8.dp))
                 }
                 Text(
                     stringResource(R.string.headroom_title),
@@ -50,8 +50,7 @@ fun HeadroomWarningCard(
             HeadroomRow(stringResource(R.string.headroom_peak_eq), headroom.peakEqDb)
             HeadroomRow(stringResource(R.string.headroom_output_boost), headroom.outputBoostDb)
             HeadroomRow(stringResource(R.string.headroom_device_offset), headroom.deviceOffsetDb)
-            HeadroomRow(stringResource(R.string.headroom_volmax), headroom.volmaxContributionDb)
-            HorizontalDivider(Modifier.padding(vertical = 6.dp))
+            HorizontalDivider(modifier.padding(vertical = 6.dp))
             HeadroomRow(
                 stringResource(R.string.headroom_remaining),
                 headroom.remainingDb,
@@ -85,17 +84,13 @@ private fun HeadroomRow(label: String, valueDb: Float, highlight: Boolean = fals
 @Composable
 fun LoudnessStackBar(
     outputBoostDb: Float,
-    volmaxContribution: Float,
-    dspStrength: Float,
     maxDb: Float,
     modifier: Modifier = Modifier
 ) {
     Column(modifier) {
         Text(stringResource(R.string.loudness_stack_title), style = MaterialTheme.typography.labelMedium)
-        Spacer(Modifier.height(8.dp))
+        Spacer(modifier.height(8.dp))
         StackSegment(stringResource(R.string.output_boost_title), outputBoostDb, maxDb, MaterialTheme.colorScheme.primary)
-        StackSegment(stringResource(R.string.volmax_boost_title), volmaxContribution, maxDb, MaterialTheme.colorScheme.secondary)
-        StackSegment(stringResource(R.string.dsp_volume_boost_title), dspStrength / 10f, maxDb, MaterialTheme.colorScheme.tertiary)
     }
 }
 

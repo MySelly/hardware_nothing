@@ -421,7 +421,6 @@ private fun ModernAdvancedSettingsContent(
                 AudioTuningSettingsCard(
                     profileSettings = state.profileSettings,
                     volumeLevelerEnabled = state.settings.volumeLevelerEnabled,
-                    showIeqAmount = state.settings.currentProfile != 0,
                     isOnBluetooth = state.activeAudioDevice.category == AudioDeviceCategory.BLUETOOTH,
                     viewModel = viewModel
                 )
@@ -706,7 +705,6 @@ private fun ModernAdvancedSettingsContent(
 private fun AudioTuningSettingsCard(
     profileSettings: org.lunaris.dolby.domain.models.ProfileSettings,
     volumeLevelerEnabled: Boolean,
-    showIeqAmount: Boolean,
     isOnBluetooth: Boolean,
     viewModel: DolbyViewModel
 ) {
@@ -744,49 +742,6 @@ private fun AudioTuningSettingsCard(
                     }
                 )
             }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-        ModernSettingSwitch(
-            title = stringResource(R.string.volmax_boost_title),
-            subtitle = stringResource(R.string.volmax_boost_summary),
-            checked = profileSettings.volmaxBoostEnabled,
-            onCheckedChange = { enabled ->
-                if (enabled) {
-                    val value = if (profileSettings.volmaxBoost == 0) 64 else profileSettings.volmaxBoost
-                    viewModel.setVolmaxBoost(true, value)
-                } else {
-                    viewModel.setVolmaxBoost(false, profileSettings.volmaxBoost)
-                }
-            },
-            icon = Icons.Default.Speaker
-        )
-        AnimatedVisibility(visible = profileSettings.volmaxBoostEnabled) {
-            Column {
-                Spacer(modifier = Modifier.height(8.dp))
-                ModernSettingSlider(
-                    title = stringResource(R.string.volmax_boost_title),
-                    value = profileSettings.volmaxBoost,
-                    onValueChange = { viewModel.setVolmaxBoost(true, it.toInt()) },
-                    valueRange = 0f..96f,
-                    steps = 95,
-                    valueLabel = { value ->
-                        context.getString(R.string.volmax_boost_value, value)
-                    }
-                )
-            }
-        }
-
-        if (showIeqAmount) {
-            Spacer(modifier = Modifier.height(12.dp))
-            ModernSettingSlider(
-                title = stringResource(R.string.ieq_amount_title),
-                value = profileSettings.ieqAmount,
-                onValueChange = { viewModel.setIeqAmount(it.toInt()) },
-                valueRange = 0f..10f,
-                steps = 9,
-                valueLabel = { "$it" }
-            )
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -984,30 +939,6 @@ private fun AudioTuningSettingsCard(
 
         Spacer(modifier = Modifier.height(12.dp))
         ModernSettingSwitch(
-            title = stringResource(R.string.reverb_suppression_title),
-            subtitle = stringResource(R.string.reverb_suppression_summary),
-            checked = profileSettings.reverbSuppressionEnabled,
-            onCheckedChange = { enabled ->
-                viewModel.setReverbSuppression(enabled, profileSettings.reverbSuppressionAmount)
-            },
-            icon = Icons.Default.Podcasts
-        )
-        AnimatedVisibility(visible = profileSettings.reverbSuppressionEnabled) {
-            Column {
-                Spacer(modifier = Modifier.height(8.dp))
-                ModernSettingSlider(
-                    title = stringResource(R.string.reverb_suppression_amount_title),
-                    value = profileSettings.reverbSuppressionAmount,
-                    onValueChange = { viewModel.setReverbSuppression(true, it.toInt()) },
-                    valueRange = 0f..16f,
-                    steps = 15,
-                    valueLabel = { "$it" }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-        ModernSettingSwitch(
             title = stringResource(R.string.regulator_title),
             subtitle = stringResource(R.string.regulator_summary),
             checked = profileSettings.regulatorEnabled,
@@ -1132,51 +1063,5 @@ private fun AudioTuningSettingsCard(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-        ModernSettingSwitch(
-            title = stringResource(R.string.volume_modeler_title),
-            subtitle = stringResource(R.string.volume_modeler_summary),
-            checked = profileSettings.volumeModelerEnabled,
-            onCheckedChange = { viewModel.setVolumeModeler(it) },
-            icon = Icons.Default.VolumeUp
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-        ModernSettingSwitch(
-            title = stringResource(R.string.mi_steering_title),
-            subtitle = stringResource(R.string.mi_steering_summary),
-            checked = profileSettings.miSteeringEnabled,
-            onCheckedChange = { viewModel.setMiSteering(it) },
-            icon = Icons.Default.Tune
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-        ModernSettingSwitch(
-            title = stringResource(R.string.dsp_volume_boost_title),
-            subtitle = stringResource(R.string.dsp_volume_boost_summary),
-            checked = profileSettings.dspVolumeBoostEnabled,
-            onCheckedChange = { enabled ->
-                if (enabled) {
-                    val strength = if (profileSettings.dspVolumeBoostStrength == 0) 50 else profileSettings.dspVolumeBoostStrength
-                    viewModel.setDspVolumeBoost(true, strength)
-                } else {
-                    viewModel.setDspVolumeBoost(false, profileSettings.dspVolumeBoostStrength)
-                }
-            },
-            icon = Icons.Default.VolumeUp
-        )
-        AnimatedVisibility(visible = profileSettings.dspVolumeBoostEnabled) {
-            Column {
-                Spacer(modifier = Modifier.height(8.dp))
-                ModernSettingSlider(
-                    title = stringResource(R.string.dsp_volume_boost_strength),
-                    value = profileSettings.dspVolumeBoostStrength,
-                    onValueChange = { viewModel.setDspVolumeBoost(true, it.toInt()) },
-                    valueRange = 0f..100f,
-                    steps = 19,
-                    valueLabel = { "$it%" }
-                )
-            }
-        }
     }
 }

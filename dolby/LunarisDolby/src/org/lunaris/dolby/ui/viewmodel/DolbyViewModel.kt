@@ -117,9 +117,6 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     bassCurve = repository.getBassCurve(profile),
                     outputBoostEnabled = repository.isOutputBoostEnabled(profile),
                     outputBoostTenthsDb = repository.getOutputBoostTenths(profile),
-                    volmaxBoostEnabled = repository.isVolmaxBoostEnabled(profile),
-                    volmaxBoost = repository.getVolmaxBoost(profile),
-                    ieqAmount = repository.getIeqAmount(profile),
                     surroundBoostEnabled = repository.isSurroundBoostEnabled(profile),
                     surroundBoost = repository.getSurroundBoost(profile),
                     surroundDecoderEnabled = repository.isSurroundDecoderEnabled(profile),
@@ -136,8 +133,6 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     advancedBassBoost = repository.getAdvancedBassBoost(profile),
                     advancedBassCutoff = repository.getAdvancedBassCutoff(profile),
                     advancedBassWidth = repository.getAdvancedBassWidth(profile),
-                    reverbSuppressionEnabled = repository.isReverbSuppressionEnabled(profile),
-                    reverbSuppressionAmount = repository.getReverbSuppressionAmount(profile),
                     regulatorEnabled = repository.isRegulatorEnabled(profile),
                     regulatorOverdriveDb = repository.getRegulatorOverdriveDb(profile),
                     regulatorTimbre = repository.isRegulatorTimbreEnabled(profile),
@@ -149,11 +144,7 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                     hpReleaseMs = repository.getHpReleaseMs(profile),
                     hpVirtMode = repository.getHpVirtMode(profile),
                     hpVirtLrAngle = repository.getHpVirtLrAngle(profile),
-                    hpVirtStartBand = repository.getHpVirtStartBand(profile),
-                    volumeModelerEnabled = repository.isVolumeModelerEnabled(profile),
-                    miSteeringEnabled = repository.isMiSteeringEnabled(profile),
-                    dspVolumeBoostEnabled = repository.isDspVolumeBoostEnabled(),
-                    dspVolumeBoostStrength = repository.getDspVolumeBoostStrength()
+                    hpVirtStartBand = repository.getHpVirtStartBand(profile)
                 )
 
                 if (!isCleared && generation == loadGeneration) {
@@ -381,30 +372,6 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun setVolmaxBoost(enabled: Boolean, value: Int) {
-        viewModelScope.launch {
-            try {
-                val profile = repository.getCurrentProfile()
-                repository.setVolmaxBoost(profile, enabled, value)
-                loadSettings()
-            } catch (e: Exception) {
-                reportSettingFailure("setting volmax boost", e)
-            }
-        }
-    }
-
-    fun setIeqAmount(amount: Int) {
-        viewModelScope.launch {
-            try {
-                val profile = repository.getCurrentProfile()
-                repository.setIeqAmount(profile, amount)
-                loadSettings()
-            } catch (e: Exception) {
-                reportSettingFailure("setting IEQ amount", e)
-            }
-        }
-    }
-
     fun setSurroundBoost(enabled: Boolean, value: Int) {
         viewModelScope.launch {
             try {
@@ -413,6 +380,18 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 loadSettings()
             } catch (e: Exception) {
                 reportSettingFailure("setting surround boost", e)
+            }
+        }
+    }
+
+    fun setSurroundDecoder(enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                val profile = repository.getCurrentProfile()
+                repository.setSurroundDecoderEnabled(profile, enabled)
+                loadSettings()
+            } catch (e: Exception) {
+                reportSettingFailure("setting surround decoder", e)
             }
         }
     }
@@ -489,18 +468,6 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun setSurroundDecoder(enabled: Boolean) {
-        viewModelScope.launch {
-            try {
-                val profile = repository.getCurrentProfile()
-                repository.setSurroundDecoderEnabled(profile, enabled)
-                loadSettings()
-            } catch (e: Exception) {
-                reportSettingFailure("setting surround decoder", e)
-            }
-        }
-    }
-
     fun setLevelerTarget(enabled: Boolean, targetDb: Int) {
         viewModelScope.launch {
             try {
@@ -522,18 +489,6 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 loadSettings()
             } catch (e: Exception) {
                 reportSettingFailure("setting advanced bass", e)
-            }
-        }
-    }
-
-    fun setReverbSuppression(enabled: Boolean, amount: Int) {
-        viewModelScope.launch {
-            try {
-                val profile = repository.getCurrentProfile()
-                repository.setReverbSuppression(profile, enabled, amount)
-                loadSettings()
-            } catch (e: Exception) {
-                reportSettingFailure("setting reverb suppression", e)
             }
         }
     }
@@ -598,18 +553,6 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun setVolumeModeler(enabled: Boolean) {
-        viewModelScope.launch {
-            try {
-                val profile = repository.getCurrentProfile()
-                repository.setVolumeModelerEnabled(profile, enabled)
-                loadSettings()
-            } catch (e: Exception) {
-                reportSettingFailure("setting volume modeler", e)
-            }
-        }
-    }
-
     fun setVirtualBassDetails(mode: Int, overallGain: Int, slopeGain: Int) {
         viewModelScope.launch {
             try {
@@ -630,29 +573,6 @@ class DolbyViewModel(application: Application) : AndroidViewModel(application) {
                 loadSettings()
             } catch (e: Exception) {
                 reportSettingFailure("setting surround diffuse", e)
-            }
-        }
-    }
-
-    fun setMiSteering(enabled: Boolean) {
-        viewModelScope.launch {
-            try {
-                val profile = repository.getCurrentProfile()
-                repository.setMiSteeringEnabled(profile, enabled)
-                loadSettings()
-            } catch (e: Exception) {
-                reportSettingFailure("setting MI steering", e)
-            }
-        }
-    }
-
-    fun setDspVolumeBoost(enabled: Boolean, strength: Int) {
-        viewModelScope.launch {
-            try {
-                repository.setDspVolumeBoost(enabled, strength)
-                loadSettings()
-            } catch (e: Exception) {
-                reportSettingFailure("setting DSP volume boost", e)
             }
         }
     }

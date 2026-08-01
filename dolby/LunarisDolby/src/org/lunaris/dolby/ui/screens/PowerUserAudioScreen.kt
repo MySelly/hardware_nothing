@@ -97,10 +97,6 @@ fun PowerUserAudioScreen(
                     LoudnessStackBar(
                         outputBoostDb = if (profileSettings.outputBoostEnabled)
                             profileSettings.outputBoostTenthsDb / 10f else 0f,
-                        volmaxContribution = if (profileSettings.volmaxBoostEnabled)
-                            profileSettings.volmaxBoost / 16f else 0f,
-                        dspStrength = if (profileSettings.dspVolumeBoostEnabled)
-                            profileSettings.dspVolumeBoostStrength.toFloat() else 0f,
                         maxDb = prefs.maxGainDb() + prefs.getOutputBoostMaxTenths() / 10f
                     )
                 }

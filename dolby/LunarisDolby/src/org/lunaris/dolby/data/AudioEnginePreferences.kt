@@ -191,7 +191,6 @@ data class HeadroomInfo(
     val peakEqDb: Float,
     val outputBoostDb: Float,
     val deviceOffsetDb: Float,
-    val volmaxContributionDb: Float,
     val totalUsedDb: Float,
     val maxAllowedDb: Float,
     val remainingDb: Float,
@@ -204,8 +203,6 @@ object HeadroomCalculator {
         eqGains: IntArray,
         outputBoostTenths: Int,
         outputBoostEnabled: Boolean,
-        volmaxEnabled: Boolean,
-        volmaxValue: Int,
         deviceOffsetTenths: Int,
         engine: AudioEnginePreferences
     ): HeadroomInfo {
@@ -213,14 +210,12 @@ object HeadroomCalculator {
         val peakEqDb = peakRaw / 10f
         val boostDb = if (outputBoostEnabled) outputBoostTenths / 10f else 0f
         val deviceDb = deviceOffsetTenths / 10f
-        val volmaxDb = if (volmaxEnabled) volmaxValue / 16f else 0f
-        val total = peakEqDb + abs(boostDb) + abs(deviceDb) + volmaxDb * 0.5f
+        val total = peakEqDb + abs(boostDb) + abs(deviceDb)
         val maxAllowed = engine.maxGainDb() + engine.getOutputBoostMaxTenths() / 10f
         return HeadroomInfo(
             peakEqDb = peakEqDb,
             outputBoostDb = boostDb,
             deviceOffsetDb = deviceDb,
-            volmaxContributionDb = volmaxDb,
             totalUsedDb = total,
             maxAllowedDb = maxAllowed,
             remainingDb = maxAllowed - total,

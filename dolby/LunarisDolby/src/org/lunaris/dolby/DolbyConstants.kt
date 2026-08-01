@@ -31,17 +31,10 @@ object DolbyConstants {
     const val PREF_VOLUME_LEVELER_AMOUNT = "dolby_volume_leveler_amount"
     const val PREF_OUTPUT_BOOST_ENABLED = "dolby_output_boost_enabled"
     const val PREF_OUTPUT_BOOST_TENTHS = "dolby_output_boost_tenths"
-    const val PREF_VOLMAX_BOOST_ENABLED = "dolby_volmax_boost_enabled"
-    const val PREF_VOLMAX_BOOST = "dolby_volmax_boost"
-    const val PREF_IEQ_AMOUNT = "dolby_ieq_amount"
-    const val PREF_SURROUND_BOOST_ENABLED = "dolby_surround_boost_enabled"
-    const val PREF_SURROUND_BOOST = "dolby_surround_boost"
     const val PREF_VIRTUAL_BASS = "dolby_virtual_bass"
     const val PREF_VIRTUAL_BASS_SPEAKER = "dolby_virtual_bass_speaker"
     const val PREF_VIRTUAL_BASS_BLUETOOTH = "dolby_virtual_bass_bluetooth"
     const val PREF_HEARING_PROTECTION = "dolby_hearing_protection"
-    const val PREF_REVERB_SUPPRESSION_ENABLED = "dolby_reverb_suppression_enabled"
-    const val PREF_REVERB_SUPPRESSION_AMOUNT = "dolby_reverb_suppression_amount"
     const val PREF_DIALOGUE_DUCKING_ENABLED = "dolby_dialogue_ducking_enabled"
     const val PREF_DIALOGUE_DUCKING_AMOUNT = "dolby_dialogue_ducking_amount"
     const val PREF_GRAPHIC_EQ_ENABLED = "dolby_graphic_eq_enabled"
@@ -51,6 +44,8 @@ object DolbyConstants {
     const val PREF_ADV_BASS_WIDTH = "dolby_adv_bass_width"
     const val PREF_LEVELER_TARGET_ENABLED = "dolby_leveler_target_enabled"
     const val PREF_LEVELER_TARGET_DB = "dolby_leveler_target_db"
+    const val PREF_SURROUND_BOOST_ENABLED = "dolby_surround_boost_enabled"
+    const val PREF_SURROUND_BOOST = "dolby_surround_boost"
     const val PREF_SURROUND_DECODER_ENABLED = "dolby_surround_decoder_enabled"
     const val PREF_SURROUND_DIFFUSE_FRONT = "dolby_surround_diffuse_front"
     const val PREF_REGULATOR_ENABLED = "dolby_regulator_enabled"
@@ -58,7 +53,6 @@ object DolbyConstants {
     const val PREF_REGULATOR_TIMBRE = "dolby_regulator_timbre"
     const val PREF_REGULATOR_SIBILANCE = "dolby_regulator_sibilance"
     const val PREF_REGULATOR_STRESS = "dolby_regulator_stress"
-    const val PREF_VOLUME_MODELER_ENABLED = "dolby_volume_modeler_enabled"
     const val PREF_VB_MODE = "dolby_vb_mode"
     const val PREF_VB_OVERALL_GAIN = "dolby_vb_overall_gain"
     const val PREF_VB_SLOPE_GAIN = "dolby_vb_slope_gain"
@@ -71,9 +65,6 @@ object DolbyConstants {
     const val PREF_CALIBRATION_BOOST_SPEAKER = "dolby_calibration_boost_speaker"
     const val PREF_CALIBRATION_BOOST_HEADPHONE = "dolby_calibration_boost_headphone"
     const val PREF_CALIBRATION_BOOST_BT = "dolby_calibration_boost_bt"
-    const val PREF_MI_STEERING_ENABLED = "dolby_mi_steering_enabled"
-    const val PREF_DSP_VOLUME_BOOST_ENABLED = "dsp_volume_boost_enabled"
-    const val PREF_DSP_VOLUME_BOOST_STRENGTH = "dsp_volume_boost_strength"
     const val PREF_PRESETS_MIGRATED = "presets_migrated"
     const val PREF_BAND_MODE = "dolby_band_mode"
     const val PREF_DEVICE_STATE_MEMORY = "device_state_memory_enabled"
@@ -168,12 +159,9 @@ object DolbyConstants {
         GEQ_BAND_GAINS(110, 20),
         BASS_ENHANCER_ENABLE(111),
         STEREO_WIDENING_AMOUNT(113),
-        VOLMAX_BOOST(114),
         GRAPHIC_EQ_ENABLE(106),
-        IEQ_AMOUNT(107),
         DIALOGUE_DUCKING(109),
         VIRTUAL_BASS_ENABLE(112),
-        REVERB_SUPPRESSION_AMOUNT(115),
         VOLUME_LEVELER_AMOUNT(116),
         HEARING_PROTECTION_ENABLE(118);
 
@@ -187,10 +175,8 @@ object DolbyConstants {
     const val EQ_GAIN_STANDARD = 150
     const val EQ_GAIN_EXTENDED = 240
     const val EQ_GAIN_EXTREME = 300
-    const val VOLMAX_BOOST_MAX = 96
-    const val SURROUND_BOOST_MAX = 64
-    const val REVERB_SUPPRESSION_MAX = 16
     const val DIALOGUE_DUCKING_MAX = 16
+    const val SURROUND_BOOST_MAX = 64
     // Raw DAX units for the vendor bass-enhancer stage (see configs/dax-default.xml)
     const val ADV_BASS_BOOST_RAW_MAX = 480
     const val ADV_BASS_BOOST_RAW_STOCK = 36
@@ -230,7 +216,6 @@ object DolbyConstants {
     const val HP_VIRT_LR_ANGLE_MAX = 90
     const val HP_VIRT_START_BAND_MAX = 19
     const val CALIBRATION_BOOST_MAX = 192
-    const val IEQ_AMOUNT_MAX = 10
     const val VOLUME_LEVELER_AMOUNT_MAX = 10
 
     fun dlog(tag: String, msg: String) {

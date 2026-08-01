@@ -17,17 +17,6 @@ object DolbyHalBridge {
     private fun audioManager(context: Context): AudioManager? =
         context.getSystemService(AudioManager::class.java)
 
-    fun applyVolmaxBoost(context: Context, enabled: Boolean, value: Int) {
-        val boost = if (enabled) value.coerceIn(0, 96) else 0
-        setParameters(context, listOf(
-            "dolby_volmax_boost=$boost",
-            "volmax_boost=$boost",
-            "volmax-boost=$boost",
-            "DolbyVolMaxBoost=$boost"
-        ))
-        DolbyConstants.dlog(TAG, "volmax_boost=$boost enabled=$enabled")
-    }
-
     fun applySurroundBoost(context: Context, enabled: Boolean, value: Int) {
         val boost = if (enabled) value.coerceIn(0, 64) else 0
         setParameters(context, listOf(
@@ -88,18 +77,6 @@ object DolbyHalBridge {
             "virtual-bass-slope-gain=$slope"
         ))
         DolbyConstants.dlog(TAG, "virtual_bass=$flag mode=$vbMode overall=$overall slope=$slope")
-    }
-
-    fun applyReverbSuppression(context: Context, enabled: Boolean, amount: Int) {
-        val flag = if (enabled) 1 else 0
-        val amt = if (enabled) amount.coerceIn(0, 16) else 0
-        setParameters(context, listOf(
-            "reverb_suppression_enable=$flag",
-            "reverb-suppression-enable=$flag",
-            "reverb_suppression_amount=$amt",
-            "reverb-suppression-amount=$amt"
-        ))
-        DolbyConstants.dlog(TAG, "reverb_suppression enable=$flag amount=$amt")
     }
 
     fun applyAdvancedBass(
@@ -218,16 +195,6 @@ object DolbyHalBridge {
         )
     }
 
-    fun applyVolumeModeler(context: Context, enabled: Boolean) {
-        val flag = if (enabled) 1 else 0
-        setParameters(context, listOf(
-            "volume_modeler_enable=$flag",
-            "volume-modeler-enable=$flag",
-            "dolby_volume_modeler=$flag"
-        ))
-        DolbyConstants.dlog(TAG, "volume_modeler=$flag")
-    }
-
     fun applyHeadphoneVirtualizerTuning(
         context: Context,
         mode: Int,
@@ -269,19 +236,6 @@ object DolbyHalBridge {
         DolbyConstants.dlog(TAG, "game_latency=$flag")
     }
 
-    fun applyMiSteering(context: Context, enabled: Boolean) {
-        val flag = if (enabled) 1 else 0
-        setParameters(context, listOf(
-            "mi_dv_leveler_steering_enable=$flag",
-            "mi-dv-leveler-steering-enable=$flag",
-            "mi_dv_dialog_steering_enable=$flag",
-            "mi-dv-dialog-steering-enable=$flag",
-            "mi_ieq_steering_enable=$flag",
-            "mi-ieq-steering-enable=$flag"
-        ))
-        DolbyConstants.dlog(TAG, "mi_steering=$flag")
-    }
-
     fun applySpatialAudio(
         context: Context,
         balanceEnabled: Boolean,
@@ -302,22 +256,6 @@ object DolbyHalBridge {
             "dolby_crossfeed=$crossfeed"
         ))
         DolbyConstants.dlog(TAG, "spatial balance=$balanceVal mono=$mono crossfeed=$crossfeed")
-    }
-
-    fun syncDspVolume(context: Context, volumeStep: Int, boostEnabled: Boolean, boostStrength: Int) {
-        val am = audioManager(context) ?: return
-        val strength = boostStrength.coerceIn(0, 100)
-        if (!boostEnabled || strength == 0) {
-            am.setParameters("volume_change=$volumeStep;flags=8")
-            return
-        }
-        val maxSteps = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
-        val fraction = volumeStep.toFloat() / maxSteps.toFloat()
-        val extra = (fraction * strength / 100f * maxSteps * 0.35f).toInt()
-        val scaled = (volumeStep + extra).coerceIn(0, maxSteps)
-        am.setParameters("volume_change=$scaled;flags=8")
-        am.setParameters("dsp_loudness_boost=$strength")
-        DolbyConstants.dlog(TAG, "dsp volume step=$volumeStep scaled=$scaled boost=$strength")
     }
 
     private fun setParameters(context: Context, params: List<String>) {

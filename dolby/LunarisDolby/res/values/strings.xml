@@ -301,11 +301,6 @@
     <string name="output_boost_title">Output boost</string>
     <string name="output_boost_summary">Global gain applied on top of EQ. Set to 0 or turn off to disable. Can reduce below 0 dB.</string>
     <string name="output_boost_value">%1$.1f dB</string>
-    <string name="volmax_boost_title">Volmax boost</string>
-    <string name="volmax_boost_summary">Hardware max-volume extension (DAX volmax). Turn off for stock loudness.</string>
-    <string name="volmax_boost_value">%1$d</string>
-    <string name="ieq_amount_title">IEQ intensity</string>
-    <string name="ieq_amount_summary">How strongly the intelligent equalizer preset is applied</string>
     <string name="surround_boost_title">Surround boost</string>
     <string name="surround_boost_summary">Extra surround decoder lift separate from stereo widening</string>
     <string name="volume_leveler_amount_title">Leveler strength</string>
@@ -331,9 +326,6 @@
     <string name="adv_bass_boost_title">Bass boost</string>
     <string name="adv_bass_cutoff_title">Bass crossover frequency</string>
     <string name="adv_bass_width_title">Bass enhancer width</string>
-    <string name="reverb_suppression_title">Reverb suppression</string>
-    <string name="reverb_suppression_summary">Reduces room echo and ambience for clearer speech, podcasts and audiobooks</string>
-    <string name="reverb_suppression_amount_title">Suppression strength</string>
     <string name="regulator_title">Speaker regulator</string>
     <string name="regulator_summary">Distortion protection for the speakers. Overdrive lets peaks push past the limit for extra loudness at some distortion cost</string>
     <string name="regulator_overdrive_title">Regulator overdrive</string>
@@ -349,10 +341,6 @@
     <string name="hp_virt_mode_title">HP virtualizer mode</string>
     <string name="hp_virt_angle_title">HP virtualizer L/R angle</string>
     <string name="hp_virt_start_band_title">HP virtualizer start band</string>
-    <string name="volume_modeler_title">Volume modeler</string>
-    <string name="volume_modeler_summary">Compensate perceived loudness across volume steps</string>
-    <string name="mi_steering_title">MI steering</string>
-    <string name="mi_steering_summary">Media intelligence steering for leveler, dialogue and IEQ</string>
     <string name="vb_mode_title">Virtual bass mode</string>
     <string name="vb_overall_gain_title">Virtual bass overall gain</string>
     <string name="vb_slope_gain_title">Virtual bass slope gain</string>
@@ -362,9 +350,6 @@
     <string name="calibration_boost_speaker">Speaker calibration (%1$d)</string>
     <string name="calibration_boost_headphone">Headphone calibration (%1$d)</string>
     <string name="calibration_boost_bt">Bluetooth calibration (%1$d)</string>
-    <string name="dsp_volume_boost_title">DSP volume lift</string>
-    <string name="dsp_volume_boost_summary">Extra loudness at high media volume steps via DSP sync</string>
-    <string name="dsp_volume_boost_strength">Lift strength</string>
     <string name="audio_tuning_disabled">Off</string>
 
     <!-- Credits dialog -->
@@ -502,7 +487,6 @@
     <string name="headroom_peak_eq">EQ peak</string>
     <string name="headroom_output_boost">Output boost</string>
     <string name="headroom_device_offset">Device offset</string>
-    <string name="headroom_volmax">Volmax est.</string>
     <string name="headroom_remaining">Remaining</string>
     <string name="headroom_over_limit">Total gain exceeds safe headroom — distortion possible</string>
     <string name="loudness_stack_title">Loudness stack</string>

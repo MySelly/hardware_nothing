@@ -292,7 +292,6 @@
     <string name="headroom_peak_eq">EQ peak</string>
     <string name="headroom_output_boost">Output boost</string>
     <string name="headroom_device_offset">Device offset</string>
-    <string name="headroom_volmax">Volmax est.</string>
     <string name="headroom_remaining">Remaining</string>
     <string name="headroom_over_limit">Total gain exceeds safe headroom — distortion possible</string>
     <string name="loudness_stack_title">Loudness stack</string>
